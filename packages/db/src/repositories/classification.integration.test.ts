@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { createDatabaseConnection } from "../client";
 import { appLabels, storeApps } from "../schema/index";
 import { loadClassificationInputs } from "../queries/classification-inputs";
+import { loadLabelMembership } from "../queries/label-membership";
 import { loadRuleInputHashes, replaceRuleLabels, syncTaxonomyLabels } from "./classification";
 import type { DatabaseExecutor } from "./executor";
 import { persistStoreApps, type PersistableStoreApp } from "./store-app-persistence";
@@ -126,6 +127,50 @@ describe("classification repositories", { skip: connection === null }, () => {
       );
       assert.equal(rows.find((r) => r.source === "rule")?.promptVersion, "rules-test");
       assert.equal((await loadRuleInputHashes(tx, "taxonomy-test")).get(listing.appId), "h2");
+    });
+  });
+
+  it("resolves membership per listing: manual wins, weak automated labels are dropped", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const stored = await persistStoreApps(tx, [game]);
+      const storeAppId = [...stored.storeAppIds.values()][0] ?? "";
+      const [listing] = await tx.select({ appId: storeApps.appId }).from(storeApps).where(eq(storeApps.id, storeAppId));
+      assert.ok(listing);
+      const ids = await syncTaxonomyLabels(tx, { taxonomyVersion: "taxonomy-test", labels });
+      const puzzle = ids.get("genre:puzzle");
+      const merge = ids.get("subgenre:merge");
+      assert.ok(puzzle && merge);
+
+      await replaceRuleLabels(tx, {
+        appId: listing.appId,
+        taxonomyVersion: "taxonomy-test",
+        rulesVersion: "rules-test",
+        inputHash: "h1",
+        labels: [
+          { labelId: puzzle, confidence: 0.95, evidence: [] },
+          { labelId: merge, confidence: 0.55, evidence: [] },
+        ],
+      });
+      await tx.insert(appLabels).values({
+        appId: listing.appId,
+        labelId: puzzle,
+        source: "manual",
+        confidence: "1.000",
+        taxonomyVersion: "taxonomy-test",
+        isManualOverride: true,
+      });
+
+      const rows = await loadLabelMembership(tx, {
+        stores: ["google_play"],
+        country: "us",
+        taxonomyVersion: "taxonomy-test",
+        types: ["genre", "subgenre"],
+        minConfidence: 0.6,
+      });
+      assert.deepEqual(
+        rows.map((r) => `${r.storeAppId === storeAppId}:${r.slug}:${r.source}`),
+        ["true:puzzle:manual"],
+      );
     });
   });
 });

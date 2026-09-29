@@ -5,7 +5,7 @@ import { GameHeader } from "@/components/game-detail/game-header";
 import { MetricCards } from "@/components/game-detail/metric-cards";
 import { ObservationsTable } from "@/components/game-detail/observations-table";
 import { ScorePanel } from "@/components/game-detail/score-panel";
-import { ClassificationPending } from "@/components/overview/classification-pending";
+import { LabelsPanel } from "@/components/game-detail/labels-panel";
 import { AppShell } from "@/components/shell/app-shell";
 import { requireUser } from "@/lib/auth/session";
 import { getGameDetail } from "@/lib/games/get-game";
@@ -45,7 +45,7 @@ export default async function GamePage({ params }: GamePageProps) {
           <ObservationsTable view={view} />
         </div>
       </div>
-      <ClassificationPending />
+      <LabelsPanel labels={view.labels} />
     </AppShell>
   );
 }

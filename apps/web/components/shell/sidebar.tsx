@@ -13,7 +13,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending" | "releases" | "games";
+export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games";
 
 interface NavItem {
   label: string;
@@ -27,8 +27,8 @@ const NAV: NavItem[] = [
   { label: "Overview", icon: LayoutDashboard, key: "overview", href: "/" },
   { label: "Trending Games", icon: TrendingUp, key: "trending", href: "/trending" },
   { label: "New Releases", icon: Zap, key: "releases", href: "/new-releases" },
-  { label: "Genres", icon: Layers },
-  { label: "Mechanics", icon: SlidersHorizontal },
+  { label: "Genres", icon: Layers, key: "genres", href: "/genres" },
+  { label: "Mechanics", icon: SlidersHorizontal, key: "mechanics", href: "/mechanics" },
   { label: "Games", icon: Gamepad2 },
   { label: "Watchlist", icon: Eye },
 ];

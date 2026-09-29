@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth/session";
 import { AppShell } from "@/components/shell/app-shell";
-import { ClassificationPending } from "@/components/overview/classification-pending";
+import { ClassificationLinks } from "@/components/overview/classification-links";
 import { CoveragePanel } from "@/components/overview/coverage-panel";
 import { DiscoveredList } from "@/components/overview/discovered-list";
 import { KpiCards } from "@/components/overview/kpi-cards";
@@ -27,7 +27,7 @@ export default async function OverviewPage({ searchParams }: HomePageProps) {
       </div>
       <KpiCards data={data} />
       <TrendingTable data={data} filters={filters} />
-      <ClassificationPending />
+      <ClassificationLinks />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <DiscoveredList data={data} />
         <CoveragePanel data={data} />

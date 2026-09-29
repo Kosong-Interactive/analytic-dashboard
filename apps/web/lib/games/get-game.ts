@@ -1,12 +1,15 @@
 import "server-only";
 
-import { loadGameHistory } from "@analytic-dashboard/db";
+import { loadGameHistory, loadListingLabels, type ListingLabelRow } from "@analytic-dashboard/db";
 import { countryCodeSchema } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 import { getDatabase } from "../database";
+import { TAXONOMY_VERSION } from "../labels/constants";
 import { loadScoredSelection } from "../scoring/load-scored";
 import { buildGameDetail, HISTORY_DAYS, type GameDetailView } from "./view-model";
+
+export type GameDetailWithLabels = GameDetailView & { labels: ListingLabelRow[] };
 
 const RANK_CHART = "TOP_FREE";
 export const gameIdSchema = z.uuid();
@@ -15,12 +18,16 @@ export const gameIdSchema = z.uuid();
 export async function getGameDetail(
   rawId: string,
   asOf: Date = new Date(),
-): Promise<GameDetailView | null> {
+): Promise<GameDetailWithLabels | null> {
   const id = gameIdSchema.safeParse(rawId);
   if (!id.success) return null;
 
   const since = new Date(asOf.getTime() - HISTORY_DAYS * 86_400_000);
-  const history = await loadGameHistory(getDatabase(), { storeAppId: id.data, since });
+  const db = getDatabase();
+  const [history, labels] = await Promise.all([
+    loadGameHistory(db, { storeAppId: id.data, since }),
+    loadListingLabels(db, { storeAppId: id.data, taxonomyVersion: TAXONOMY_VERSION }),
+  ]);
   if (!history) return null;
 
   // The score is relative to the game's cohort, so the cohort is scored as a whole.
@@ -34,5 +41,5 @@ export async function getGameDetail(
       ).scores.find((row) => row.id === id.data)
     : undefined;
 
-  return buildGameDetail({ history, score, rankChartType: RANK_CHART, asOf });
+  return { ...buildGameDetail({ history, score, rankChartType: RANK_CHART, asOf }), labels };
 }

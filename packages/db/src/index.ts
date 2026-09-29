@@ -62,3 +62,9 @@ export {
   type ClassificationInputRow,
   type ClassificationListingRow,
 } from "./queries/classification-inputs";
+export {
+  loadLabelMembership,
+  type LabelMembershipQuery,
+  type LabelMembershipRow,
+} from "./queries/label-membership";
+export { loadListingLabels, type ListingLabelRow } from "./queries/listing-labels";
