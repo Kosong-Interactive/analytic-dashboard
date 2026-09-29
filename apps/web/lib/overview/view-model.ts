@@ -184,7 +184,7 @@ export function buildOverview(input: {
   };
 }
 
-function toSourceStatus(row: OverviewSourceHealth, asOf: Date): SourceStatus {
+export function toSourceStatus(row: OverviewSourceHealth, asOf: Date): SourceStatus {
   let state: SourceState;
   if (row.latestStatus === "failed") state = "failed";
   else if (row.lastCollectedAt === null) state = "never";

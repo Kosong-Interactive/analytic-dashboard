@@ -39,7 +39,7 @@ function RankChange({ value }: { value: number | null }) {
   );
 }
 
-function Rating({ value }: { value: number | null }) {
+export function Rating({ value }: { value: number | null }) {
   if (value === null) return <>—</>;
   return (
     <span className="inline-flex items-center gap-1">

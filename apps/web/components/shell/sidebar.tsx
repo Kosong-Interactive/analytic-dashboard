@@ -29,7 +29,7 @@ const NAV: NavItem[] = [
   { label: "New Releases", icon: Zap, key: "releases", href: "/new-releases" },
   { label: "Genres", icon: Layers, key: "genres", href: "/genres" },
   { label: "Mechanics", icon: SlidersHorizontal, key: "mechanics", href: "/mechanics" },
-  { label: "Games", icon: Gamepad2 },
+  { label: "Games", icon: Gamepad2, key: "games", href: "/games" },
   { label: "Watchlist", icon: Eye },
 ];
 
