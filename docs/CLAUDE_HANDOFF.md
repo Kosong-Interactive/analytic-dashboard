@@ -105,6 +105,12 @@ Latest committed feature commit at handoff: `1cdbe78 feat: add manual label over
   evidence, classification labels, and manual Confirm/Reject/Undo.
 - `/genres` — genre/subgenre roll-ups.
 - `/mechanics` — core/meta/theme/multiplayer roll-ups.
+- `/games` — Explorer: URL filters for text, store category, genre, core mechanic, release date,
+  rating, momentum, and classification status; stable sorting, pagination, store freshness.
+- `/watchlist` — team-shared entries (`watchlist_entries`, migration `0002`, applied) with status,
+  note, actor/timestamps, and movement since added. Game detail has Add to watchlist / Compare.
+- `/compare` — up to four listings via `?ids=`, each storefront cohort loaded once, mixed-store
+  cautions, shared-label highlighting, search to add.
 
 Store icons use `next/image` with Apple and Google hosts allowed in `apps/web/next.config.ts`, with
 initials fallback. Analytical charts have textual/tabular equivalents.
@@ -159,37 +165,14 @@ priority over implementing them.
 
 ## Next dashboard work
 
-### 1. Games / Explorer
+Games, Watchlist, and Compare are done. Remaining, in order:
 
-The sidebar shows Games as “Soon”. Build it next as a read-heavy Server Component with URL state.
-Expected capabilities:
-
-- platform and market/country context;
-- category, genre, mechanic, release-date, rating, momentum, and classification-status filters;
-- server-side pagination and stable sorting;
-- explicit missing values, freshness, coverage, and sampled-catalogue language;
-- links to `/games/[id]`;
-- loading, empty, stale, partial-data, and error states;
-- responsive table/card presentation;
-- focused query-parser, view-model, and representative query tests.
-
-Do not add Steam to the active filter yet. Keep copy platform-neutral where practical.
-
-### 2. Watchlist
-
-Requires durable per-user/team state, notes/status, actor/timestamps, and latest movement. Design the
-minimum schema only when implementing it; do not create a generic collaboration system.
-
-### 3. Compare
-
-Compare selected games while preserving platform-specific metric semantics and missing values. Show
-shared labels, Trend Score components, and source observations; never compare unlike raw metrics as
-if they were equivalent.
-
-### 4. Search / command palette
-
-Search stored games, developers, and taxonomy labels. It navigates to existing pages and never
-starts collectors or AI jobs.
+1. **Search / command palette** — search stored games, developers, and taxonomy labels; navigate
+   to existing pages; never start collectors or AI jobs.
+2. Final navigation, responsive, accessibility, and browser-flow pass. The Games, Watchlist, and
+   Compare pages were verified with unit tests, a production build, and read-only probes against
+   Supabase, but not yet in a signed-in browser session.
+3. Only then Automated Game Research / Steam, and the Vercel deployment.
 
 Design reference for current pages:
 
