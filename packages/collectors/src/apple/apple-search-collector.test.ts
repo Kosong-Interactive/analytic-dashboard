@@ -74,6 +74,18 @@ describe("AppleSearchCollector", () => {
     assert.match(results[0]?.metadataHash ?? "", /^[a-f0-9]{64}$/);
   });
 
+  it("reports skipped non-game results", async () => {
+    const skipped: string[] = [];
+    const collector = new AppleSearchCollector({
+      fetchImplementation: async () => Response.json(appleFixture),
+      events: { onSkipped: (reason) => skipped.push(reason) },
+    });
+
+    await collector.searchGames({ term: "puzzle", country: "us", locale: "en_US" });
+
+    assert.deepEqual(skipped, ["non_game"]);
+  });
+
   it("uses ID lookup for known apps", async () => {
     let requestedUrl: URL | undefined;
     const collector = new AppleSearchCollector({

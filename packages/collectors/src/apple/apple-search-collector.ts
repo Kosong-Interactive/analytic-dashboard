@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import {
   normalizedStoreAppSchema,
+  type CollectorEvents,
   type NormalizedStoreApp,
   type StoreCollectorAdapter,
 } from "../contracts.js";
@@ -38,6 +39,7 @@ export interface AppleSearchCollectorOptions {
   fetchImplementation?: typeof fetch;
   now?: () => Date;
   timeoutMs?: number;
+  events?: CollectorEvents;
 }
 
 export class AppleSearchApiError extends Error {
@@ -57,8 +59,10 @@ export class AppleSearchCollector
   private readonly fetchImplementation: typeof fetch;
   private readonly now: () => Date;
   private readonly timeoutMs: number;
+  private readonly events: CollectorEvents;
 
   constructor(options: AppleSearchCollectorOptions = {}) {
+    this.events = options.events ?? {};
     this.baseUrl = options.baseUrl ?? "https://itunes.apple.com";
     this.fetchImplementation = options.fetchImplementation ?? fetch;
     this.now = options.now ?? (() => new Date());
@@ -128,9 +132,15 @@ export class AppleSearchCollector
 
     const capturedAt = this.now().toISOString();
 
-    return parsedResponse.data.results
-      .filter(isGame)
-      .map((result) => normalizeAppleGame(result, country, locale, capturedAt));
+    const games: NormalizedStoreApp[] = [];
+    for (const result of parsedResponse.data.results) {
+      if (isGame(result)) {
+        games.push(normalizeAppleGame(result, country, locale, capturedAt));
+      } else {
+        this.events.onSkipped?.("non_game");
+      }
+    }
+    return games;
   }
 }
 

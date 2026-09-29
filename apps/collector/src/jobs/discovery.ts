@@ -9,6 +9,7 @@ import type {
 import { storeListingKey } from "@analytic-dashboard/db";
 import type { CountryCode } from "@analytic-dashboard/shared";
 
+import type { CollectionTally } from "../runtime/collection-tally.js";
 import type { DiscoverySeeds, EnabledCountries } from "../runtime/config.js";
 import type {
   DiscoveredBatch,
@@ -125,7 +126,9 @@ export async function runDiscoveryJob(
   job: DiscoveryJob,
   store: DiscoveryStore,
   now: () => Date = () => new Date(),
+  tally?: CollectionTally,
 ): Promise<DiscoveryJobResult> {
+  tally?.take();
   const runId = await store.startRun({
     source: job.source,
     jobType: job.jobType,
@@ -154,6 +157,11 @@ export async function runDiscoveryJob(
     }
   }
 
+  const skipped = tally?.take() ?? {
+    invalidSkipped: 0,
+    nonGameSkipped: 0,
+    retryCount: 0,
+  };
   const status = resolveStatus(job.steps.length, errors.length, discovered.size);
   const errorSample = resolveErrorSample(errors, discovered.size, errors.length);
 
@@ -162,12 +170,14 @@ export async function runDiscoveryJob(
     finishedAt: now(),
     discoveredCount: discovered.size,
     changedCount,
-    retryCount: 0,
+    retryCount: skipped.retryCount,
     errorCount: errors.length,
     errorSample,
     metadata: {
       steps: job.steps.map((step) => step.label),
       chartEntriesWritten,
+      invalidSkipped: skipped.invalidSkipped,
+      nonGameSkipped: skipped.nonGameSkipped,
       zeroResults: discovered.size === 0,
     },
   });

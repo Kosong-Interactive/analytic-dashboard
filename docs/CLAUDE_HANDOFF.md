@@ -51,8 +51,8 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 
 ## Known gaps / next
 
-- Collectors still drop invalid or non-game items silently; count and record them in `collector_runs`.
-- `retry_count` is always 0 because adapters do not report retries.
+- Adapters report skipped items (`invalid`, `non_game`) and Google retries through optional `CollectorEvents`; discovery records them as `retry_count` and `metadata.invalidSkipped`/`nonGameSkipped`. Cached responses do not re-emit skips.
+- `.github/workflows/collect.yml` runs discovery every 6 hours (17 past). It needs the repository secret `DATABASE_URL`; it has not been run on GitHub yet.
 - Phase 2 starts with `packages/analytics` (velocity, `trend_score_v1`). UI follows the design artifact `https://claude.ai/artifact/FmXb2bJ9ViYy9S9p5NyGNy` (Overview, Trending, NewReleases, GameDetail, Genres, Mechanics, TrendScore, Compare, Search, Watchlist).
 
 ## Checklist for the next agent

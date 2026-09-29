@@ -11,6 +11,7 @@ import { z } from "zod";
 import {
   normalizedStoreAppSchema,
   type ChartObservation,
+  type CollectorEvents,
   type NormalizedStoreApp,
   type StoreCollectorAdapter,
 } from "../contracts.js";
@@ -98,6 +99,7 @@ export interface GooglePlayCollectorOptions {
   minimumRequestIntervalMs?: number;
   retryAttempts?: number;
   sleep?: (milliseconds: number) => Promise<void>;
+  events?: CollectorEvents;
 }
 
 export class GooglePlayCollectorError extends Error {
@@ -126,9 +128,11 @@ export class GooglePlayCollector
   private readonly retryAttempts: number;
   private readonly sleep: (milliseconds: number) => Promise<void>;
   private readonly cache = new Map<string, CacheEntry>();
+  private readonly events: CollectorEvents;
   private nextRequestAt = 0;
 
   constructor(options: GooglePlayCollectorOptions = {}) {
+    this.events = options.events ?? {};
     this.client =
       options.client ?? (googlePlayScraper as GooglePlayScraperClient);
     this.now = options.now ?? (() => new Date());
@@ -235,6 +239,7 @@ export class GooglePlayCollector
         if (attempt === this.retryAttempts || !isRetryable(error)) {
           break;
         }
+        this.events.onRetry?.();
         await this.sleep(500 * 2 ** attempt);
       }
     }
@@ -272,7 +277,11 @@ export class GooglePlayCollector
 
     results.forEach((result, index) => {
       const parsed = appSchema.safeParse(result);
-      if (parsed.success && parsed.data.genreId?.startsWith("GAME") === true) {
+      if (!parsed.success) {
+        this.events.onSkipped?.("invalid");
+      } else if (parsed.data.genreId?.startsWith("GAME") !== true) {
+        this.events.onSkipped?.("non_game");
+      } else {
         entries.push({
           rank: index + 1,
           app: normalizeGame(parsed.data, country, locale, capturedAt),

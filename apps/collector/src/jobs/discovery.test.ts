@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import type { NormalizedStoreApp } from "@analytic-dashboard/collectors";
 
+import { createCollectionTally } from "../runtime/collection-tally.js";
 import type { DiscoverySeeds, EnabledCountries } from "../runtime/config.js";
 import type {
   DiscoveredBatch,
@@ -198,6 +199,29 @@ describe("runDiscoveryJob", () => {
     assert.equal(result.status, "partial");
     assert.equal(finished[0]?.errorSample, "Discovery returned no games");
     assert.equal(finished[0]?.metadata?.zeroResults, true);
+  });
+
+  it("records skipped items and retries from the tally", async () => {
+    const { store, finished } = recordingStore();
+    const tally = createCollectionTally();
+    tally.events.onSkipped?.("invalid");
+    tally.events.onSkipped?.("non_game");
+    tally.events.onRetry?.();
+    const job = jobWithSteps([
+      async () => {
+        tally.events.onSkipped?.("invalid");
+        tally.events.onSkipped?.("non_game");
+        tally.events.onSkipped?.("non_game");
+        tally.events.onRetry?.();
+        return { apps: [app("a")] };
+      },
+    ]);
+
+    await runDiscoveryJob(job, store, now, tally);
+
+    assert.equal(finished[0]?.retryCount, 1);
+    assert.equal(finished[0]?.metadata?.invalidSkipped, 1);
+    assert.equal(finished[0]?.metadata?.nonGameSkipped, 2);
   });
 
   it("records a persistence failure as a run error", async () => {

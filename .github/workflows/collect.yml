@@ -1,0 +1,53 @@
+name: Scheduled collection
+
+on:
+  schedule:
+    # Non-round minutes; GitHub Actions schedules are best-effort and may run late.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Limit to one source
+        type: choice
+        options: ["", app_store, google_play]
+        default: ""
+      country:
+        description: Limit to one country
+        type: choice
+        options: ["", id, us]
+        default: ""
+
+permissions:
+  contents: read
+
+# Reruns are safe (idempotent writes), but two overlapping runs would only waste request budget.
+concurrency:
+  group: scheduled-collection
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: Discover games
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Non-zero exit when any job hit an error, so failures show up in the Actions UI.
+      - name: Run discovery
+        run: npm run discover --workspace @analytic-dashboard/collector -- ${SOURCE:+--source "$SOURCE"} ${COUNTRY:+--country "$COUNTRY"}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SOURCE: ${{ inputs.source }}
+          COUNTRY: ${{ inputs.country }}

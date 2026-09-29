@@ -46,3 +46,12 @@ export interface StoreCollectorAdapter<
   searchGames(input: TSearchInput): Promise<NormalizedStoreApp[]>;
   lookupGames(input: TLookupInput): Promise<NormalizedStoreApp[]>;
 }
+
+/** Why an upstream item was left out of a batch. Reported so runs can show what was dropped. */
+export type CollectorSkipReason = "invalid" | "non_game";
+
+/** Optional observability hooks; adapters call them but never depend on them. */
+export interface CollectorEvents {
+  onSkipped?(reason: CollectorSkipReason): void;
+  onRetry?(): void;
+}

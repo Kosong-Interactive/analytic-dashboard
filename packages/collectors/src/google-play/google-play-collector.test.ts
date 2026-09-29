@@ -89,6 +89,42 @@ describe("GooglePlayCollector", () => {
     );
   });
 
+  it("reports invalid and non-game entries and retries through events", async () => {
+    const events = { skipped: [] as string[], retries: 0 };
+    let calls = 0;
+    const collector = new GooglePlayCollector({
+      client: createClient({
+        search: async () => {
+          calls += 1;
+          if (calls === 1) throw new Error("429 slow down");
+          return [
+            gameFixture,
+            { ...gameFixture, genreId: "PRODUCTIVITY" },
+            { appId: "", title: "" },
+          ];
+        },
+      }),
+      minimumRequestIntervalMs: 0,
+      sleep: async () => undefined,
+      events: {
+        onSkipped: (reason) => events.skipped.push(reason),
+        onRetry: () => {
+          events.retries += 1;
+        },
+      },
+    });
+
+    const results = await collector.searchGames({
+      term: "puzzle",
+      country: "us",
+      locale: "en_US",
+    });
+
+    assert.equal(results.length, 1);
+    assert.deepEqual(events.skipped, ["non_game", "invalid"]);
+    assert.equal(events.retries, 1);
+  });
+
   it("retries temporary errors without leaking provider details", async () => {
     let attempts = 0;
     const collector = new GooglePlayCollector({

@@ -14,6 +14,7 @@ import {
   runDiscoveryJob,
   type DiscoveryJobResult,
 } from "../jobs/discovery.js";
+import { createCollectionTally } from "../runtime/collection-tally.js";
 import {
   getRepositoryRoot,
   loadDiscoverySeeds,
@@ -45,8 +46,12 @@ export async function runDiscoverCommand(argv: string[]): Promise<number> {
     : undefined;
   const dryRun = values["dry-run"] === true;
 
+  const tally = createCollectionTally();
   const jobs = buildDiscoveryJobs(
-    { apple: new AppleSearchCollector(), googlePlay: new GooglePlayCollector() },
+    {
+      apple: new AppleSearchCollector({ events: tally.events }),
+      googlePlay: new GooglePlayCollector({ events: tally.events }),
+    },
     loadDiscoverySeeds(),
     loadEnabledCountries(),
     { source, country },
@@ -56,7 +61,7 @@ export async function runDiscoverCommand(argv: string[]): Promise<number> {
   const results: DiscoveryJobResult[] = [];
   try {
     for (const job of jobs) {
-      const result = await runDiscoveryJob(job, store);
+      const result = await runDiscoveryJob(job, store, undefined, tally);
       results.push(result);
       console.info(JSON.stringify({ event: "discovery.job", dryRun, ...result }));
     }
