@@ -68,8 +68,8 @@ const PAGES: Array<{ title: string; href: string; keywords: string }> = [
   { title: "Genres", href: "/genres", keywords: "genres subgenres categories" },
   { title: "Mechanics", href: "/mechanics", keywords: "mechanics themes multiplayer" },
   { title: "Games", href: "/games", keywords: "games explorer browse all tracked catalogue" },
-  { title: "Watchlist", href: "/watchlist", keywords: "watchlist watching priority notes" },
-  { title: "Compare", href: "/compare", keywords: "compare side by side versus" },
+  { title: "Watchlist", href: "/games/watchlist", keywords: "watchlist watching priority notes" },
+  { title: "Compare", href: "/games/compare", keywords: "compare side by side versus" },
 ];
 
 export function matchPages(text: string): SearchItem[] {

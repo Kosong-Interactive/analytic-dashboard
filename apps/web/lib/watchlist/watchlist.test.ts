@@ -52,8 +52,8 @@ describe("watchlist query", () => {
   it("defaults to active entries and keeps links short", () => {
     const query = parseWatchlistQuery({ view: "bogus" });
     assert.equal(query.view, "active");
-    assert.equal(watchlistHref(query, {}), "/watchlist");
-    assert.equal(watchlistHref(query, { view: "archived", country: "us" }), "/watchlist?country=us&view=archived");
+    assert.equal(watchlistHref(query, {}), "/games/watchlist");
+    assert.equal(watchlistHref(query, { view: "archived", country: "us" }), "/games/watchlist?country=us&view=archived");
   });
 });
 

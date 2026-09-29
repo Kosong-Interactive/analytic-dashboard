@@ -1,11 +1,13 @@
+import { RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 import { ComparisonTable } from "@/components/compare/comparison-table";
 import { GameIcon } from "@/components/games/game-icon";
+import { GamesTabs } from "@/components/games/games-tabs";
 import { EmptyState, Panel } from "@/components/overview/panel";
 import { AppShell } from "@/components/shell/app-shell";
 import { requireUser } from "@/lib/auth/session";
-import { compareHref, MAX_COMPARED, parseCompareQuery } from "@/lib/compare/comparison";
+import { compareHref, MAX_COMPARED, parseCompareQuery, type Comparison } from "@/lib/compare/comparison";
 import { getCompare } from "@/lib/compare/get-compare";
 import { countryLabels, platformLabels } from "@/lib/overview/filters";
 
@@ -18,14 +20,22 @@ interface ComparePageProps {
 const fieldClass =
   "h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-accent";
 
+function comparisonDescription(comparison: Comparison): string {
+  if (comparison.games.length === 0) return "Pick 2 to 4 games";
+  if (comparison.mixedStores || comparison.mixedCountries) {
+    return "Mixed storefronts: raw counts are shown per store and are not directly comparable";
+  }
+  return "Same storefront: values are measured the same way";
+}
+
 export default async function ComparePage({ searchParams }: ComparePageProps) {
-  await requireUser("/compare");
+  await requireUser("/games/compare");
   const query = parseCompareQuery(await searchParams);
   const { asOf, comparison, results } = await getCompare(query);
   const full = query.ids.length >= MAX_COMPARED;
 
   return (
-    <AppShell filters={query} active="compare" buildHref={(change) => compareHref(query, change)}>
+    <AppShell filters={query} active="games" buildHref={(change) => compareHref(query, change)}>
       <div className="flex flex-col gap-1">
         <h1 className="text-[22px] font-semibold tracking-tight">Compare</h1>
         <p className="text-[13px] text-dim">
@@ -33,11 +43,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         </p>
       </div>
 
+      <GamesTabs active="compare" filters={query} compareIds={query.ids} />
+
       <Panel
         title="Add a game"
         description={`Searching ${countryLabels[query.country]} · ${platformLabels[query.platform]}; change the storefront in the top bar`}
       >
-        <form method="get" action="/compare" role="search" className="flex flex-wrap items-end gap-2 border-t border-line-soft px-4 py-3">
+        <form method="get" action="/games/compare" role="search" className="flex flex-wrap items-end gap-2 border-t border-line-soft px-4 py-3">
           {query.ids.length > 0 ? <input type="hidden" name="ids" value={query.ids.join(",")} /> : null}
           {query.country !== "id" ? <input type="hidden" name="country" value={query.country} /> : null}
           {query.platform !== "all" ? <input type="hidden" name="platform" value={query.platform} /> : null}
@@ -97,16 +109,24 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
       <Panel
         title="Comparison"
-        description={
-          comparison.mixedStores || comparison.mixedCountries
-            ? "Mixed storefronts: raw counts are shown per store and are not directly comparable"
-            : "Same storefront: values are measured the same way"
+        description={comparisonDescription(comparison)}
+        action={
+          query.ids.length > 0 ? (
+            <Link
+              href={compareHref(query, { ids: [], q: "" })}
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt hover:text-ink"
+            >
+              <RotateCcw aria-hidden className="size-3.5" />
+              Reset
+              <span className="sr-only"> the comparison and remove all {query.ids.length} selected games</span>
+            </Link>
+          ) : null
         }
       >
         {comparison.games.length === 0 ? (
           <EmptyState title="No games selected">
-            Search above, or use “Compare” on a game page or the Watchlist. Links keep the selection, so a comparison can
-            be shared.
+            Tick “Compare” on rows in All games, search above, or use “Compare” on a game page. Links keep the selection,
+            so a comparison can be shared.
           </EmptyState>
         ) : (
           <ComparisonTable

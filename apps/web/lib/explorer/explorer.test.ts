@@ -90,6 +90,15 @@ describe("parseExplorerQuery", () => {
     assert.equal(parseExplorerQuery({ q: `  ${"x".repeat(100)}  ` }).q.length, 80);
   });
 
+  it("keeps the compare selection across filters, and keeps the page when only the selection changes", () => {
+    const id = "11111111-1111-4111-8111-111111111111";
+    const query = { ...parseExplorerQuery({ compare: `${id},bad`, genre: "puzzle" }), page: 3 };
+    assert.deepEqual(query.compare, [id]);
+    assert.equal(explorerHref(query, { compare: [] }), "/games?genre=puzzle&page=3");
+    assert.equal(explorerHref(query, { genre: undefined }), `/games?compare=${id}`);
+    assert.equal(explorerHref(query, clearedExplorerFilters), `/games?compare=${id}`);
+  });
+
   it("builds short, shareable links that reset the page", () => {
     const query = { ...parseExplorerQuery({ genre: "puzzle", q: "merge" }), page: 3 };
     assert.equal(explorerHref(query, { sort: "name" }), "/games?q=merge&genre=puzzle&sort=name");

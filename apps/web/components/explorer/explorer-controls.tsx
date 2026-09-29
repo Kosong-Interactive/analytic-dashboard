@@ -108,6 +108,7 @@ export function ExplorerControls({ query, options }: { query: ExplorerQuery; opt
         {query.country !== "id" ? <input type="hidden" name="country" value={query.country} /> : null}
         {query.platform !== "all" ? <input type="hidden" name="platform" value={query.platform} /> : null}
         {query.sort !== "most_rated" ? <input type="hidden" name="sort" value={query.sort} /> : null}
+        {query.compare.length > 0 ? <input type="hidden" name="compare" value={query.compare.join(",")} /> : null}
 
         <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim sm:col-span-2 lg:col-span-2 xl:col-span-1">
           Title or developer

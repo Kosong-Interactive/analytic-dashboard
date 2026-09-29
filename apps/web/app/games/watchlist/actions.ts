@@ -14,7 +14,8 @@ export async function changeWatchlist(
   const input = watchlistFormInput(formData);
   const result = await applyWatchlistChange(input);
   if (result.ok) {
-    revalidatePath("/watchlist");
+    revalidatePath("/games/watchlist");
+    revalidatePath("/games");
     if (typeof input.storeAppId === "string") revalidatePath(`/games/${input.storeAppId}`);
   }
   return result;

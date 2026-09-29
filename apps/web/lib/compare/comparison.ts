@@ -11,17 +11,26 @@ export type CompareQuery = OverviewFilters & { ids: string[]; q: string };
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 
-/** `ids` may be repeated or comma-separated; invalid and duplicate ids are dropped, order is kept. */
-export function parseCompareQuery(params: RawSearchParams): CompareQuery {
-  const raw = params.ids;
+/** Ids may be repeated or comma-separated; invalid and duplicate ids are dropped, order is kept. */
+export function parseCompareIds(raw: string | string[] | undefined): string[] {
   const values = (Array.isArray(raw) ? raw : raw ? [raw] : []).flatMap((value) => value.split(","));
   const ids: string[] = [];
   for (const value of values) {
     const id = z.uuid().safeParse(value.trim());
     if (id.success && !ids.includes(id.data) && ids.length < MAX_COMPARED) ids.push(id.data);
   }
+  return ids;
+}
+
+/** Adds the id, or removes it when already selected. Adding beyond the cap is ignored. */
+export function toggleCompareId(ids: readonly string[], id: string): string[] {
+  if (ids.includes(id)) return ids.filter((other) => other !== id);
+  return ids.length >= MAX_COMPARED ? [...ids] : [...ids, id];
+}
+
+export function parseCompareQuery(params: RawSearchParams): CompareQuery {
   const q = Array.isArray(params.q) ? params.q[0] : params.q;
-  return { ...parseOverviewFilters(params), ids, q: (q ?? "").trim().slice(0, 80) };
+  return { ...parseOverviewFilters(params), ids: parseCompareIds(params.ids), q: (q ?? "").trim().slice(0, 80) };
 }
 
 export function compareHref(current: CompareQuery, change: Partial<CompareQuery>): string {
@@ -32,7 +41,7 @@ export function compareHref(current: CompareQuery, change: Partial<CompareQuery>
   if (next.platform !== "all") query.set("platform", next.platform);
   if (next.q) query.set("q", next.q);
   const text = query.toString();
-  return text ? `/compare?${text}` : "/compare";
+  return text ? `/games/compare?${text}` : "/games/compare";
 }
 
 /** Candidate row plus install ranges, which only Google Play publishes. */

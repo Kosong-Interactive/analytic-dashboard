@@ -34,7 +34,7 @@ export function watchlistHref(current: WatchlistQuery, change: Partial<Watchlist
   if (next.platform !== "all") query.set("platform", next.platform);
   if (next.view !== "active") query.set("view", next.view);
   const text = query.toString();
-  return text ? `/watchlist?${text}` : "/watchlist";
+  return text ? `/games/watchlist?${text}` : "/games/watchlist";
 }
 
 /** Structural subset of the database entry row, so this module is testable without a database. */

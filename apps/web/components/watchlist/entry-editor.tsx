@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { changeWatchlist, type WatchlistActionState } from "@/app/watchlist/actions";
+import { changeWatchlist, type WatchlistActionState } from "@/app/games/watchlist/actions";
 import { WATCHLIST_NOTE_MAX, watchlistStatusLabels, watchlistStatusValues, type WatchlistStatus } from "@/lib/watchlist/status";
 
 const initial: WatchlistActionState = { ok: null };

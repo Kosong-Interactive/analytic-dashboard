@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import type { MembershipRow } from "../labels/aggregate";
-import { buildComparison, compareHref, parseCompareQuery, searchCandidates, type CompareCandidate } from "./comparison";
+import {
+  buildComparison,
+  compareHref,
+  parseCompareQuery,
+  searchCandidates,
+  toggleCompareId,
+  type CompareCandidate,
+} from "./comparison";
 
 const asOf = new Date("2026-09-30T12:00:00Z");
 const ids = [
@@ -52,8 +59,16 @@ describe("parseCompareQuery", () => {
   it("builds shareable links", () => {
     const query = parseCompareQuery({ ids: ids[0]!, q: " merge " });
     assert.equal(query.q, "merge");
-    assert.equal(compareHref(query, { q: "" }), `/compare?ids=${ids[0]}`);
-    assert.equal(compareHref(query, { ids: [] , q: "" }), "/compare");
+    assert.equal(compareHref(query, { q: "" }), `/games/compare?ids=${ids[0]}`);
+    assert.equal(compareHref(query, { ids: [] , q: "" }), "/games/compare");
+  });
+});
+
+describe("toggleCompareId", () => {
+  it("adds, removes, and ignores additions past four", () => {
+    assert.deepEqual(toggleCompareId([ids[0]!], ids[1]!), [ids[0], ids[1]]);
+    assert.deepEqual(toggleCompareId([ids[0]!, ids[1]!], ids[0]!), [ids[1]]);
+    assert.deepEqual(toggleCompareId(ids.slice(0, 4), ids[4]!), ids.slice(0, 4));
   });
 });
 

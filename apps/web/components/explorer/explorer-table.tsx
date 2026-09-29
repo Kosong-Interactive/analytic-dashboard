@@ -8,8 +8,11 @@ import { cn } from "@/lib/utils";
 import { GameIcon } from "../games/game-icon";
 import { Rating } from "../games/game-table";
 import { ScoreBreakdown } from "../overview/score-breakdown";
+import { RowActions, type RowActionContext } from "./row-actions";
 
-const HEADERS = ["#", "Game", "Platform", "Category", "Genre", "Core mechanic", "Released", "Rating", "Ratings", "Trend score", "First seen"];
+const HEADERS = ["#", "Game", "Platform", "Category", "Genre · mechanic", "Released", "Rating", "Ratings", "Trend score", "First seen", "Action"];
+/** Hidden until there is room, so the Action column always stays visible. */
+const WIDE_ONLY = new Set(["First seen"]);
 const RIGHT_ALIGNED = new Set(["Rating", "Ratings"]);
 
 function releaseText(row: ExplorerRow): string {
@@ -39,15 +42,25 @@ function GameLink({ row }: { row: ExplorerRow }) {
     <Link href={`/games/${row.id}`} className="flex min-w-0 items-center gap-2.5 hover:underline">
       <GameIcon title={row.title} iconUrl={row.iconUrl} size={28} />
       <span className="flex min-w-0 flex-col">
-        <span className="max-w-[16rem] truncate font-medium">{row.title}</span>
-        <span className="max-w-[16rem] truncate text-[11.5px] text-dim">{row.developer ?? "Unknown developer"}</span>
+        <span className="max-w-[13rem] truncate font-medium">{row.title}</span>
+        <span className="max-w-[13rem] truncate text-[11.5px] text-dim">{row.developer ?? "Unknown developer"}</span>
       </span>
     </Link>
   );
 }
 
 /** A table from `lg` up and a stack of cards below it, so small screens never need sideways scrolling. */
-export function ExplorerTable({ rows, caption, asOf }: { rows: ExplorerRow[]; caption: string; asOf: Date }) {
+export function ExplorerTable({
+  rows,
+  caption,
+  asOf,
+  actions,
+}: {
+  rows: ExplorerRow[];
+  caption: string;
+  asOf: Date;
+  actions: RowActionContext;
+}) {
   return (
     <>
       <div className="hidden lg:block lg:overflow-x-auto">
@@ -64,6 +77,7 @@ export function ExplorerTable({ rows, caption, asOf }: { rows: ExplorerRow[]; ca
                     index === 0 && "pl-4",
                     index === HEADERS.length - 1 && "pr-4",
                     RIGHT_ALIGNED.has(header) ? "text-right" : "text-left",
+                    WIDE_ONLY.has(header) && "hidden 2xl:table-cell",
                   )}
                 >
                   {header}
@@ -78,13 +92,13 @@ export function ExplorerTable({ rows, caption, asOf }: { rows: ExplorerRow[]; ca
                 <td><GameLink row={row} /></td>
                 <td className="whitespace-nowrap text-[11.5px] text-ink-soft">{platformLabels[row.store]}</td>
                 <td className="max-w-[8rem] truncate text-[11.5px] text-ink-soft">{row.category ?? "—"}</td>
-                <td className="max-w-[10rem]"><Labels labels={row.genres} /></td>
-                <td className="max-w-[10rem]"><Labels labels={row.mechanics} /></td>
+                <td className="max-w-[12rem]"><Labels labels={[...row.genres, ...row.mechanics]} /></td>
                 <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
                 <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
                 <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
                 <td><ScoreBreakdown row={row} /></td>
-                <td className="whitespace-nowrap pr-4 text-xs text-dim">{formatRelative(row.firstSeenAt, asOf)}</td>
+                <td className="hidden whitespace-nowrap text-xs text-dim 2xl:table-cell">{formatRelative(row.firstSeenAt, asOf)}</td>
+                <td className="pr-4"><RowActions id={row.id} title={row.title} context={actions} /></td>
               </tr>
             ))}
           </tbody>
@@ -123,6 +137,9 @@ export function ExplorerTable({ rows, caption, asOf }: { rows: ExplorerRow[]; ca
             </dl>
             <div className="pl-[32px]">
               <ScoreBreakdown row={row} />
+            </div>
+            <div className="pl-[32px]">
+              <RowActions id={row.id} title={row.title} context={actions} />
             </div>
           </li>
         ))}

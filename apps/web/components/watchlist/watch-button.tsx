@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { changeWatchlist, type WatchlistActionState } from "@/app/watchlist/actions";
+import { changeWatchlist, type WatchlistActionState } from "@/app/games/watchlist/actions";
 import { watchlistStatusLabels, type WatchlistStatus } from "@/lib/watchlist/status";
 
 const initial: WatchlistActionState = { ok: null };
@@ -27,7 +27,7 @@ export function WatchButton({ storeAppId, status }: { storeAppId: string; status
         </button>
       ) : (
         <>
-          <Link href="/watchlist" className="text-xs text-ink-soft underline-offset-2 hover:underline">
+          <Link href="/games/watchlist" className="text-xs text-ink-soft underline-offset-2 hover:underline">
             On watchlist · {watchlistStatusLabels[status]}
           </Link>
           <button
@@ -42,7 +42,7 @@ export function WatchButton({ storeAppId, status }: { storeAppId: string; status
         </>
       )}
       <Link
-        href={`/compare?ids=${storeAppId}`}
+        href={`/games/compare?ids=${storeAppId}`}
         className="h-7 rounded-md border border-line-strong px-2 text-[11px] leading-7 text-ink-soft hover:bg-surface hover:text-ink"
       >
         Compare

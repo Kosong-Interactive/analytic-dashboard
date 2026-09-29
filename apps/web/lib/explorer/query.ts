@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { parseCompareIds } from "../compare/comparison";
 import { parseOverviewFilters, type OverviewFilters } from "../overview/filters";
 
 export const explorerSortValues = ["most_rated", "rating", "score", "newest", "released", "name"] as const;
@@ -92,6 +93,8 @@ export type ExplorerQuery = OverviewFilters & {
   labels: LabelStatusFilter;
   sort: ExplorerSort;
   page: number;
+  /** Games picked for Compare; kept across filters and pages. */
+  compare: string[];
 };
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
@@ -111,14 +114,24 @@ export function parseExplorerQuery(params: RawSearchParams): ExplorerQuery {
     sort: first(params.sort),
     page: first(params.page),
   });
-  return { ...parseOverviewFilters(params), ...parsed, genre: parsed.genre, mechanic: parsed.mechanic };
+  return {
+    ...parseOverviewFilters(params),
+    ...parsed,
+    genre: parsed.genre,
+    mechanic: parsed.mechanic,
+    compare: parseCompareIds(params.compare),
+  };
 }
 
-/** Builds a shareable URL. Defaults are omitted and any filter change returns to page 1. */
+/**
+ * Builds a shareable URL. Defaults are omitted and any filter change returns to page 1, except a
+ * change to the compare selection, which keeps the page so picking games does not jump around.
+ */
 export function explorerHref(current: ExplorerQuery, change: Partial<ExplorerQuery>): string {
+  const keepsPage = change.page !== undefined || Object.keys(change).every((key) => key === "compare");
   const next: ExplorerQuery = {
     ...current,
-    ...(change.page === undefined ? { page: 1 } : {}),
+    ...(keepsPage ? {} : { page: 1 }),
     ...change,
   };
   const query = new URLSearchParams();
@@ -134,6 +147,7 @@ export function explorerHref(current: ExplorerQuery, change: Partial<ExplorerQue
   if (next.labels !== "any") query.set("labels", next.labels);
   if (next.sort !== "most_rated") query.set("sort", next.sort);
   if (next.page !== 1) query.set("page", String(next.page));
+  if (next.compare.length > 0) query.set("compare", next.compare.join(","));
   const text = query.toString();
   return text ? `/games?${text}` : "/games";
 }

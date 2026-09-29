@@ -107,10 +107,15 @@ Latest committed feature commit at handoff: `1cdbe78 feat: add manual label over
 - `/mechanics` — core/meta/theme/multiplayer roll-ups.
 - `/games` — Explorer: URL filters for text, store category, genre, core mechanic, release date,
   rating, momentum, and classification status; stable sorting, pagination, store freshness.
-- `/watchlist` — team-shared entries (`watchlist_entries`, migration `0002`, applied) with status,
+- `/games/watchlist` — team-shared entries (`watchlist_entries`, migration `0002`, applied) with status,
   note, actor/timestamps, and movement since added. Game detail has Add to watchlist / Compare.
-- `/compare` — up to four listings via `?ids=`, each storefront cohort loaded once, mixed-store
-  cautions, shared-label highlighting, search to add.
+- `/games/compare` — up to four listings via `?ids=`, each storefront cohort loaded once, mixed-store
+  cautions, shared-label highlighting, search to add, Reset.
+- Watchlist and Compare live inside Games (tabs All games / Watchlist / Compare, no sidebar items).
+  Each Games row has a watchlist star (optimistic) and a Compare toggle; the selection is kept in
+  `?compare=` and shown in a sticky tray.
+- Search: Cmd/Ctrl+K palette in the top bar over `GET /api/search` (signed-in, no-store), plus
+  `/search` for full results. Signed-out `/api/*` requests get 401 JSON.
 
 Store icons use `next/image` with Apple and Google hosts allowed in `apps/web/next.config.ts`, with
 initials fallback. Analytical charts have textual/tabular equivalents.
@@ -165,14 +170,12 @@ priority over implementing them.
 
 ## Next dashboard work
 
-Games, Watchlist, and Compare are done. Remaining, in order:
+Games, Watchlist, Compare, and Search are done. Remaining, in order:
 
-1. **Search / command palette** — search stored games, developers, and taxonomy labels; navigate
-   to existing pages; never start collectors or AI jobs.
-2. Final navigation, responsive, accessibility, and browser-flow pass. The Games, Watchlist, and
-   Compare pages were verified with unit tests, a production build, and read-only probes against
-   Supabase, but not yet in a signed-in browser session.
-3. Only then Automated Game Research / Steam, and the Vercel deployment.
+1. Final navigation, responsive, accessibility, and browser-flow pass. Games, Compare, the
+   watchlist star, Reset, and the Cmd+K palette were exercised in a signed-in Chrome session;
+   the Watchlist page editor and mobile layouts still need a pass.
+2. Only then Automated Game Research / Steam, and the Vercel deployment.
 
 Design reference for current pages:
 
