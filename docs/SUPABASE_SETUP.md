@@ -69,6 +69,28 @@ The publishable key is intentionally safe to ship to a browser only when Row Lev
 9. Verify browser clients cannot access collector jobs, raw payloads, secrets, or internal operational tables.
 10. Record the chosen project reference and region in private deployment configuration, not in public docs if the team treats them as sensitive.
 
-## Not needed yet
+## Running the Phase 0.2 migration
 
-No Supabase input is required while the repository contains only planning and agent configuration. Ask for the values only when Phase 0 scaffolding is ready to connect and migrate the database.
+1. At the repository root, copy `.env.example` to `.env.local`.
+2. In the Supabase project, click **Connect** and copy a database connection URI.
+3. Replace the password placeholder locally. Do not paste the completed URI into chat.
+4. Set `DATABASE_URL` to the transaction-pooler URI for future serverless queries.
+5. Set `DIRECT_URL` to a direct URI when IPv6 is available, or a session-pooler URI when it is not. If only one connection is available, leave `DIRECT_URL` empty and migrations will use `DATABASE_URL`.
+6. Generate and verify the checked-in SQL migration:
+
+   ```bash
+   npm run db:generate
+   npm run db:check
+   ```
+
+7. Apply pending migrations:
+
+   ```bash
+   npm run db:migrate
+   npm run db:verify
+   ```
+
+8. In **Table Editor**, verify the nine initial tables exist: `apps`, `store_apps`, `app_snapshots`, `chart_entries`, `reviews`, `taxonomy_labels`, `app_labels`, `collector_runs`, and `jobs`.
+9. Verify Row Level Security is enabled for all nine tables. The initial migration intentionally creates no public policies; browser clients must not have direct access to internal collector data.
+
+The checked-in migration can be generated and validated without a live database. Applying it to Supabase requires `DIRECT_URL` or `DATABASE_URL`; the public project URL and publishable key cannot run database migrations.

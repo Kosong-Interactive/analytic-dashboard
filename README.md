@@ -19,8 +19,17 @@ npm run build
 npm run check
 ```
 
-The Next.js application lives in `apps/web`. Database and collector work will be added in subsequent Phase 0 steps.
+The Next.js application lives in `apps/web`. The Drizzle schema and SQL migrations live in `packages/db`.
 
 Copy `apps/web/.env.example` to `apps/web/.env.local` when Phase 0.2 connects Supabase. Never commit `.env.local`.
+
+For database migrations, copy the root `.env.example` to `.env.local`, add `DIRECT_URL` or `DATABASE_URL`, then run:
+
+```bash
+npm run db:generate
+npm run db:check
+npm run db:migrate
+npm run db:verify
+```
 
 See `docs/MVP_IMPLEMENTATION_PLAN.md` for product scope and architecture.

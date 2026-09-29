@@ -1,0 +1,370 @@
+import { sql } from "drizzle-orm";
+import {
+  bigint,
+  boolean,
+  check,
+  index,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+
+const timestamps = {
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+};
+
+export const storeEnum = pgEnum("store", ["app_store", "google_play"]);
+
+export const labelTypeEnum = pgEnum("label_type", [
+  "genre",
+  "subgenre",
+  "core_mechanic",
+  "meta_mechanic",
+  "theme",
+  "multiplayer_mode",
+  "monetization_clue",
+]);
+
+export const labelSourceEnum = pgEnum("label_source", [
+  "rule",
+  "ai",
+  "manual",
+]);
+
+export const collectorRunStatusEnum = pgEnum("collector_run_status", [
+  "running",
+  "succeeded",
+  "partial",
+  "failed",
+  "cancelled",
+]);
+
+export const jobStatusEnum = pgEnum("job_status", [
+  "pending",
+  "running",
+  "succeeded",
+  "failed",
+  "cancelled",
+]);
+
+export const apps = pgTable(
+  "apps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    canonicalName: text("canonical_name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    developerName: text("developer_name"),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("apps_normalized_name_idx").on(table.normalizedName),
+    index("apps_first_seen_at_idx").on(table.firstSeenAt),
+  ],
+).enableRLS();
+
+export const storeApps = pgTable(
+  "store_apps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => apps.id, { onDelete: "restrict" }),
+    store: storeEnum("store").notNull(),
+    externalId: text("external_id").notNull(),
+    country: varchar("country", { length: 2 }).notNull(),
+    locale: varchar("locale", { length: 16 }).notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    developerName: text("developer_name"),
+    developerExternalId: text("developer_external_id"),
+    storeCategory: text("store_category"),
+    releaseDate: timestamp("release_date", { withTimezone: true }),
+    currentVersion: text("current_version"),
+    iconUrl: text("icon_url"),
+    storeUrl: text("store_url").notNull(),
+    metadataHash: text("metadata_hash").notNull(),
+    rawMetadata: jsonb("raw_metadata"),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("store_apps_listing_uidx").on(
+      table.store,
+      table.externalId,
+      table.country,
+      table.locale,
+    ),
+    index("store_apps_app_id_idx").on(table.appId),
+    index("store_apps_release_date_idx").on(table.releaseDate),
+    index("store_apps_last_seen_at_idx").on(table.lastSeenAt),
+    check("store_apps_country_lowercase_chk", sql`${table.country} = lower(${table.country})`),
+  ],
+).enableRLS();
+
+export const appSnapshots = pgTable(
+  "app_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    storeAppId: uuid("store_app_id")
+      .notNull()
+      .references(() => storeApps.id, { onDelete: "cascade" }),
+    capturedAt: timestamp("captured_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    rating: numeric("rating", { precision: 3, scale: 2 }),
+    ratingCount: bigint("rating_count", { mode: "number" }),
+    reviewCount: bigint("review_count", { mode: "number" }),
+    minInstalls: bigint("min_installs", { mode: "number" }),
+    maxInstalls: bigint("max_installs", { mode: "number" }),
+    price: numeric("price", { precision: 12, scale: 2 }),
+    currency: varchar("currency", { length: 3 }),
+    version: text("version"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("app_snapshots_store_app_captured_uidx").on(
+      table.storeAppId,
+      table.capturedAt,
+    ),
+    index("app_snapshots_captured_at_idx").on(table.capturedAt),
+    check(
+      "app_snapshots_rating_range_chk",
+      sql`${table.rating} is null or (${table.rating} >= 0 and ${table.rating} <= 5)`,
+    ),
+    check(
+      "app_snapshots_counts_nonnegative_chk",
+      sql`coalesce(${table.ratingCount}, 0) >= 0 and coalesce(${table.reviewCount}, 0) >= 0`,
+    ),
+    check(
+      "app_snapshots_installs_range_chk",
+      sql`coalesce(${table.minInstalls}, 0) >= 0 and (${table.maxInstalls} is null or ${table.maxInstalls} >= coalesce(${table.minInstalls}, 0))`,
+    ),
+    check(
+      "app_snapshots_price_nonnegative_chk",
+      sql`${table.price} is null or ${table.price} >= 0`,
+    ),
+  ],
+).enableRLS();
+
+export const chartEntries = pgTable(
+  "chart_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    storeAppId: uuid("store_app_id")
+      .notNull()
+      .references(() => storeApps.id, { onDelete: "cascade" }),
+    chartType: text("chart_type").notNull(),
+    category: text("category").default("all").notNull(),
+    country: varchar("country", { length: 2 }).notNull(),
+    rank: integer("rank").notNull(),
+    capturedAt: timestamp("captured_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("chart_entries_observation_uidx").on(
+      table.storeAppId,
+      table.chartType,
+      table.category,
+      table.country,
+      table.capturedAt,
+    ),
+    index("chart_entries_cohort_idx").on(
+      table.country,
+      table.chartType,
+      table.category,
+      table.capturedAt,
+    ),
+    check("chart_entries_rank_positive_chk", sql`${table.rank} > 0`),
+    check("chart_entries_country_lowercase_chk", sql`${table.country} = lower(${table.country})`),
+  ],
+).enableRLS();
+
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    storeAppId: uuid("store_app_id")
+      .notNull()
+      .references(() => storeApps.id, { onDelete: "cascade" }),
+    externalReviewId: text("external_review_id").notNull(),
+    rating: smallint("rating").notNull(),
+    reviewText: text("review_text"),
+    reviewDate: timestamp("review_date", { withTimezone: true }).notNull(),
+    locale: varchar("locale", { length: 16 }).notNull(),
+    collectedAt: timestamp("collected_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("reviews_store_external_uidx").on(
+      table.storeAppId,
+      table.externalReviewId,
+    ),
+    index("reviews_store_app_review_date_idx").on(
+      table.storeAppId,
+      table.reviewDate,
+    ),
+    check("reviews_rating_range_chk", sql`${table.rating} between 1 and 5`),
+  ],
+).enableRLS();
+
+export const taxonomyLabels = pgTable(
+  "taxonomy_labels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    type: labelTypeEnum("type").notNull(),
+    slug: text("slug").notNull(),
+    displayName: text("display_name").notNull(),
+    description: text("description"),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("taxonomy_labels_version_type_slug_uidx").on(
+      table.taxonomyVersion,
+      table.type,
+      table.slug,
+    ),
+  ],
+).enableRLS();
+
+export const appLabels = pgTable(
+  "app_labels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => apps.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => taxonomyLabels.id, { onDelete: "restrict" }),
+    source: labelSourceEnum("source").notNull(),
+    confidence: numeric("confidence", { precision: 4, scale: 3 }).notNull(),
+    evidence: jsonb("evidence").default([]).notNull(),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    promptVersion: text("prompt_version").default("none").notNull(),
+    model: text("model"),
+    inputHash: text("input_hash").default("manual").notNull(),
+    isManualOverride: boolean("is_manual_override").default(false).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("app_labels_provenance_uidx").on(
+      table.appId,
+      table.labelId,
+      table.source,
+      table.taxonomyVersion,
+      table.promptVersion,
+      table.inputHash,
+    ),
+    index("app_labels_app_id_idx").on(table.appId),
+    check(
+      "app_labels_confidence_range_chk",
+      sql`${table.confidence} >= 0 and ${table.confidence} <= 1`,
+    ),
+  ],
+).enableRLS();
+
+export const collectorRuns = pgTable(
+  "collector_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    source: storeEnum("source").notNull(),
+    jobType: text("job_type").notNull(),
+    country: varchar("country", { length: 2 }).notNull(),
+    locale: varchar("locale", { length: 16 }).notNull(),
+    status: collectorRunStatusEnum("status").default("running").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    discoveredCount: integer("discovered_count").default(0).notNull(),
+    changedCount: integer("changed_count").default(0).notNull(),
+    retryCount: integer("retry_count").default(0).notNull(),
+    errorCount: integer("error_count").default(0).notNull(),
+    errorSample: text("error_sample"),
+    metadata: jsonb("metadata").default({}).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("collector_runs_health_idx").on(
+      table.source,
+      table.country,
+      table.jobType,
+      table.startedAt,
+    ),
+    check(
+      "collector_runs_counts_nonnegative_chk",
+      sql`${table.discoveredCount} >= 0 and ${table.changedCount} >= 0 and ${table.retryCount} >= 0 and ${table.errorCount} >= 0`,
+    ),
+    check("collector_runs_country_lowercase_chk", sql`${table.country} = lower(${table.country})`),
+  ],
+).enableRLS();
+
+export const jobs = pgTable(
+  "jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    type: text("type").notNull(),
+    payload: jsonb("payload").notNull(),
+    status: jobStatusEnum("status").default("pending").notNull(),
+    attempts: integer("attempts").default(0).notNull(),
+    maxAttempts: integer("max_attempts").default(5).notNull(),
+    availableAt: timestamp("available_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lockedBy: text("locked_by"),
+    idempotencyKey: text("idempotency_key").notNull(),
+    lastError: text("last_error"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("jobs_idempotency_key_uidx").on(table.idempotencyKey),
+    index("jobs_lease_idx").on(table.status, table.availableAt, table.lockedAt),
+    check(
+      "jobs_attempts_range_chk",
+      sql`${table.attempts} >= 0 and ${table.maxAttempts} > 0 and ${table.attempts} <= ${table.maxAttempts}`,
+    ),
+  ],
+).enableRLS();
+
+export type App = typeof apps.$inferSelect;
+export type NewApp = typeof apps.$inferInsert;
+export type StoreApp = typeof storeApps.$inferSelect;
+export type NewStoreApp = typeof storeApps.$inferInsert;
+export type AppSnapshot = typeof appSnapshots.$inferSelect;
+export type NewAppSnapshot = typeof appSnapshots.$inferInsert;
