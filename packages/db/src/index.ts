@@ -49,3 +49,16 @@ export {
   type GameSiblingListing,
   type GameSnapshotRow,
 } from "./queries/game-history";
+export {
+  loadRuleInputHashes,
+  replaceRuleLabels,
+  syncTaxonomyLabels,
+  type LabelType,
+  type RuleLabelRow,
+  type TaxonomyLabelInput,
+} from "./repositories/classification";
+export {
+  loadClassificationInputs,
+  type ClassificationInputRow,
+  type ClassificationListingRow,
+} from "./queries/classification-inputs";

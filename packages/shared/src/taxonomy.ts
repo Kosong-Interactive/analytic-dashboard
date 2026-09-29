@@ -31,7 +31,8 @@ const assignmentBaseSchema = z.object({
 export const appLabelAssignmentSchema = z.discriminatedUnion("source", [
   assignmentBaseSchema.extend({
     source: z.literal("rule"),
-    promptVersion: z.null(),
+    /** Rules version (e.g. `rules-v1`), so a rule change is traceable per label. */
+    promptVersion: z.string().trim().min(1),
     model: z.null(),
     isManualOverride: z.literal(false),
   }),

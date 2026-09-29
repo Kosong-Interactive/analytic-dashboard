@@ -55,3 +55,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SOURCE: ${{ inputs.source }}
           COUNTRY: ${{ inputs.country }}
+
+      # Runs even when discovery reported errors, so games that were stored still get labels.
+      # Unchanged apps are skipped by input hash, so this is cheap after the first run.
+      - name: Classify games with rules
+        if: ${{ !cancelled() }}
+        run: npm run classify --workspace @analytic-dashboard/collector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

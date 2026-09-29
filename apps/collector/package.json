@@ -7,11 +7,13 @@
     "build": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts",
+    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts src/jobs/classification.test.ts",
     "typecheck": "tsc --noEmit",
-    "discover": "tsx src/index.ts discover"
+    "discover": "tsx src/index.ts discover",
+    "classify": "tsx src/index.ts classify"
   },
   "dependencies": {
+    "@analytic-dashboard/classifier": "0.0.0",
     "@analytic-dashboard/collectors": "0.0.0",
     "@analytic-dashboard/db": "0.0.0",
     "@analytic-dashboard/shared": "0.0.0",

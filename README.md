@@ -57,6 +57,14 @@ GitHub tidak menjamin ketepatan jadwal, jadi run bisa telat beberapa menit atau 
   kesegarannya tampil di panel **Data coverage** di Overview.
 - Butuh repository secret `DATABASE_URL` (Settings → Secrets and variables → Actions).
 
+Setelah discovery, workflow yang sama menjalankan **klasifikasi rule**: setiap game diberi label
+genre, subgenre, mechanic, tema, mode multiplayer, dan petunjuk monetisasi dari taxonomy
+`config/taxonomy/v1.json`. Game yang datanya tidak berubah dilewati. Manual:
+
+```bash
+npm run classify --workspace @analytic-dashboard/collector -- --dry-run
+```
+
 Dashboard hanya **membaca** database. Membuka halaman tidak pernah memicu pengambilan data.
 
 ## Trend Score

@@ -12,7 +12,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
     "db:verify": "tsx src/verify.ts",
-    "test": "tsx --test src/repositories/snapshot-policy.test.ts src/repositories/store-app-persistence.integration.test.ts src/queries/trend-inputs.integration.test.ts",
+    "test": "tsx --test src/repositories/snapshot-policy.test.ts src/repositories/store-app-persistence.integration.test.ts src/queries/trend-inputs.integration.test.ts src/repositories/classification.integration.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

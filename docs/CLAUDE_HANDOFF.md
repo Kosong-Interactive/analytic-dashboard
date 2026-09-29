@@ -63,6 +63,8 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - New Releases (`/new-releases`): store release date inside a 7/30/90-day window (never discovery time); few rows today because discovery favours chart and keyword games.
 - Store icons render through `next/image` (`*.mzstatic.com`, `play-lh.googleusercontent.com` in `next.config.ts`), falling back to initials.
 - Discovery seeds `mvp-v2` (22 Apple terms × 50, Google TOP_FREE/TOP_PAID/GROSSING × 25): dry run for `id` found 801 Apple + 68 Google games in 77 s. Apple requests are spaced 3 s apart. Runs record `metadata.seedVersion`.
+- Phase 3 rules are wired to the database: `npm run classify --workspace @analytic-dashboard/collector` syncs `taxonomy_labels` (taxonomy-v1) and writes rule labels to `app_labels` with `prompt_version = rules-v1`, the input hash, and evidence. Unchanged hashes are skipped; a changed app's old rule labels are replaced, AI/manual labels never touched. First live run: 1,320 apps, 8,066 labels; second run wrote nothing. It runs in `collect.yml` after discovery.
+- Rule confidence: store genre/price 0.95, title keyword 0.8, repeated description keyword 0.7, single mention 0.55 (hide below 0.6 in UI).
 - Next: Phase 3 classification (taxonomy, rules, AI provider) to unlock Genres/Mechanics.
 
 ## Known gaps / next

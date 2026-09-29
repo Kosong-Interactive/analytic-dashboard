@@ -1,3 +1,4 @@
+import { runClassifyCommand } from "./commands/classify.js";
 import { runDiscoverCommand } from "./commands/discover.js";
 import { createCollectorDescriptor } from "./descriptor.js";
 
@@ -18,6 +19,18 @@ if (command === "info") {
     console.error(
       JSON.stringify({
         event: "discovery.failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+    process.exitCode = 1;
+  }
+} else if (command === "classify") {
+  try {
+    process.exitCode = await runClassifyCommand(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "classification.failed",
         message: error instanceof Error ? error.message : "Unknown error",
       }),
     );

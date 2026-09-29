@@ -103,6 +103,12 @@ describe("classification contracts", () => {
     );
   });
 
+  it("requires rule labels to record the rules version", () => {
+    const rule = { ...baseAssignment, source: "rule", model: null, isManualOverride: false };
+    assert.equal(appLabelAssignmentSchema.safeParse({ ...rule, promptVersion: "rules-v1" }).success, true);
+    assert.equal(appLabelAssignmentSchema.safeParse({ ...rule, promptVersion: null }).success, false);
+  });
+
   it("requires manual assignments to be marked as overrides", () => {
     assert.equal(
       appLabelAssignmentSchema.safeParse({
