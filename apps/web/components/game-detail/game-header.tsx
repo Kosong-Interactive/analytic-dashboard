@@ -1,7 +1,7 @@
 import { ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-import { initials } from "@/lib/format/format";
+import { GameIcon } from "../games/game-icon";
 import type { GameDetailView } from "@/lib/games/view-model";
 import { countryLabels, platformLabels } from "@/lib/overview/filters";
 
@@ -21,12 +21,7 @@ export function GameHeader({ view }: { view: GameDetailView }) {
       </nav>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <span
-          aria-hidden
-          className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-accent/80 font-mono text-lg font-medium text-canvas"
-        >
-          {initials(listing.title)}
-        </span>
+        <GameIcon title={listing.title} iconUrl={listing.iconUrl} size={56} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h1 className="text-[22px] font-semibold tracking-tight">{listing.title}</h1>

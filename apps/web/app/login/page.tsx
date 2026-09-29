@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mb-6 flex items-center gap-3">
           <Image src="/kosong-interactive.png" alt="" width={40} height={40} priority />
           <div className="flex flex-col gap-1">
-            <h1 className="text-[15px] font-semibold leading-none">GAME ANALYTIC</h1>
+            <h1 className="text-[15px] font-semibold leading-none">Game Analytic</h1>
             <p className="text-xs leading-none text-dim">by Kosong Interactive</p>
           </div>
         </div>

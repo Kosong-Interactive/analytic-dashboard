@@ -21,6 +21,7 @@ function candidate(id: string, overrides: Partial<OverviewCandidate> = {}): Over
     title: `Game ${id}`,
     developerName: "Dev",
     storeCategory: "GAME_PUZZLE",
+    iconUrl: null,
     storeUrl: `https://example.com/${id}`,
     releaseDate: null,
     firstSeenAt: hoursAgo(72),

@@ -1,10 +1,11 @@
 import { Star } from "lucide-react";
 import Link from "next/link";
 
-import { formatCount, formatRelative, initials } from "@/lib/format/format";
+import { formatCount, formatRelative } from "@/lib/format/format";
 import { platformLabels } from "@/lib/overview/filters";
 import type { OverviewData } from "@/lib/overview/view-model";
 
+import { GameIcon } from "../games/game-icon";
 import { EmptyState, Panel } from "./panel";
 
 export function DiscoveredList({ data }: { data: OverviewData }) {
@@ -27,12 +28,7 @@ export function DiscoveredList({ data }: { data: OverviewData }) {
               key={game.id}
               className="flex items-center gap-3 border-t border-line-soft px-4 py-2.5"
             >
-              <span
-                aria-hidden
-                className="flex size-[34px] shrink-0 items-center justify-center rounded-lg bg-accent/80 font-mono text-xs font-medium text-canvas"
-              >
-                {initials(game.title)}
-              </span>
+              <GameIcon title={game.title} iconUrl={game.iconUrl} size={34} />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <div className="flex items-center gap-2">
                   <Link href={`/games/${game.id}`} className="truncate font-medium hover:underline">

@@ -20,6 +20,7 @@ export interface OverviewCandidate {
   developerName: string | null;
   storeCategory: string | null;
   storeUrl: string;
+  iconUrl: string | null;
   releaseDate: Date | null;
   firstSeenAt: Date;
   snapshots: ReadonlyArray<{
@@ -51,6 +52,7 @@ export interface TrendingRow {
   id: string;
   rank: number;
   title: string;
+  iconUrl: string | null;
   developer: string | null;
   store: "app_store" | "google_play";
   country: string;
@@ -74,6 +76,7 @@ export interface TrendingRow {
 export interface DiscoveredRow {
   id: string;
   title: string;
+  iconUrl: string | null;
   developer: string | null;
   store: "app_store" | "google_play";
   category: string | null;
@@ -167,6 +170,7 @@ export function buildOverview(input: {
       .map((candidate) => ({
         id: candidate.storeAppId,
         title: candidate.title,
+        iconUrl: candidate.iconUrl,
         developer: candidate.developerName,
         store: candidate.store,
         category: candidate.storeCategory,
@@ -227,6 +231,7 @@ export function toTrendingRow(
     id: candidate.storeAppId,
     rank,
     title: candidate.title,
+    iconUrl: candidate.iconUrl,
     developer: candidate.developerName,
     store: candidate.store,
     country: candidate.country,

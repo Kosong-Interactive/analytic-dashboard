@@ -60,7 +60,9 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - Auth: Supabase Auth email + password. `proxy.ts` refreshes the session and redirects to `/login`; every page also calls `requireUser()`. Users are created in the Supabase dashboard (sign-ups off); no app table is needed. Not yet verified with a real sign-in.
 - Trending Games page (`/trending`) is built with URL filters, sort, pagination; layouts are responsive (cards below `md`, mobile nav below `lg`).
 - Game Detail (`/games/[id]`, id = `store_apps.id`): metrics, ECharts step charts (ratings, rank, rating) with text summaries, score breakdown, and the source observations table that traces every score to stored snapshots. Query: `loadGameHistory` in `packages/db`.
-- Next: New Releases, then Genres/Mechanics after Phase 3.
+- New Releases (`/new-releases`): store release date inside a 7/30/90-day window (never discovery time); few rows today because discovery favours chart and keyword games.
+- Store icons render through `next/image` (`*.mzstatic.com`, `play-lh.googleusercontent.com` in `next.config.ts`), falling back to initials.
+- Next: Phase 3 classification (taxonomy, rules, AI provider) to unlock Genres/Mechanics.
 
 ## Known gaps / next
 

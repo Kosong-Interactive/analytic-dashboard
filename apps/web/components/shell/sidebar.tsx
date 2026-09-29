@@ -13,7 +13,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending" | "games";
+export type NavKey = "overview" | "trending" | "releases" | "games";
 
 interface NavItem {
   label: string;
@@ -26,7 +26,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { label: "Overview", icon: LayoutDashboard, key: "overview", href: "/" },
   { label: "Trending Games", icon: TrendingUp, key: "trending", href: "/trending" },
-  { label: "New Releases", icon: Zap },
+  { label: "New Releases", icon: Zap, key: "releases", href: "/new-releases" },
   { label: "Genres", icon: Layers },
   { label: "Mechanics", icon: SlidersHorizontal },
   { label: "Games", icon: Gamepad2 },
@@ -47,7 +47,7 @@ export function Sidebar({ active }: { active: NavKey }) {
         />
         <div className="flex flex-col gap-0.5">
           <span className="text-[13px] font-semibold leading-none">
-            GAME ANALYTIC
+            Game Analytic
           </span>
           <span className="text-[10.5px] leading-none text-dim">by Kosong Interactive</span>
         </div>

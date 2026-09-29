@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp, Minus, Star } from "lucide-react";
 
-import { formatCount, formatSigned, initials } from "@/lib/format/format";
+import { formatCount, formatSigned } from "@/lib/format/format";
 import { platformLabels } from "@/lib/overview/filters";
 import type { TrendingRow } from "@/lib/overview/view-model";
 import { cn } from "@/lib/utils";
 
 import { ScoreBreakdown } from "../overview/score-breakdown";
+import { GameIcon } from "./game-icon";
 
-const HEADERS: Array<{ label: string; align?: "right" }> = [
+type Header = { label: string; align?: "right" };
+
+const HEADERS: Header[] = [
   { label: "#" },
   { label: "Game" },
   { label: "Developer" },
@@ -56,19 +59,30 @@ function PerDay({ value }: { value: number | null }) {
 function GameLink({ row }: { row: TrendingRow }) {
   return (
     <Link href={`/games/${row.id}`} className="flex items-center gap-2.5 font-medium hover:underline">
-      <span
-        aria-hidden
-        className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-accent/80 font-mono text-[11px] font-medium text-canvas"
-      >
-        {initials(row.title)}
-      </span>
+      <GameIcon title={row.title} iconUrl={row.iconUrl} size={28} />
       <span className="max-w-[16rem] truncate">{row.title}</span>
     </Link>
   );
 }
 
 /** A table from `md` up and a stack of cards below it, so small screens never need sideways scrolling. */
-export function GameTable({ rows, caption }: { rows: TrendingRow[]; caption: string }) {
+const RELEASE_HEADER: Header = { label: "Released" };
+
+function releaseText(row: TrendingRow): string {
+  return row.releaseDate ? row.releaseDate.toISOString().slice(0, 10) : "—";
+}
+
+export function GameTable({
+  rows,
+  caption,
+  showRelease = false,
+}: {
+  rows: TrendingRow[];
+  caption: string;
+  /** Adds the store release date column, used by New Releases. */
+  showRelease?: boolean;
+}) {
+  const headers = showRelease ? [...HEADERS.slice(0, 4), RELEASE_HEADER, ...HEADERS.slice(4)] : HEADERS;
   return (
     <>
       <div className="hidden md:block md:overflow-x-auto xl:overflow-visible">
@@ -76,14 +90,14 @@ export function GameTable({ rows, caption }: { rows: TrendingRow[]; caption: str
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
-              {HEADERS.map((header, index) => (
+              {headers.map((header, index) => (
                 <th
                   key={header.label}
                   scope="col"
                   className={cn(
                     "whitespace-nowrap px-2 font-medium",
                     index === 0 && "pl-4",
-                    index === HEADERS.length - 1 && "pr-4",
+                    index === headers.length - 1 && "pr-4",
                     header.align === "right" ? "text-right" : "text-left",
                   )}
                 >
@@ -99,6 +113,9 @@ export function GameTable({ rows, caption }: { rows: TrendingRow[]; caption: str
                 <td><GameLink row={row} /></td>
                 <td className="max-w-[9rem] truncate text-dim">{row.developer ?? "—"}</td>
                 <td className="text-[11.5px] text-ink-soft">{platformLabels[row.store]}</td>
+                {showRelease ? (
+                  <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
+                ) : null}
                 <td className="max-w-[9rem] truncate text-[11.5px] text-ink-soft">{row.category ?? "—"}</td>
                 <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
                 <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
@@ -121,6 +138,7 @@ export function GameTable({ rows, caption }: { rows: TrendingRow[]; caption: str
                 <p className="truncate pl-[38px] text-[11.5px] text-dim">
                   {row.developer ?? "Unknown developer"} · {platformLabels[row.store]}
                   {row.category ? ` · ${row.category}` : ""}
+                  {showRelease ? ` · released ${releaseText(row)}` : ""}
                 </p>
               </div>
             </div>
