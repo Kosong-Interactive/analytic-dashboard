@@ -26,6 +26,19 @@ export function EntryEditor({
   return (
     <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="storeAppId" value={storeAppId} />
+      <label className="flex flex-col gap-1 text-[11px] text-dim">
+        <span>
+          Note <span className="sr-only">for {title}</span>
+        </span>
+        <textarea
+          name="note"
+          defaultValue={note ?? ""}
+          maxLength={WATCHLIST_NOTE_MAX}
+          rows={2}
+          placeholder="Why is this game worth watching?"
+          className="min-h-14 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-xs text-ink focus-visible:outline-2 focus-visible:outline-accent"
+        />
+      </label>
       <div className="flex flex-wrap items-end gap-2">
         <label className="flex flex-col gap-1 text-[11px] text-dim">
           Status
@@ -55,19 +68,6 @@ export function EntryEditor({
           </span>
         ) : null}
       </div>
-      <label className="flex flex-col gap-1 text-[11px] text-dim">
-        <span>
-          Note <span className="sr-only">for {title}</span>
-        </span>
-        <textarea
-          name="note"
-          defaultValue={note ?? ""}
-          maxLength={WATCHLIST_NOTE_MAX}
-          rows={2}
-          placeholder="Why is this game worth watching?"
-          className="min-h-14 rounded-md border border-line-strong bg-surface px-2 py-1.5 text-xs text-ink focus-visible:outline-2 focus-visible:outline-accent"
-        />
-      </label>
     </form>
   );
 }

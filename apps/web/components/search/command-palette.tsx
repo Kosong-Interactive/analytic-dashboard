@@ -127,7 +127,7 @@ export function CommandPalette() {
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
-      <Dialog.Trigger className="flex h-8 w-full min-w-0 items-center gap-2 rounded-md border border-line-strong bg-surface px-2.5 text-[13px] text-dim hover:text-ink focus-visible:outline-2 focus-visible:outline-accent sm:w-56">
+      <Dialog.Trigger className="flex h-8 w-full min-w-0 items-center gap-2 rounded-md border border-line-strong bg-surface px-2.5 text-[13px] text-dim hover:text-ink focus-visible:outline-2 focus-visible:outline-accent">
         <Search aria-hidden className="size-3.5 shrink-0" />
         <span className="flex-1 truncate text-left">Search games, developers, labels</span>
         <kbd className="hidden rounded border border-line-strong px-1 font-mono text-[10px] sm:inline">⌘K</kbd>

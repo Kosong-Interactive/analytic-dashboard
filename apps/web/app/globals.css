@@ -158,3 +158,10 @@ body {
     @apply font-sans;
   }
 }
+/* Horizontally scrollable rows on small screens keep scrolling but hide the bar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -27,21 +27,25 @@ export function RowActions({ id, title, context }: { id: string; title: string; 
           className="inline-flex h-7 items-center gap-1 rounded-md border border-line-strong px-2 text-[11px] text-dim opacity-50"
         >
           <GitCompare aria-hidden className="size-3" />
-          Compare
+          <span aria-hidden className="hidden sm:inline">
+            Compare
+          </span>
+          <span className="sr-only">Compare {title} is unavailable: four games are already selected</span>
         </span>
       ) : (
         <Link
           href={context.toggleCompareHref(id)}
           scroll={false}
-          aria-pressed={selected}
+          aria-label={selected ? `Remove ${title} from Compare` : `Add ${title} to Compare`}
           className={cn(
-            "inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] hover:bg-surface-alt",
+            "inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md border px-2 text-[11px] hover:bg-surface-alt",
             selected ? "border-accent/60 text-accent" : "border-line-strong text-ink-soft hover:text-ink",
           )}
         >
           {selected ? <Check aria-hidden className="size-3" /> : <GitCompare aria-hidden className="size-3" />}
-          Compare
-          <span className="sr-only">{selected ? ` (selected, remove ${title})` : ` ${title}`}</span>
+          <span aria-hidden className="hidden sm:inline">
+            Compare
+          </span>
         </Link>
       )}
     </div>

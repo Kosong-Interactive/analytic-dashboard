@@ -17,6 +17,7 @@ import {
   type ExplorerQuery,
 } from "@/lib/explorer/query";
 
+import { MobileDisclosure } from "../shell/mobile-disclosure";
 import { SegmentedLinks } from "../shell/segmented-links";
 
 const fieldClass =
@@ -98,50 +99,52 @@ export function ExplorerControls({ query, options }: { query: ExplorerQuery; opt
 
   return (
     <div className="flex flex-col gap-3">
-      <form
-        method="get"
-        action="/games"
-        role="search"
-        aria-label="Filter games"
-        className="grid grid-cols-1 gap-3 rounded-[10px] border border-line bg-surface p-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"
-      >
-        {query.country !== "id" ? <input type="hidden" name="country" value={query.country} /> : null}
-        {query.platform !== "all" ? <input type="hidden" name="platform" value={query.platform} /> : null}
-        {query.sort !== "most_rated" ? <input type="hidden" name="sort" value={query.sort} /> : null}
-        {query.compare.length > 0 ? <input type="hidden" name="compare" value={query.compare.join(",")} /> : null}
+      <MobileDisclosure label={chips.length > 0 ? `Filters (${chips.length} active)` : "Filters"}>
+        <form
+          method="get"
+          action="/games"
+          role="search"
+          aria-label="Filter games"
+          className="grid grid-cols-2 gap-3 rounded-[10px] border border-line bg-surface p-3 lg:grid-cols-4 xl:grid-cols-5"
+        >
+          {query.country !== "id" ? <input type="hidden" name="country" value={query.country} /> : null}
+          {query.platform !== "all" ? <input type="hidden" name="platform" value={query.platform} /> : null}
+          {query.sort !== "most_rated" ? <input type="hidden" name="sort" value={query.sort} /> : null}
+          {query.compare.length > 0 ? <input type="hidden" name="compare" value={query.compare.join(",")} /> : null}
 
-        <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim sm:col-span-2 lg:col-span-2 xl:col-span-1">
-          Title or developer
-          <input type="search" name="q" defaultValue={query.q} maxLength={80} placeholder="Search tracked games" className={fieldClass} />
-        </label>
-        <OptionSelect label="Store category" name="category" value={query.category} options={options.categories} />
-        <OptionSelect label="Genre" name="genre" value={query.genre ?? ""} options={options.genres} />
-        <OptionSelect label="Core mechanic" name="mechanic" value={query.mechanic ?? ""} options={options.mechanics} />
-        <EnumSelect label="Released" name="released" value={query.released} values={releasedValues} labels={releasedLabels} />
-        <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
-          Minimum rating
-          <select name="minRating" defaultValue={String(query.minRating)} className={fieldClass}>
-            {explorerRatingOptions.map((value) => (
-              <option key={value} value={value}>
-                {value === 0 ? "Any" : `${value}+`}
-              </option>
-            ))}
-          </select>
-        </label>
-        <EnumSelect label="Momentum" name="momentum" value={query.momentum} values={momentumValues} labels={momentumLabels} />
-        <EnumSelect label="Classification" name="labels" value={query.labels} values={labelStatusValues} labels={labelStatusLabels} />
-        <div className="flex items-end gap-2">
-          <button type="submit" className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90">
-            Apply
-          </button>
-          <Link
-            href={explorerHref(query, clearedExplorerFilters)}
-            className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt"
-          >
-            Clear
-          </Link>
-        </div>
-      </form>
+          <label className="col-span-2 flex min-w-0 flex-col gap-1 text-[11px] text-dim xl:col-span-1">
+            Title or developer
+            <input type="search" name="q" defaultValue={query.q} maxLength={80} placeholder="Search tracked games" className={fieldClass} />
+          </label>
+          <OptionSelect label="Store category" name="category" value={query.category} options={options.categories} />
+          <OptionSelect label="Genre" name="genre" value={query.genre ?? ""} options={options.genres} />
+          <OptionSelect label="Core mechanic" name="mechanic" value={query.mechanic ?? ""} options={options.mechanics} />
+          <EnumSelect label="Released" name="released" value={query.released} values={releasedValues} labels={releasedLabels} />
+          <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
+            Minimum rating
+            <select name="minRating" defaultValue={String(query.minRating)} className={fieldClass}>
+              {explorerRatingOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value === 0 ? "Any" : `${value}+`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <EnumSelect label="Momentum" name="momentum" value={query.momentum} values={momentumValues} labels={momentumLabels} />
+          <EnumSelect label="Classification" name="labels" value={query.labels} values={labelStatusValues} labels={labelStatusLabels} />
+          <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
+            <button type="submit" className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90">
+              Apply
+            </button>
+            <Link
+              href={explorerHref(query, clearedExplorerFilters)}
+              className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt"
+            >
+              Clear
+            </Link>
+          </div>
+        </form>
+      </MobileDisclosure>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ul className="flex flex-wrap items-center gap-1.5" aria-label="Active filters">

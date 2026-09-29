@@ -111,7 +111,10 @@ export function ExplorerTable({
             <div className="flex items-start gap-2.5">
               <span className="w-6 pt-1.5 font-mono text-xs text-dim">{row.rank}</span>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <GameLink row={row} />
+                <div className="flex items-start justify-between gap-2">
+                  <GameLink row={row} />
+                  <RowActions id={row.id} title={row.title} context={actions} />
+                </div>
                 <p className="truncate pl-[38px] text-[11.5px] text-dim">
                   {platformLabels[row.store]}
                   {row.category ? ` · ${row.category}` : ""} · released {releaseText(row)}
@@ -137,9 +140,6 @@ export function ExplorerTable({
             </dl>
             <div className="pl-[32px]">
               <ScoreBreakdown row={row} />
-            </div>
-            <div className="pl-[32px]">
-              <RowActions id={row.id} title={row.title} context={actions} />
             </div>
           </li>
         ))}

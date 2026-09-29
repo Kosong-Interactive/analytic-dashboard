@@ -11,6 +11,16 @@ import { CommandPalette } from "../search/command-palette";
 import { SegmentedLinks } from "./segmented-links";
 import { UserMenu } from "./user-menu";
 
+/** Phones get a shorter storefront name; it still says "US store" so it is never read as worldwide. */
+const shortCountryLabels: Record<(typeof supportedCountryCodes)[number], string> = {
+  id: "Indonesia",
+  us: "US store",
+};
+
+/**
+ * Two rows on phones (brand, search, account; then storefront filters) and one row from `sm` up.
+ * The filter row scrolls sideways on the narrowest screens instead of wrapping a third time.
+ */
 export function Topbar({
   filters,
   buildHref,
@@ -21,25 +31,32 @@ export function Topbar({
   userEmail: string | null;
 }) {
   return (
-    <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-2 sm:px-7">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <p className="shrink-0 text-[13px] font-semibold lg:hidden">Game Analytic</p>
-        <div className="min-w-0 flex-1 sm:flex-none">
-          <CommandPalette />
-        </div>
+    <header className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-canvas px-4 py-2 sm:flex-nowrap sm:px-7">
+      <p className="order-1 shrink-0 text-[13px] font-semibold lg:hidden">Game Analytic</p>
+      <div className="order-2 min-w-0 flex-1 sm:max-w-56">
+        <CommandPalette />
       </div>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="no-scrollbar order-4 flex w-full items-center gap-2 overflow-x-auto sm:order-3 sm:ml-auto sm:w-auto sm:gap-3">
         <SegmentedLinks
           label="Country"
+          compact
+          className="shrink-0 flex-nowrap"
           items={supportedCountryCodes.map((code) => ({
             key: code,
-            label: countryLabels[code],
+            label: (
+              <>
+                <span className="sm:hidden">{shortCountryLabels[code]}</span>
+                <span className="hidden sm:inline">{countryLabels[code]}</span>
+              </>
+            ),
             href: buildHref({ country: code }),
             active: filters.country === code,
           }))}
         />
         <SegmentedLinks
           label="Platform"
+          compact
+          className="shrink-0 flex-nowrap"
           items={platformValues.map((value) => ({
             key: value,
             label: platformLabels[value],
@@ -47,8 +64,12 @@ export function Topbar({
             active: filters.platform === value,
           }))}
         />
-        {userEmail ? <UserMenu email={userEmail} /> : null}
       </div>
+      {userEmail ? (
+        <div className="order-3 shrink-0 sm:order-4">
+          <UserMenu email={userEmail} />
+        </div>
+      ) : null}
     </header>
   );
 }

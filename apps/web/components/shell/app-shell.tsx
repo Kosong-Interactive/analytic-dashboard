@@ -18,6 +18,12 @@ export async function AppShell({ filters, active, buildHref, children }: AppShel
   const user = await getCurrentUser();
   return (
     <div className="flex min-h-screen">
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-accent text-[13px] font-medium text-canvas focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:px-3 focus:py-2"
+      >
+        Skip to content
+      </a>
       <Sidebar active={active} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
@@ -26,7 +32,7 @@ export async function AppShell({ filters, active, buildHref, children }: AppShel
           userEmail={user?.email ?? null}
         />
         <MobileNav active={active} />
-        <main id="main" className="flex flex-col gap-5 px-4 py-6 sm:px-7 sm:pb-8">
+        <main id="main" tabIndex={-1} className="flex flex-col gap-5 px-4 py-6 outline-none sm:px-7 sm:pb-8">
           {children}
         </main>
       </div>

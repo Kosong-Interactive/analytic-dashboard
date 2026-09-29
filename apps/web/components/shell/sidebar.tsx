@@ -12,6 +12,8 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
+import { ScrollActiveIntoView } from "./scroll-active-into-view";
+
 export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games";
 
 interface NavItem {
@@ -89,9 +91,9 @@ export function Sidebar({ active }: { active: NavKey }) {
 export function MobileNav({ active }: { active: NavKey }) {
   const links = NAV.filter((item) => item.href);
   return (
-    <nav
-      aria-label="Primary"
-      className="flex gap-1 overflow-x-auto border-b border-line bg-rail px-4 py-1.5 sm:px-7 lg:hidden"
+    <ScrollActiveIntoView
+      label="Primary"
+      className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line bg-rail px-4 py-1.5 sm:px-7 lg:hidden"
     >
       {links.map(({ label, icon: Icon, key, href }) => (
         <Link
@@ -107,6 +109,6 @@ export function MobileNav({ active }: { active: NavKey }) {
           {label}
         </Link>
       ))}
-    </nav>
+    </ScrollActiveIntoView>
   );
 }
