@@ -1,6 +1,7 @@
 import {
   Eye,
   Gamepad2,
+  GitCompare,
   Layers,
   LayoutDashboard,
   SlidersHorizontal,
@@ -13,7 +14,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games" | "watchlist";
+export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games" | "watchlist" | "compare";
 
 interface NavItem {
   label: string;
@@ -22,7 +23,6 @@ interface NavItem {
   href?: string;
 }
 
-// Only built pages are links; the rest are listed so the planned scope is visible.
 const NAV: NavItem[] = [
   { label: "Overview", icon: LayoutDashboard, key: "overview", href: "/" },
   { label: "Trending Games", icon: TrendingUp, key: "trending", href: "/trending" },
@@ -31,6 +31,7 @@ const NAV: NavItem[] = [
   { label: "Mechanics", icon: SlidersHorizontal, key: "mechanics", href: "/mechanics" },
   { label: "Games", icon: Gamepad2, key: "games", href: "/games" },
   { label: "Watchlist", icon: Eye, key: "watchlist", href: "/watchlist" },
+  { label: "Compare", icon: GitCompare, key: "compare", href: "/compare" },
 ];
 
 export function Sidebar({ active }: { active: NavKey }) {

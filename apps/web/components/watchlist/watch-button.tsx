@@ -41,6 +41,12 @@ export function WatchButton({ storeAppId, status }: { storeAppId: string; status
           </button>
         </>
       )}
+      <Link
+        href={`/compare?ids=${storeAppId}`}
+        className="h-7 rounded-md border border-line-strong px-2 text-[11px] leading-7 text-ink-soft hover:bg-surface hover:text-ink"
+      >
+        Compare
+      </Link>
       {state.ok === false ? (
         <span role="alert" className="text-[11px] text-down">
           {state.error}

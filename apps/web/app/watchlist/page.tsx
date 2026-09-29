@@ -6,6 +6,7 @@ import { FreshnessLine } from "@/components/shell/freshness-line";
 import { SegmentedLinks } from "@/components/shell/segmented-links";
 import { WatchlistList } from "@/components/watchlist/watchlist-list";
 import { requireUser } from "@/lib/auth/session";
+import { MAX_COMPARED } from "@/lib/compare/comparison";
 import { countryLabels, platformLabels } from "@/lib/overview/filters";
 import { getWatchlist } from "@/lib/watchlist/get-watchlist";
 import {
@@ -37,15 +38,25 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
 
       <FreshnessLine freshness={view.freshness} asOf={view.asOf} />
 
-      <SegmentedLinks
-        label="Watchlist status"
-        items={watchlistViewValues.map((value) => ({
-          key: value,
-          label: `${watchlistViewLabels[value]} (${view.counts[value]})`,
-          href: watchlistHref(query, { view: value }),
-          active: query.view === value,
-        }))}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SegmentedLinks
+          label="Watchlist status"
+          items={watchlistViewValues.map((value) => ({
+            key: value,
+            label: `${watchlistViewLabels[value]} (${view.counts[value]})`,
+            href: watchlistHref(query, { view: value }),
+            active: query.view === value,
+          }))}
+        />
+        {view.rows.length > 1 ? (
+          <Link
+            href={`/compare?ids=${view.rows.slice(0, MAX_COMPARED).map((row) => row.entry.storeAppId).join(",")}`}
+            className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt"
+          >
+            Compare the first {Math.min(view.rows.length, MAX_COMPARED)}
+          </Link>
+        ) : null}
+      </div>
 
       <Panel title="Watched games" description="Shared by the team; each change records who made it">
         {view.rows.length === 0 ? (
