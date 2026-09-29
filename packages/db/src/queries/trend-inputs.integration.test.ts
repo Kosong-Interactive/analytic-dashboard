@@ -72,11 +72,12 @@ function game(
   };
 }
 
-describe("loadTrendCandidates", { skip: connection === null }, () => {
-  after(async () => {
-    await connection?.client.end();
-  });
+// File-level so the connection stays open until every suite in this file has run.
+after(async () => {
+  await connection?.client.end();
+});
 
+describe("loadTrendCandidates", { skip: connection === null }, () => {
   it("returns ordered snapshots, chart ranks, and country breadth for one storefront", async () => {
     await inRolledBackTransaction(async (tx) => {
       const first = await persistStoreApps(tx, [game("com.a", "us", 1, 100)]);
