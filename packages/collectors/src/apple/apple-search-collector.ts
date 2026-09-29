@@ -40,6 +40,9 @@ export interface AppleSearchCollectorOptions {
   now?: () => Date;
   timeoutMs?: number;
   events?: CollectorEvents;
+  /** Spacing between requests. Apple documents roughly 20 calls per minute for this API. */
+  minimumRequestIntervalMs?: number;
+  sleep?: (milliseconds: number) => Promise<void>;
 }
 
 export class AppleSearchApiError extends Error {
@@ -60,9 +63,16 @@ export class AppleSearchCollector
   private readonly now: () => Date;
   private readonly timeoutMs: number;
   private readonly events: CollectorEvents;
+  private readonly minimumRequestIntervalMs: number;
+  private readonly sleep: (milliseconds: number) => Promise<void>;
+  private nextRequestAt = 0;
 
   constructor(options: AppleSearchCollectorOptions = {}) {
     this.events = options.events ?? {};
+    this.minimumRequestIntervalMs = options.minimumRequestIntervalMs ?? 3_000;
+    this.sleep =
+      options.sleep ??
+      ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
     this.baseUrl = options.baseUrl ?? "https://itunes.apple.com";
     this.fetchImplementation = options.fetchImplementation ?? fetch;
     this.now = options.now ?? (() => new Date());
@@ -98,6 +108,7 @@ export class AppleSearchCollector
     locale: string,
   ): Promise<NormalizedStoreApp[]> {
     let response: Response;
+    await this.waitForTurn();
 
     try {
       response = await this.fetchImplementation(url, {
@@ -141,6 +152,15 @@ export class AppleSearchCollector
       }
     }
     return games;
+  }
+
+  private async waitForTurn(): Promise<void> {
+    const now = this.now().getTime();
+    const waitMs = Math.max(0, this.nextRequestAt - now);
+    if (waitMs > 0) {
+      await this.sleep(waitMs);
+    }
+    this.nextRequestAt = Math.max(now, this.nextRequestAt) + this.minimumRequestIntervalMs;
   }
 }
 

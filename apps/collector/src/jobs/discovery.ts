@@ -26,6 +26,8 @@ export interface DiscoveryJob {
   jobType: string;
   country: CountryCode;
   locale: string;
+  /** Seed file version, recorded on the run so results can be traced to their inputs. */
+  seedVersion: string;
   steps: DiscoveryStep[];
 }
 
@@ -76,6 +78,7 @@ export function buildDiscoveryJobs(
         jobType: APPLE_SEARCH_JOB,
         country,
         locale,
+        seedVersion: seeds.version,
         steps: seeds.appleSearchTerms.map((term) => ({
           label: `search:${term}`,
           collect: async () => ({
@@ -83,7 +86,7 @@ export function buildDiscoveryJobs(
               term,
               country,
               locale,
-              limit: seeds.limit,
+              limit: seeds.appleLimit,
             }),
           }),
         })),
@@ -96,6 +99,7 @@ export function buildDiscoveryJobs(
         jobType: GOOGLE_CHART_JOB,
         country,
         locale,
+        seedVersion: seeds.version,
         steps: seeds.googleCharts.map((collection) => ({
           label: `chart:${collection}`,
           collect: async () => {
@@ -103,7 +107,7 @@ export function buildDiscoveryJobs(
               country,
               locale,
               collection,
-              limit: seeds.limit,
+              limit: seeds.googleLimit,
             });
             return {
               apps: entries.map((entry) => entry.app),
@@ -135,7 +139,7 @@ export async function runDiscoveryJob(
     country: job.country,
     locale: job.locale,
     startedAt: now(),
-    metadata: { steps: job.steps.map((step) => step.label) },
+    metadata: { seedVersion: job.seedVersion, steps: job.steps.map((step) => step.label) },
   });
 
   const discovered = new Set<string>();
@@ -174,6 +178,7 @@ export async function runDiscoveryJob(
     errorCount: errors.length,
     errorSample,
     metadata: {
+      seedVersion: job.seedVersion,
       steps: job.steps.map((step) => step.label),
       chartEntriesWritten,
       invalidSkipped: skipped.invalidSkipped,

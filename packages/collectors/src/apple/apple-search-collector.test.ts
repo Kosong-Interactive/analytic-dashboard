@@ -49,6 +49,7 @@ describe("AppleSearchCollector", () => {
   it("builds a scoped search and normalizes only games", async () => {
     let requestedUrl: URL | undefined;
     const collector = new AppleSearchCollector({
+      minimumRequestIntervalMs: 0,
       fetchImplementation: async (input) => {
         requestedUrl = new URL(input.toString());
         return Response.json(appleFixture);
@@ -77,6 +78,7 @@ describe("AppleSearchCollector", () => {
   it("reports skipped non-game results", async () => {
     const skipped: string[] = [];
     const collector = new AppleSearchCollector({
+      minimumRequestIntervalMs: 0,
       fetchImplementation: async () => Response.json(appleFixture),
       events: { onSkipped: (reason) => skipped.push(reason) },
     });
@@ -86,9 +88,27 @@ describe("AppleSearchCollector", () => {
     assert.deepEqual(skipped, ["non_game"]);
   });
 
+  it("spaces consecutive requests to respect Apple's rate limit", async () => {
+    const waits: number[] = [];
+    const collector = new AppleSearchCollector({
+      fetchImplementation: async () => Response.json(appleFixture),
+      now: () => new Date("2026-09-29T10:00:00.000Z"),
+      minimumRequestIntervalMs: 3_000,
+      sleep: async (ms) => {
+        waits.push(ms);
+      },
+    });
+
+    await collector.searchGames({ term: "puzzle", country: "us", locale: "en_US" });
+    await collector.searchGames({ term: "idle", country: "us", locale: "en_US" });
+
+    assert.deepEqual(waits, [3_000]);
+  });
+
   it("uses ID lookup for known apps", async () => {
     let requestedUrl: URL | undefined;
     const collector = new AppleSearchCollector({
+      minimumRequestIntervalMs: 0,
       fetchImplementation: async (input) => {
         requestedUrl = new URL(input.toString());
         return Response.json({ resultCount: 1, results: [appleFixture.results[0]] });
@@ -107,6 +127,7 @@ describe("AppleSearchCollector", () => {
 
   it("rejects malformed provider payloads", async () => {
     const collector = new AppleSearchCollector({
+      minimumRequestIntervalMs: 0,
       fetchImplementation: async () =>
         Response.json({ resultCount: 1, results: [{ trackId: "invalid" }] }),
     });
@@ -124,6 +145,7 @@ describe("AppleSearchCollector", () => {
 
   it("reports HTTP status without exposing response bodies", async () => {
     const collector = new AppleSearchCollector({
+      minimumRequestIntervalMs: 0,
       fetchImplementation: async () =>
         new Response("provider details", { status: 429 }),
     });

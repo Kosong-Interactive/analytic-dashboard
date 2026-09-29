@@ -62,6 +62,7 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - Game Detail (`/games/[id]`, id = `store_apps.id`): metrics, ECharts step charts (ratings, rank, rating) with text summaries, score breakdown, and the source observations table that traces every score to stored snapshots. Query: `loadGameHistory` in `packages/db`.
 - New Releases (`/new-releases`): store release date inside a 7/30/90-day window (never discovery time); few rows today because discovery favours chart and keyword games.
 - Store icons render through `next/image` (`*.mzstatic.com`, `play-lh.googleusercontent.com` in `next.config.ts`), falling back to initials.
+- Discovery seeds `mvp-v2` (22 Apple terms × 50, Google TOP_FREE/TOP_PAID/GROSSING × 25): dry run for `id` found 801 Apple + 68 Google games in 77 s. Apple requests are spaced 3 s apart. Runs record `metadata.seedVersion`.
 - Next: Phase 3 classification (taxonomy, rules, AI provider) to unlock Genres/Mechanics.
 
 ## Known gaps / next

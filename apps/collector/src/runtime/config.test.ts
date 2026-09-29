@@ -12,11 +12,12 @@ describe("discovery configuration", () => {
     assert.equal(countries.us?.locale, "en_US");
   });
 
-  it("keeps the discovery sample small and versioned", () => {
+  it("loads a versioned seed file within the adapter limits", () => {
     const seeds = loadDiscoverySeeds();
 
-    assert.equal(seeds.version, "mvp-v1");
-    assert.ok(seeds.limit <= 25);
-    assert.ok(seeds.appleSearchTerms.length > 0);
+    assert.equal(seeds.version, "mvp-v2");
+    assert.ok(seeds.appleLimit <= 200);
+    assert.ok(seeds.googleLimit <= 25);
+    assert.equal(new Set(seeds.appleSearchTerms).size, seeds.appleSearchTerms.length);
   });
 });

@@ -18,7 +18,8 @@ import {
 
 const seeds: DiscoverySeeds = {
   version: "test",
-  limit: 5,
+  appleLimit: 5,
+  googleLimit: 5,
   appleSearchTerms: ["puzzle", "idle"],
   googleCharts: ["TOP_FREE"],
 };
@@ -88,6 +89,7 @@ function jobWithSteps(
     jobType: "discovery.chart",
     country: "us",
     locale: "en_US",
+    seedVersion: "test",
     steps: steps.map((collect, index) => ({ label: `step-${index}`, collect })),
   };
 }
@@ -105,6 +107,34 @@ describe("buildDiscoveryJobs", () => {
       jobs.map((job) => `${job.source}:${job.country}`),
       ["app_store:id", "google_play:id", "app_store:us", "google_play:us"],
     );
+  });
+
+  it("uses the per-store limits from the seed file", async () => {
+    const requested: number[] = [];
+    const jobs = buildDiscoveryJobs(
+      {
+        apple: {
+          searchGames: async (input) => {
+            requested.push(input.limit ?? -1);
+            return [];
+          },
+        },
+        googlePlay: {
+          discoverTopGameEntries: async (input) => {
+            requested.push(input.limit ?? -1);
+            return [];
+          },
+        },
+      },
+      { ...seeds, appleLimit: 50, googleLimit: 25, appleSearchTerms: ["puzzle"] },
+      countries,
+      { country: "us" },
+    );
+
+    for (const job of jobs) await job.steps[0]?.collect();
+
+    assert.deepEqual(requested, [50, 25]);
+    assert.equal(jobs[0]?.seedVersion, "test");
   });
 
   it("filters by source and country", () => {
@@ -222,6 +252,7 @@ describe("runDiscoveryJob", () => {
     assert.equal(finished[0]?.retryCount, 1);
     assert.equal(finished[0]?.metadata?.invalidSkipped, 1);
     assert.equal(finished[0]?.metadata?.nonGameSkipped, 2);
+    assert.equal(finished[0]?.metadata?.seedVersion, "test");
   });
 
   it("records a persistence failure as a run error", async () => {

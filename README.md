@@ -25,11 +25,16 @@ store Amerika Serikat sebagai proxy.
 
 | Sumber | Cara ambil | Yang diambil |
 |---|---|---|
-| **Apple App Store** | iTunes Search API resmi dari Apple | Hasil pencarian untuk kata kunci seed: `puzzle`, `idle`, `match 3` |
-| **Google Play** | Scraper open-source [`@mradex77/google-play-scraper`](https://www.npmjs.com/package/@mradex77/google-play-scraper), dibungkus adapter supaya bisa diganti | Chart **Top Free** kategori Game |
+| **Apple App Store** | iTunes Search API resmi dari Apple | Hasil pencarian untuk 22 kata kunci genre (misalnya `puzzle`, `rpg`, `tower defense`), hingga 50 hasil per kata kunci |
+| **Google Play** | Scraper open-source [`@mradex77/google-play-scraper`](https://www.npmjs.com/package/@mradex77/google-play-scraper), dibungkus adapter supaya bisa diganti | Chart **Top Free**, **Top Paid**, dan **Grossing** kategori Game, masing-masing 25 game teratas |
 
-Untuk setiap negara (`id` dan `us`), tiap sumber mengambil hingga 10 game per seed atau chart.
-Seed-nya ada di `config/discovery-seeds/` dan daftar negaranya di `config/countries/`.
+Dalam satu run, satu negara menghasilkan sekitar 800 game dari Apple dan 70 dari Google Play
+(diukur untuk Indonesia, 29 Sep 2026). Seed aktif ada di `config/discovery-seeds/mvp-v2.json`,
+dan versi seed tercatat di setiap `collector_runs`. Seed lama disimpan supaya run lama tetap bisa
+dijelaskan. Daftar negara ada di `config/countries/`.
+
+Request ke Apple diberi jeda 3 detik (Apple membatasi sekitar 20 request per menit), dan request ke
+Google Play diberi jeda 1,5 detik dengan retry terbatas.
 
 Yang disimpan per game: metadata (judul, developer, kategori, tanggal rilis, ikon, link store) dan
 **snapshot** angka (rating, jumlah rating, jumlah review, rentang install, harga, versi), plus posisi

@@ -1,0 +1,30 @@
+{
+  "version": "mvp-v2",
+  "appleLimit": 50,
+  "googleLimit": 25,
+  "appleSearchTerms": [
+    "puzzle",
+    "idle",
+    "match 3",
+    "merge",
+    "rpg",
+    "strategy",
+    "simulation",
+    "tycoon",
+    "racing",
+    "shooter",
+    "casual",
+    "word",
+    "arcade",
+    "card",
+    "board",
+    "adventure",
+    "survival",
+    "tower defense",
+    "roguelike",
+    "farming",
+    "sports",
+    "action"
+  ],
+  "googleCharts": ["TOP_FREE", "TOP_PAID", "GROSSING"]
+}
