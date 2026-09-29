@@ -2,87 +2,231 @@
 
 Updated: 2026-09-29
 
-## Product context
+This is the bootstrap document for a new Claude session with no previous chat context. Read this
+file, `AGENTS.md`, all relevant `.claude/rules/*.md`, and `docs/MVP_IMPLEMENTATION_PLAN.md` before
+changing code. Do not assume the working tree is clean.
 
-This repository is an internal MVP for analysing mobile-game market signals. It is not a full store catalogue and must not present estimated revenue, download counts, or discovery coverage as facts. Trends derive from our own historical snapshots.
+## Immediate instruction from the user
 
-## Current state
+Finish every existing dashboard menu before starting the next-generation research features or
+deploying to Vercel.
 
-- Phase 0 is complete: Next.js workspace, Supabase schema/migrations, shared Zod contracts, collector scaffold, CI, logo/favicon.
-- Phase 1.1 is complete: `AppleSearchCollector` uses the official iTunes Search and Lookup APIs.
-- Phase 1.2 is complete: `GooglePlayCollector` is collector-only, validates normalized output with Zod, filters to `GAME*` categories, has search, detail lookup, and top-chart discovery paths, plus cache, low request rate, and transient-only retry behavior.
-- No dashboard UI implementation has begun. The user’s design handoff is the Claude design artifact linked below.
+Work order:
 
-## Runtime and package decisions
+1. Games / Explorer.
+2. Watchlist.
+3. Compare.
+4. Search / command palette.
+5. Final navigation, responsive, accessibility, and browser-flow pass.
+6. Only then start Automated Game Research and Steam/cross-platform work.
+7. Deploy to Vercel after the dashboard menus are complete.
 
-- Use `npm`, never pnpm, with the one root `package-lock.json`.
-- Node baseline is `22.23.3` in `.nvmrc` (minimum `22.12.0`). Run `nvm use` before local work.
-- Google Play uses `@mradex77/google-play-scraper@1.3.0`. The earlier Node-20-compatible `google-play-scraper` was rejected because a live smoke test returned zero records, indicating parser drift.
-- Keep all scraper interactions inside `packages/collectors`; no scraper import in `apps/web`, `packages/db`, or `packages/shared`.
-- No Redis or external queue: the PostgreSQL `jobs` table remains the MVP queue.
+The approved future product direction is documented in `docs/NEXT_DEVELOPMENT_PLAN.md`. Do not
+implement that roadmap early. The product is now conceptually **Game Market Intelligence**, not a
+mobile-only product, but Steam must not appear as an active filter before its collector and real
+observations exist.
 
-## Important locations
+## Repository and runtime
 
-- `packages/collectors/src/apple/` — official Apple adapter and smoke test.
-- `packages/collectors/src/google-play/` — Google adapter, fixture test, smoke test.
-- `packages/collectors/src/contracts.ts` — output boundary all adapters must return.
-- `packages/db/src/schema/` — persisted model and historical snapshots.
-- `.claude/rules/` — mandatory architecture, safety, and product rules.
-- `docs/MVP_IMPLEMENTATION_PLAN.md` — phase plan and acceptance checks.
+- Repository: `git@github.com:Kosong-Interactive/analytic-dashboard.git`.
+- Current branch: `main`, tracking `origin/main`.
+- Package manager: npm with one root `package-lock.json`; never use pnpm.
+- Node: `22.23.3` in `.nvmrc`, minimum `22.12.0`. Run `nvm use` first.
+- Monorepo: npm workspaces + Turborepo.
+- Database: Supabase PostgreSQL via Drizzle.
+- Dashboard: Next.js App Router, Server Components by default.
+- Deployment target: Vercel, intentionally deferred. Setup notes are in
+  `docs/DEPLOYMENT_VERCEL.md`.
+- Collection/classification schedule: GitHub Actions in `.github/workflows/collect.yml`.
 
-## Validation commands
+Never print, paste, or commit `.env.local` values. Preserve unrelated user changes.
+
+## Product semantics that must not drift
+
+- This is sampled market research, not a complete catalogue.
+- “Newly discovered” means first observed by this system, not newly released.
+- “Newly released” requires a provider release date.
+- Trend Score is an internal versioned score, not a store label.
+- Google install values are ranges, never exact downloads.
+- AI/rule labels are inferred and retain confidence, evidence, source, versions, and model.
+- Manual Confirm/Reject decisions always override automated labels and are never overwritten.
+- Missing values remain missing; never turn them into zero.
+- Dashboard reads never trigger collection or classification.
+
+## Committed state on `main`
+
+Latest committed feature commit at handoff: `1cdbe78 feat: add manual label overrides on game detail`.
+
+### Collection and persistence
+
+- Apple Search/Lookup adapter and Google Play adapter live in `packages/collectors`.
+- Discovery targets Indonesia (`id`) and the United States (`us`). The UI currently labels the US
+  storefront as “Global (US store)”; it is not true global coverage.
+- Discovery seeds are versioned; active widened seeds are `config/discovery-seeds/mvp-v2.json`.
+- Store listings are idempotently upserted. Snapshots are change-only with a 24-hour heartbeat.
+- Chart entries retain provider positions. Apple does not yet have a chart path.
+- Collector runs record success/partial/failure, retries, errors, and skipped invalid/non-game items.
+- The scheduled GitHub workflow has been exercised successfully against Supabase. Discovery runs
+  every six hours at minute 17 and then runs deterministic rule classification.
+
+### Analytics
+
+- `packages/analytics` contains windowed velocity, cohort percentile normalization,
+  `trend_score_v1`, and score explanations.
+- Formula:
+  - 30% normalized rank gain over 7 days;
+  - 25% normalized review velocity over 7 days;
+  - 15% normalized rating-count velocity over 7 days;
+  - 15% country breadth growth;
+  - 10% discovery recency;
+  - 5% rating momentum.
+- Missing components are excluded and remaining weights are rescaled. A score is withheld when less
+  than 40% of score weight is measurable.
+- `loadTrendCandidates` retrieves snapshots, ranks, and country breadth without per-game queries.
+- Live read-only queries against Supabase were verified. Meaningful velocity requires accumulated
+  history; do not fake scores while history is short.
+
+### Authentication
+
+- Supabase Auth uses email + password.
+- `proxy.ts` refreshes the session and redirects to `/login`.
+- Every protected page also calls `requireUser()`.
+- Users are created in Supabase; there is no application password table.
+- Public sign-up should remain disabled.
+- A real end-to-end sign-in has not yet been verified in this handoff.
+
+### Dashboard pages already built
+
+- `/` — Overview: KPI cards, trending summary, classification links, newly discovered games, source
+  freshness/coverage.
+- `/trending` — URL filters, sorting, pagination, responsive table/cards, score breakdown.
+- `/new-releases` — actual store release dates over 7/30/90 days; discovery time is not substituted.
+- `/games/[id]` — listing metadata, ECharts history, accessible observation table, Trend Score
+  evidence, classification labels, and manual Confirm/Reject/Undo.
+- `/genres` — genre/subgenre roll-ups.
+- `/mechanics` — core/meta/theme/multiplayer roll-ups.
+
+Store icons use `next/image` with Apple and Google hosts allowed in `apps/web/next.config.ts`, with
+initials fallback. Analytical charts have textual/tabular equivalents.
+
+### Classification committed on `main`
+
+- Controlled taxonomy: `config/taxonomy/v1.json`.
+- Deterministic rules: `packages/classifier/src/rules.ts`.
+- Command: `npm run classify --workspace @analytic-dashboard/collector`.
+- Rule outputs retain taxonomy version, rules version, input hash, confidence, and evidence.
+- Unchanged hashes are skipped. Changed rule labels are replaced without touching AI/manual labels.
+- Label resolution is manual > AI > rule. Manual confidence 0 is an explicit rejection.
+- UI roll-ups hide automated labels below confidence 0.6.
+- Known false positives from description keywords exist; manual review or AI should correct them.
+
+## AI classification (committed)
+
+The Gemini AI classifier is committed (`npm run classify-ai --workspace @analytic-dashboard/collector`).
+It uses the official `@google/genai` SDK, a strict JSON schema, Zod re-validation, evidence
+verification against the supplied title/description/store category, bounded batches, request
+spacing, model rotation, and token counts. Manual overrides are never touched.
+
+- `classification_runs` (migration `0001`) records the last automated run per app, source, and
+  taxonomy version. It is the input-hash cache, so empty results are cached too. Existing rule runs
+  were backfilled; the migration has been applied to Supabase.
+- `--dry-run` writes nothing, including the taxonomy sync.
+- A live dry run of one batch (8 apps, `gemini-3.5-flash-lite`) succeeded: 38 labels, 1 rejected
+  by evidence checks, ~6k tokens.
+- The scheduled workflow runs `classify-ai --limit 200` (at most 25 requests per run). It skips with
+  exit 0 until the `GEMINI_API_KEY` repository secret is added; that secret is not set yet.
+- Database integration tests for AI persistence exist but need a disposable `TEST_DATABASE_URL`.
+
+### Agent/tooling files
+
+`.agents/` and `.codex/` are untracked project skills and reviewer agent configuration. Decide
+explicitly whether repository tooling should be versioned before committing them.
+
+## Newly approved future roadmap
+
+`docs/NEXT_DEVELOPMENT_PLAN.md` is new and uncommitted. It records two user-approved plans:
+
+1. **Automated Game Research** — deterministic Opportunity Score, separate Research Confidence,
+   comparable-game evidence, counter-signals, studio fit, internal Shortlist/Reject/Prototype
+   decisions, and a constrained AI-authored research brief.
+2. **Cross-platform / Steam readiness** — neutral Game Market Intelligence language, platform and
+   market compatibility, Steam-specific observations, platform-level normalization, and
+   Steam-to-mobile/mobile-to-Steam opportunity research.
+
+The roadmap was also referenced from `docs/MVP_IMPLEMENTATION_PLAN.md`. These docs are intentional
+changes requested by the user, but they have not been committed. Current dashboard completion takes
+priority over implementing them.
+
+## Next dashboard work
+
+### 1. Games / Explorer
+
+The sidebar shows Games as “Soon”. Build it next as a read-heavy Server Component with URL state.
+Expected capabilities:
+
+- platform and market/country context;
+- category, genre, mechanic, release-date, rating, momentum, and classification-status filters;
+- server-side pagination and stable sorting;
+- explicit missing values, freshness, coverage, and sampled-catalogue language;
+- links to `/games/[id]`;
+- loading, empty, stale, partial-data, and error states;
+- responsive table/card presentation;
+- focused query-parser, view-model, and representative query tests.
+
+Do not add Steam to the active filter yet. Keep copy platform-neutral where practical.
+
+### 2. Watchlist
+
+Requires durable per-user/team state, notes/status, actor/timestamps, and latest movement. Design the
+minimum schema only when implementing it; do not create a generic collaboration system.
+
+### 3. Compare
+
+Compare selected games while preserving platform-specific metric semantics and missing values. Show
+shared labels, Trend Score components, and source observations; never compare unlike raw metrics as
+if they were equivalent.
+
+### 4. Search / command palette
+
+Search stored games, developers, and taxonomy labels. It navigates to existing pages and never
+starts collectors or AI jobs.
+
+Design reference for current pages:
+
+`https://claude.ai/artifact/FmXb2bJ9ViYy9S9p5NyGNy`
+
+## Verification evidence at handoff
+
+- `npm run check` (lint, typecheck, tests, build): passed after the AI fixes.
+- Migration `0001_classification_runs` applied to Supabase; 1,320 rule runs backfilled.
+- One live Gemini dry run succeeded and wrote no rows.
+
+## Commands for a fresh session
 
 ```bash
 nvm use
+git status --short
+git diff --check
+
+# Focused classification checks
+npm test --workspace @analytic-dashboard/classifier
+npm test --workspace @analytic-dashboard/collector
+npm run typecheck --workspace @analytic-dashboard/classifier
+npm run typecheck --workspace @analytic-dashboard/collector
+
+# Before any commit
 npm run check
 npm audit --omit=dev
-npm run smoke:apple --workspace @analytic-dashboard/collectors
-npm run smoke:google-play --workspace @analytic-dashboard/collectors
 ```
 
-The smoke commands make live public requests; keep them manual, low-volume, and outside CI. Unit tests must stay fixture-based.
+Database integration tests need a migrated disposable `TEST_DATABASE_URL`; they roll back. Never
+point integration tests at production. Store smoke tests and Gemini live checks are manual,
+low-volume operations and require explicit awareness of external requests/quota.
 
-## Phase 1.3 (complete)
+## Commit discipline for the next session
 
-- `packages/db/src/repositories/`: `persistStoreApps` (listing upsert, change-only snapshots with a 24h heartbeat), `persistChartEntries`, and `startCollectorRun`/`finishCollectorRun`. DB integration tests need `TEST_DATABASE_URL` and run in CI after migrations; they roll back.
-- `apps/collector`: `npm run discover --workspace @analytic-dashboard/collector -- [--dry-run] [--source app_store|google_play] [--country id|us]`. Seeds and countries live in `config/`. Google chart rank is the provider position, kept when an earlier item is dropped. Apple has no chart path yet.
-- Live run against Supabase verified: two consecutive runs; unchanged Apple listings wrote no new snapshots, changed Google counters wrote new ones.
-- The collector app now runs through `tsx` and its `build` only typechecks, because `packages/db` exports TypeScript source.
-
-## Phase 2 progress
-
-- `packages/analytics`: `windowedChange`, `percentileRanks`, `trend_score_v1` (`computeRawComponents`, `scoreCohort`) and `scoreTrending` (cohorts default to store+country).
-- `packages/db/src/queries/trend-inputs.ts`: `loadTrendCandidates` returns snapshots, chart ranks, and country breadth in a constant number of queries. Its integration test needs `TEST_DATABASE_URL` (runs in CI). Raw `sql` fragments must pass dates as ISO strings with `::timestamptz`.
-- Live check: the query runs against Supabase, but no candidate is scored yet because history is under a day; velocity needs several days of scheduled collection.
-- Overview page is built (`apps/web/app/page.tsx`, `components/overview/`, `lib/overview/`): KPI cards, trending table with score breakdown, newly discovered list, data coverage, filters via `?country=&platform=`. Genres/mechanics are an explicit "not available yet" panel until Phase 3; there is no Market Signals panel.
-- The trending table stays empty ("No games scored yet") until about 3.5 days of history exist; verified live against Supabase and, for the populated state, with a temporary fixture page (removed).
-- Web deploys to Vercel; steps for this monorepo are in `docs/DEPLOYMENT_VERCEL.md` (not yet run against a real project).
-- Auth: Supabase Auth email + password. `proxy.ts` refreshes the session and redirects to `/login`; every page also calls `requireUser()`. Users are created in the Supabase dashboard (sign-ups off); no app table is needed. Not yet verified with a real sign-in.
-- Trending Games page (`/trending`) is built with URL filters, sort, pagination; layouts are responsive (cards below `md`, mobile nav below `lg`).
-- Game Detail (`/games/[id]`, id = `store_apps.id`): metrics, ECharts step charts (ratings, rank, rating) with text summaries, score breakdown, and the source observations table that traces every score to stored snapshots. Query: `loadGameHistory` in `packages/db`.
-- New Releases (`/new-releases`): store release date inside a 7/30/90-day window (never discovery time); few rows today because discovery favours chart and keyword games.
-- Store icons render through `next/image` (`*.mzstatic.com`, `play-lh.googleusercontent.com` in `next.config.ts`), falling back to initials.
-- Discovery seeds `mvp-v2` (22 Apple terms × 50, Google TOP_FREE/TOP_PAID/GROSSING × 25): dry run for `id` found 801 Apple + 68 Google games in 77 s. Apple requests are spaced 3 s apart. Runs record `metadata.seedVersion`.
-- Phase 3 rules are wired to the database: `npm run classify --workspace @analytic-dashboard/collector` syncs `taxonomy_labels` (taxonomy-v1) and writes rule labels to `app_labels` with `prompt_version = rules-v1`, the input hash, and evidence. Unchanged hashes are skipped; a changed app's old rule labels are replaced, AI/manual labels never touched. First live run: 1,320 apps, 8,066 labels; second run wrote nothing. It runs in `collect.yml` after discovery.
-- Rule confidence: store genre/price 0.95, title keyword 0.8, repeated description keyword 0.7, single mention 0.55 (hide below 0.6 in UI).
-- Genres (`/genres`: genre, subgenre) and Mechanics (`/mechanics`: core, meta, theme, multiplayer) pages roll up label membership per storefront: games, share, new in 7 days, average rating, momentum (mean Trend Score of scored members), top games. `loadLabelMembership` resolves manual > AI > rule and drops automated labels below 0.6.
-- Game Detail shows every label with confidence, source, version, and evidence (`loadListingLabels`). Known rule false positives exist (e.g. Candy Crush Saga tagged Solitaire from its description); AI or manual review should correct them.
-- Manual override on Game Detail: Confirm (manual, confidence 1), Reject (manual, confidence 0, hides the automated label everywhere), Undo (deletes the manual row). Server action `app/games/[id]/actions.ts` → `lib/labels/manual-labels.ts` validates with Zod, requires a session, looks the app id up from the listing, and checks the label is in taxonomy-v1. The actor email and time are stored in the evidence. Not yet exercised by a real click.
-- Next: Phase 3 classification (taxonomy, rules, AI provider) to unlock Genres/Mechanics.
-
-## Known gaps / next
-
-- Adapters report skipped items (`invalid`, `non_game`) and Google retries through optional `CollectorEvents`; discovery records them as `retry_count` and `metadata.invalidSkipped`/`nonGameSkipped`. Cached responses do not re-emit skips.
-- `.github/workflows/collect.yml` runs discovery every 6 hours (17 past). It needs the repository secret `DATABASE_URL`; it has not been run on GitHub yet.
-- Phase 2 starts with `packages/analytics` (velocity, `trend_score_v1`). UI follows the design artifact `https://claude.ai/artifact/FmXb2bJ9ViYy9S9p5NyGNy` (Overview, Trending, NewReleases, GameDetail, Genres, Mechanics, TrendScore, Compare, Search, Watchlist).
-
-## Checklist for the next agent
-
-- [ ] Read `AGENTS.md` and every relevant `.claude/rules/*.md` before editing.
-- [ ] Run `nvm use` and confirm Node is at least 22.12.
-- [ ] Never print, commit, or paste `.env.local` values.
-- [ ] Validate any external payload at the adapter boundary with Zod.
-- [ ] Preserve install ranges as ranges; never label them exact downloads.
-- [ ] Do not add UI until the user provides the design handoff.
-- [ ] Run focused tests, then `npm run check`, then `npm audit --omit=dev`.
-- [ ] Inspect `git diff --check` and `git status` before committing.
+- Keep each dashboard menu in its own focused conventional commit.
+- Keep the roadmap/documentation changes in a separate docs commit unless the user asks otherwise.
+- Keep future Games / Explorer work in its own feature commit.
+- Stage explicit files; never include `.env.local` or unrelated managed
+  agent files accidentally.

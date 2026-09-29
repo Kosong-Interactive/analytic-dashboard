@@ -405,6 +405,23 @@ Exit criteria: classifications are validated, versioned, explainable, and never 
 
 Exit criteria: the MVP can run unattended for seven days with visible health and bounded costs.
 
+### Post-MVP — Automated research and cross-platform expansion
+
+After every existing dashboard menu is complete and the MVP is operationally stable:
+
+- Add deterministic, evidence-backed game opportunity research with separate Opportunity Score
+  and Research Confidence.
+- Add internal Shortlist, Reject, and Prototype decisions without presenting recommendations as
+  profitability forecasts.
+- Neutralize mobile-only product language and centralize platform capabilities.
+- Add Steam as a third platform with Steam-specific observation semantics.
+- Compare platforms only after platform-level normalization; never compare raw mobile rating counts
+  directly with Steam review or player metrics.
+- Add cross-platform and platform-migration opportunities once Steam history is sufficient.
+
+The detailed approved direction, formula draft, UI, data model, safeguards, and delivery order live
+in `docs/NEXT_DEVELOPMENT_PLAN.md`. These items do not replace the remaining MVP dashboard work.
+
 ## 16. MVP acceptance criteria
 
 - Supports Apple and Google Play data for Indonesia and the United States.
