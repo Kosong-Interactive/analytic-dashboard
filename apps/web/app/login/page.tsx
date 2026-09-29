@@ -3,7 +3,7 @@ import Image from "next/image";
 import { LoginForm } from "@/components/auth/login-form";
 import { safeNextPath } from "@/lib/auth/redirect";
 
-export const metadata = { title: "Sign in · Game Intel" };
+export const metadata = { title: "Sign in · Game Analytic" };
 
 interface LoginPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mb-6 flex items-center gap-3">
           <Image src="/kosong-interactive.png" alt="" width={40} height={40} priority />
           <div className="flex flex-col gap-1">
-            <h1 className="text-[15px] font-semibold leading-none tracking-[0.16em]">GAME INTEL</h1>
+            <h1 className="text-[15px] font-semibold leading-none tracking-[0.16em]">GAME ANALYTIC</h1>
             <p className="text-xs leading-none text-dim">by Kosong Interactive</p>
           </div>
         </div>

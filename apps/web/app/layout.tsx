@@ -8,7 +8,7 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
-  title: "Mobile Game Intelligence",
+  title: "Game Analytic",
   description:
     "Internal dashboard for mobile-game releases, momentum, and feature trends.",
 };

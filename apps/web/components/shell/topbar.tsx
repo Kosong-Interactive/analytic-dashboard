@@ -51,7 +51,7 @@ export function Topbar({
 }) {
   return (
     <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-2 sm:px-7">
-      <p className="text-[13px] font-semibold tracking-[0.16em] lg:invisible">GAME INTEL</p>
+      <p className="text-[13px] font-semibold tracking-[0.16em] lg:invisible">GAME ANALYTIC</p>
       <div className="flex flex-wrap items-center gap-3">
         <Segmented
           label="Country"

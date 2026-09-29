@@ -46,7 +46,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Dashboard palette (dark first), taken from the Game Intel design. */
+  /* Dashboard palette (dark first), taken from the dashboard design. */
   --color-canvas: #0a0b0d;
   --color-rail: #0c0d10;
   --color-surface: #101215;

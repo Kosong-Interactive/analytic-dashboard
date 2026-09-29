@@ -9,7 +9,7 @@ import { loadScoredSelection } from "@/lib/scoring/load-scored";
 import { buildTrendingList } from "@/lib/trending/list";
 import { parseTrendingQuery, sortLabels, trendingHref } from "@/lib/trending/query";
 
-export const metadata = { title: "Trending Games · Game Intel" };
+export const metadata = { title: "Trending Games · Game Analytic" };
 
 interface TrendingPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

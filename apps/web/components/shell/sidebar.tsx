@@ -47,7 +47,7 @@ export function Sidebar({ active }: { active: NavKey }) {
         />
         <div className="flex flex-col gap-0.5">
           <span className="text-[13px] font-semibold leading-none tracking-[0.16em]">
-            GAME INTEL
+            GAME ANALYTIC
           </span>
           <span className="text-[10.5px] leading-none text-dim">by Kosong Interactive</span>
         </div>
