@@ -36,9 +36,13 @@ export function overviewHref(
   return text ? `/?${text}` : "/";
 }
 
+/**
+ * Stores publish data per country, never globally. The US storefront is shown as a proxy for the
+ * global market, and the label keeps "US store" so it is never mistaken for worldwide data.
+ */
 export const countryLabels: Record<CountryCode, string> = {
   id: "Indonesia",
-  us: "United States",
+  us: "Global (US store)",
 };
 
 export const platformLabels: Record<Platform, string> = {
