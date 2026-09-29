@@ -85,8 +85,13 @@ The dashboard has its own email + password login (Supabase Auth); every page red
 
 ## 5. Region
 
-Set the Function Region (**Settings → Functions**) to the region closest to the Supabase
-project, to keep query latency low. Record the chosen region in private deployment notes.
+Functions must run next to the database. `apps/web/vercel.json` pins them to `sin1` (Singapore),
+matching the Supabase project in `ap-southeast-1`. Vercel's default is `iad1` (US East): with the
+database in Singapore every query crossed the Pacific, and pages took about 12 s instead of about 1 s.
+
+If the Supabase project ever moves, change `regions` to the closest Vercel region. The response
+header `x-vercel-id` shows it: `sin1::iad1::…` means the edge was Singapore but the function ran in
+`iad1`. After the change it should read `sin1::sin1::…`.
 
 ## 6. Verify after the first deploy
 

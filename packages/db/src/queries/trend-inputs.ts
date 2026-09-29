@@ -71,28 +71,52 @@ export async function loadTrendCandidates(
   const historyStart = new Date(query.asOf.getTime() - 2 * query.windowDays * DAY_MS);
   const windowStart = new Date(query.asOf.getTime() - query.windowDays * DAY_MS);
 
-  const listings = await db
-    .select()
-    .from(storeApps)
-    .where(
-      and(
-        eq(storeApps.store, query.store),
-        eq(storeApps.country, query.country),
-        lte(storeApps.firstSeenAt, query.asOf),
-      ),
-    )
-    .orderBy(asc(storeApps.id));
-  if (listings.length === 0) return [];
+  const inStorefront = and(
+    eq(storeApps.store, query.store),
+    eq(storeApps.country, query.country),
+    lte(storeApps.firstSeenAt, query.asOf),
+  );
+  // Listing ids of this storefront as a subquery, so large storefronts do not send thousands of
+  // bind parameters to every follow-up query.
+  const storefrontIds = db.select({ id: storeApps.id }).from(storeApps).where(inStorefront);
+  const snapshotColumns = {
+    storeAppId: appSnapshots.storeAppId,
+    capturedAt: appSnapshots.capturedAt,
+    rating: appSnapshots.rating,
+    ratingCount: appSnapshots.ratingCount,
+    reviewCount: appSnapshots.reviewCount,
+    minInstalls: appSnapshots.minInstalls,
+    maxInstalls: appSnapshots.maxInstalls,
+  };
 
-  const ids = listings.map((listing) => listing.id);
-
-  const [inWindow, baseline, ranks, breadth] = await Promise.all([
+  const [listings, inWindow, baseline, ranks, breadth] = await Promise.all([
+    // Only the columns the dashboard uses: raw metadata and descriptions are most of a row's size.
     db
-      .select()
+      .select({
+        id: storeApps.id,
+        appId: storeApps.appId,
+        store: storeApps.store,
+        externalId: storeApps.externalId,
+        country: storeApps.country,
+        locale: storeApps.locale,
+        title: storeApps.title,
+        developerName: storeApps.developerName,
+        iconUrl: storeApps.iconUrl,
+        storeUrl: storeApps.storeUrl,
+        storeCategory: storeApps.storeCategory,
+        releaseDate: storeApps.releaseDate,
+        firstSeenAt: storeApps.firstSeenAt,
+        lastSeenAt: storeApps.lastSeenAt,
+      })
+      .from(storeApps)
+      .where(inStorefront)
+      .orderBy(asc(storeApps.id)),
+    db
+      .select(snapshotColumns)
       .from(appSnapshots)
       .where(
         and(
-          inArray(appSnapshots.storeAppId, ids),
+          inArray(appSnapshots.storeAppId, storefrontIds),
           gte(appSnapshots.capturedAt, historyStart),
           lte(appSnapshots.capturedAt, query.asOf),
         ),
@@ -100,21 +124,26 @@ export async function loadTrendCandidates(
       .orderBy(asc(appSnapshots.capturedAt)),
     // Change-only storage means the reading in force at the window start may be older than the window.
     db
-      .selectDistinctOn([appSnapshots.storeAppId])
+      .selectDistinctOn([appSnapshots.storeAppId], snapshotColumns)
       .from(appSnapshots)
       .where(
         and(
-          inArray(appSnapshots.storeAppId, ids),
+          inArray(appSnapshots.storeAppId, storefrontIds),
           sql`${appSnapshots.capturedAt} < ${historyStart.toISOString()}::timestamptz`,
         ),
       )
       .orderBy(appSnapshots.storeAppId, desc(appSnapshots.capturedAt)),
     db
-      .select()
+      .select({
+        storeAppId: chartEntries.storeAppId,
+        chartType: chartEntries.chartType,
+        capturedAt: chartEntries.capturedAt,
+        rank: chartEntries.rank,
+      })
       .from(chartEntries)
       .where(
         and(
-          inArray(chartEntries.storeAppId, ids),
+          inArray(chartEntries.storeAppId, storefrontIds),
           gte(chartEntries.capturedAt, historyStart),
           lte(chartEntries.capturedAt, query.asOf),
           query.chartType ? eq(chartEntries.chartType, query.chartType) : undefined,
@@ -137,12 +166,13 @@ export async function loadTrendCandidates(
           eq(storeApps.store, query.store),
           inArray(
             storeApps.externalId,
-            listings.map((listing) => listing.externalId),
+            db.select({ externalId: storeApps.externalId }).from(storeApps).where(inStorefront),
           ),
         ),
       )
       .groupBy(storeApps.externalId),
   ]);
+  if (listings.length === 0) return [];
 
   const snapshotsById = groupById([...baseline, ...inWindow], (row) => row.storeAppId);
   const ranksById = groupById(ranks, (row) => row.storeAppId);
