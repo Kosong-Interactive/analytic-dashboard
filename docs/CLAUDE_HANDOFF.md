@@ -207,14 +207,15 @@ priority over implementing them.
 - Next stages: `/research/[id]` with Shortlist/Reject/Prototype, Studio Fit, AI research brief,
   and 30/90-day durability.
 
-## Next dashboard work
+## Next work
 
-Games, Watchlist, Compare, and Search are done. Remaining, in order:
-
-1. Final navigation, responsive, accessibility, and browser-flow pass. Games, Compare, the
-   watchlist star, Reset, and the Cmd+K palette were exercised in a signed-in Chrome session;
-   the Watchlist page editor and mobile layouts still need a pass.
-2. Only then Automated Game Research / Steam, and the Vercel deployment.
+1. **Requested:** Genres/Mechanics label detail with the full game list (see
+   `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions).
+2. Research stage 1 follow-up: once Trend Scores exist (about 3.5 days of history, around
+   2026-10-02/03), check that scored opportunities are sensible and review the card layout with
+   real data.
+3. Research stage 2: `/research/[id]` with the full calculation and Shortlist/Reject/Prototype.
+4. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:
 
