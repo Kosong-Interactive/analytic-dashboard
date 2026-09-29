@@ -28,6 +28,9 @@ const timestamps = {
 
 export const storeEnum = pgEnum("store", ["app_store", "google_play"]);
 
+/** Platform ids as stored; the shared platform registry describes what each one publishes. */
+export type StoreId = (typeof storeEnum.enumValues)[number];
+
 export const labelTypeEnum = pgEnum("label_type", [
   "genre",
   "subgenre",

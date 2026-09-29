@@ -1,10 +1,10 @@
 import { and, desc, inArray } from "drizzle-orm";
 
-import { collectorRuns } from "../schema/index";
+import { collectorRuns, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
 export interface SourceHealthRow {
-  source: "app_store" | "google_play";
+  source: StoreId;
   country: string;
   jobType: string;
   /** Status of the most recent run, whatever its outcome. */

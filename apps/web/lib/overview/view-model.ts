@@ -4,6 +4,7 @@ import {
   type TrendingScore,
   type TrendTier,
 } from "@analytic-dashboard/analytics";
+import type { Store } from "@analytic-dashboard/shared";
 
 const DAY_MS = 86_400_000;
 export const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
@@ -14,7 +15,7 @@ const DISCOVERED_ROWS = 5;
 /** Structural subset of the database candidate row, so this module is testable without a database. */
 export interface OverviewCandidate {
   storeAppId: string;
-  store: "app_store" | "google_play";
+  store: Store;
   country: string;
   title: string;
   developerName: string | null;
@@ -33,7 +34,7 @@ export interface OverviewCandidate {
 }
 
 export interface OverviewSourceHealth {
-  source: "app_store" | "google_play";
+  source: Store;
   country: string;
   jobType: string;
   latestStatus: string;
@@ -54,7 +55,7 @@ export interface TrendingRow {
   title: string;
   iconUrl: string | null;
   developer: string | null;
-  store: "app_store" | "google_play";
+  store: Store;
   country: string;
   category: string | null;
   storeUrl: string;
@@ -78,7 +79,7 @@ export interface DiscoveredRow {
   title: string;
   iconUrl: string | null;
   developer: string | null;
-  store: "app_store" | "google_play";
+  store: Store;
   category: string | null;
   storeUrl: string;
   rating: number | null;
@@ -91,7 +92,7 @@ export type SourceState = "fresh" | "stale" | "failed" | "never";
 
 export interface SourceStatus {
   key: string;
-  source: "app_store" | "google_play";
+  source: Store;
   country: string;
   jobType: string;
   state: SourceState;

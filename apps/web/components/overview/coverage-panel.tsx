@@ -1,3 +1,5 @@
+import { platformLabel } from "@analytic-dashboard/shared";
+
 import { formatRelative } from "@/lib/format/format";
 import { countryLabels } from "@/lib/overview/filters";
 import type { OverviewData, SourceState } from "@/lib/overview/view-model";
@@ -12,7 +14,6 @@ const STATE: Record<SourceState, { label: string; dot: string; text: string }> =
   never: { label: "No data yet", dot: "bg-dim", text: "text-dim" },
 };
 
-const SOURCE_LABEL = { app_store: "App Store", google_play: "Google Play" } as const;
 const JOB_LABEL: Record<string, string> = {
   "discovery.search": "keyword discovery",
   "discovery.chart": "chart discovery",
@@ -43,7 +44,7 @@ export function CoveragePanel({ data }: { data: OverviewData }) {
                 <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", state.dot)} />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="text-[13px]">
-                    {SOURCE_LABEL[source.source]}
+                    {platformLabel(source.source)}
                     <span className="text-dim">
                       {" "}
                       · {JOB_LABEL[source.jobType] ?? source.jobType} ·{" "}

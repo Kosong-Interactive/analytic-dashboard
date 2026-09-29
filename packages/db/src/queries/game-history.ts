@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, lt, ne } from "drizzle-orm";
 
-import { appSnapshots, chartEntries, storeApps } from "../schema/index";
+import { appSnapshots, chartEntries, storeApps, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
 export interface GameHistoryQuery {
@@ -30,7 +30,7 @@ export interface GameChartRow {
 
 export interface GameSiblingListing {
   storeAppId: string;
-  store: "app_store" | "google_play";
+  store: StoreId;
   country: string;
   title: string;
 }
@@ -39,7 +39,7 @@ export interface GameHistory {
   listing: {
     storeAppId: string;
     appId: string;
-    store: "app_store" | "google_play";
+    store: StoreId;
     externalId: string;
     country: string;
     locale: string;

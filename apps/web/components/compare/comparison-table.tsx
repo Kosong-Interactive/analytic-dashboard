@@ -2,6 +2,8 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { platformLabel, platformsSupporting } from "@analytic-dashboard/shared";
+
 import type { CompareGame, CompareLabel, Comparison } from "@/lib/compare/comparison";
 import { formatCount, formatRelative, formatSigned } from "@/lib/format/format";
 import { formatInstallRange } from "@/lib/games/view-model";
@@ -48,6 +50,15 @@ interface MetricRow {
   render: (game: CompareGame) => ReactNode;
 }
 
+/** Names the platforms that publish install ranges when the compared games mix platforms. */
+function installsCaution(comparison: Comparison): string | undefined {
+  if (!comparison.mixedStores) return undefined;
+  const stores = [...new Set(comparison.games.map((game) => game.row.store))];
+  const publishing = platformsSupporting(stores, "installs").map(platformLabel);
+  if (publishing.length === 0) return undefined;
+  return `Only ${publishing.join(" and ")} ${publishing.length === 1 ? "publishes" : "publish"} install ranges.`;
+}
+
 function metricRows(comparison: Comparison, asOf: Date): MetricRow[] {
   const storeCaution = comparison.mixedStores
     ? "Stores count ratings differently; compare within a store only."
@@ -72,9 +83,9 @@ function metricRows(comparison: Comparison, asOf: Date): MetricRow[] {
     },
     {
       label: "Installs",
-      caution: comparison.mixedStores ? "Only Google Play publishes install ranges." : undefined,
+      caution: installsCaution(comparison),
       render: (g) => {
-        if (g.installs === null) return <Missing>Not published by the App Store</Missing>;
+        if (g.installs === null) return <Missing>Not published by {platformLabel(g.row.store)}</Missing>;
         return formatInstallRange(g.installs.min, g.installs.max) ?? <Missing />;
       },
     },

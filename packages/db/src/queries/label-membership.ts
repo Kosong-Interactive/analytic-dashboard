@@ -1,12 +1,12 @@
 import { and, eq, gte, inArray, or } from "drizzle-orm";
 
-import { appLabels, storeApps, taxonomyLabels } from "../schema/index";
+import { appLabels, storeApps, taxonomyLabels, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 import type { LabelType } from "../repositories/classification";
 import { notSupersededByAi } from "./rule-superseded";
 
 export interface LabelMembershipQuery {
-  stores: ReadonlyArray<"app_store" | "google_play">;
+  stores: ReadonlyArray<StoreId>;
   country: string;
   taxonomyVersion: string;
   types: readonly LabelType[];

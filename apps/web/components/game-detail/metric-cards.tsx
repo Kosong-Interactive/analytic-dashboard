@@ -1,3 +1,5 @@
+import { platformLabel, supports } from "@analytic-dashboard/shared";
+
 import { formatCount, formatRelative, formatSigned } from "@/lib/format/format";
 import type { GameDetailView } from "@/lib/games/view-model";
 import { cn } from "@/lib/utils";
@@ -13,6 +15,17 @@ export function MetricCards({ view }: { view: GameDetailView }) {
   const perDay = rawOf(view, "ratingCountVelocity7d");
   const rankGain = rawOf(view, "rankGain7d");
   const tier = score.tier ? tierStyles[score.tier] : null;
+  const chartsCollected = supports(view.listing.store, "chartRank");
+
+  function chartNote(): string {
+    if (latest.rank) return `${latest.rank.chartType.replace("_", " ").toLowerCase()} · ${formatRelative(latest.rank.capturedAt, asOf)}`;
+    return chartsCollected ? "not seen in a tracked chart" : `${platformLabel(view.listing.store)} charts are not collected yet`;
+  }
+
+  function rankGainNote(): string {
+    if (rankGain !== null) return "positions; positive means rising";
+    return chartsCollected ? "not measurable yet" : "needs chart collection";
+  }
 
   const items = [
     {
@@ -33,12 +46,12 @@ export function MetricCards({ view }: { view: GameDetailView }) {
     {
       label: "Chart rank",
       value: latest.rank ? `#${latest.rank.rank}` : "—",
-      note: latest.rank ? `${latest.rank.chartType.replace("_", " ").toLowerCase()} · ${formatRelative(latest.rank.capturedAt, asOf)}` : "not seen in a tracked chart",
+      note: chartNote(),
     },
     {
       label: "Rank change (7d)",
       value: rankGain === null ? "—" : formatSigned(rankGain),
-      note: rankGain === null ? "not measurable yet" : "positions; positive means rising",
+      note: rankGainNote(),
     },
     {
       label: "Trend score",

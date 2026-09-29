@@ -1,4 +1,4 @@
-import { countryCodeSchema, type CountryCode } from "@analytic-dashboard/shared";
+import { countryCodeSchema, platformRegistry, type CountryCode } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 export const platformValues = ["all", "google_play", "app_store"] as const;
@@ -47,6 +47,6 @@ export const countryLabels: Record<CountryCode, string> = {
 
 export const platformLabels: Record<Platform, string> = {
   all: "All",
-  google_play: "Google Play",
-  app_store: "App Store",
+  google_play: platformRegistry.google_play.label,
+  app_store: platformRegistry.app_store.label,
 };

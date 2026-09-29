@@ -1,4 +1,5 @@
 import type { TrendingScore } from "@analytic-dashboard/analytics";
+import { supports } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 import type { MembershipRow } from "../labels/aggregate";
@@ -44,7 +45,7 @@ export function compareHref(current: CompareQuery, change: Partial<CompareQuery>
   return text ? `/games/compare?${text}` : "/games/compare";
 }
 
-/** Candidate row plus install ranges, which only Google Play publishes. */
+/** Candidate row plus install ranges, which only some platforms publish. */
 export type CompareCandidate = Omit<OverviewCandidate, "snapshots"> & {
   snapshots: ReadonlyArray<{
     capturedAt: Date;
@@ -66,7 +67,7 @@ export interface CompareLabel {
 export interface CompareGame {
   row: TrendingRow;
   latestObservationAt: Date | null;
-  /** Google Play install range; `null` for App Store listings, which do not publish installs. */
+  /** Install range; `null` for a platform that never publishes installs (see the platform registry). */
   installs: { min: number | null; max: number | null } | null;
   genres: CompareLabel[];
   mechanics: CompareLabel[];
@@ -115,7 +116,7 @@ export function buildComparison(input: {
       row: toTrendingRow(candidate, scoreById.get(id), 0),
       latestObservationAt: latest?.capturedAt ?? null,
       installs:
-        candidate.store === "google_play"
+        supports(candidate.store, "installs")
           ? { min: latest?.minInstalls ?? null, max: latest?.maxInstalls ?? null }
           : null,
       genres: toLabels(id, "genre"),

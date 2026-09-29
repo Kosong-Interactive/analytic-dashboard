@@ -5,6 +5,7 @@ import {
   apps,
   chartEntries,
   storeApps,
+  type StoreId,
 } from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 import {
@@ -16,7 +17,7 @@ import {
 
 /** Store-neutral shape of a collector's normalized output, kept structural so db never imports a collector. */
 export interface PersistableStoreApp {
-  store: "app_store" | "google_play";
+  store: StoreId;
   externalId: string;
   country: string;
   locale: string;

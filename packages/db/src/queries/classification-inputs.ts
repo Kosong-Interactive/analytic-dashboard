@@ -1,10 +1,10 @@
 import { asc, desc, sql } from "drizzle-orm";
 
-import { appSnapshots, storeApps } from "../schema/index";
+import { appSnapshots, storeApps, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
 export interface ClassificationListingRow {
-  store: "app_store" | "google_play";
+  store: StoreId;
   country: string;
   title: string;
   description: string | null;
