@@ -1,6 +1,7 @@
 import { runClassifyAiCommand } from "./commands/classify-ai.js";
 import { runClassifyCommand } from "./commands/classify.js";
 import { runDiscoverCommand } from "./commands/discover.js";
+import { runResearchCommand } from "./commands/research.js";
 import { createCollectorDescriptor } from "./descriptor.js";
 
 const [command = "info", ...args] = process.argv.slice(2);
@@ -44,6 +45,18 @@ if (command === "info") {
     console.error(
       JSON.stringify({
         event: "classification.ai.failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+    process.exitCode = 1;
+  }
+} else if (command === "research") {
+  try {
+    process.exitCode = await runResearchCommand(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "research.failed",
         message: error instanceof Error ? error.message : "Unknown error",
       }),
     );
