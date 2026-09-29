@@ -35,6 +35,10 @@ export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const onLogin = pathname === "/login";
 
+  // A fetch cannot follow a redirect to an HTML login page, so API routes answer 401 instead.
+  if (!signedIn && pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+  }
   if (!signedIn && !onLogin) {
     return NextResponse.redirect(new URL(loginPath(pathname + search), request.url));
   }

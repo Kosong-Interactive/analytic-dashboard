@@ -86,3 +86,12 @@ export {
   type WatchlistStatus,
 } from "./repositories/watchlist";
 export { loadListingContexts, type ListingContextRow } from "./queries/listing-contexts";
+export {
+  escapeLikePattern,
+  searchCatalog,
+  type CatalogDeveloperHit,
+  type CatalogGameHit,
+  type CatalogLabelHit,
+  type CatalogSearchQuery,
+  type CatalogSearchResult,
+} from "./queries/catalog-search";
