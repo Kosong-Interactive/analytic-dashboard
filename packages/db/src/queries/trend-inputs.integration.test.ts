@@ -8,6 +8,7 @@ import {
   persistStoreApps,
   type PersistableStoreApp,
 } from "../repositories/store-app-persistence";
+import { loadGameHistory } from "./game-history";
 import { loadTrendCandidates } from "./trend-inputs";
 
 // Needs a migrated PostgreSQL. Every test rolls back, so nothing is left behind.
@@ -144,6 +145,36 @@ describe("loadTrendCandidates", { skip: connection === null }, () => {
         windowDays: 7,
       });
       assert.deepEqual(result, []);
+    });
+  });
+});
+
+describe("loadGameHistory", { skip: connection === null }, () => {
+  it("returns the listing, its history since a date with the baseline reading, and sibling listings", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const first = await persistStoreApps(tx, [game("com.a", "us", 1, 100)]);
+      await persistStoreApps(tx, [game("com.a", "us", 5, 120)]);
+      await persistStoreApps(tx, [game("com.a", "us", 9, 150)]);
+      await persistStoreApps(tx, [game("com.a", "id", 9, 40)]);
+      const storeAppId = [...first.storeAppIds.values()][0];
+      assert.ok(storeAppId);
+
+      const history = await loadGameHistory(tx, { storeAppId, since: at(4) });
+
+      assert.equal(history?.listing.externalId, "com.a");
+      // Day 1 is before `since` but is the reading in force at day 4, so it is kept.
+      assert.deepEqual(history?.snapshots.map((s) => s.reviewCount), [100, 120, 150]);
+      assert.deepEqual(history?.siblings.map((s) => s.country), ["id"]);
+    });
+  });
+
+  it("returns null for an unknown listing", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const history = await loadGameHistory(tx, {
+        storeAppId: "00000000-0000-4000-8000-000000000000",
+        since: at(1),
+      });
+      assert.equal(history, null);
     });
   });
 });

@@ -13,7 +13,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending";
+export type NavKey = "overview" | "trending" | "games";
 
 interface NavItem {
   label: string;
@@ -46,7 +46,7 @@ export function Sidebar({ active }: { active: NavKey }) {
           className="-ml-1 shrink-0"
         />
         <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-semibold leading-none tracking-[0.16em]">
+          <span className="text-[13px] font-semibold leading-none">
             GAME ANALYTIC
           </span>
           <span className="text-[10.5px] leading-none text-dim">by Kosong Interactive</span>

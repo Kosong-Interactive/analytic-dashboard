@@ -1,7 +1,7 @@
 import type { TrendComponent, TrendTier } from "@analytic-dashboard/analytics";
 
 import { formatCount, formatSigned } from "@/lib/format/format";
-import type { TrendingRow } from "@/lib/overview/view-model";
+import type { ScoreComponentView, TrendingRow } from "@/lib/overview/view-model";
 import { cn } from "@/lib/utils";
 
 export const tierStyles: Record<TrendTier, { label: string; text: string; bar: string }> = {
@@ -46,7 +46,6 @@ export function ScoreBreakdown({ row }: { row: TrendingRow }) {
     );
   }
   const style = tierStyles[row.tier];
-  const measured = row.components.filter((c) => c.contribution !== null);
 
   return (
     <details className="group relative">
@@ -71,38 +70,7 @@ export function ScoreBreakdown({ row }: { row: TrendingRow }) {
           trend_score_v1 · based on {Math.round(row.weightCoverage * 100)}% of the score weight.
           Unmeasurable components are left out, not counted as zero.
         </p>
-        <table className="mt-2 w-full text-[11px]">
-          <caption className="sr-only">Trend score components</caption>
-          <thead className="text-dim">
-            <tr>
-              <th scope="col" className="pb-1 text-left font-medium">Component</th>
-              <th scope="col" className="pb-1 text-right font-medium">Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {row.components.map((c) => (
-              <tr key={c.component} className="border-t border-line-soft align-top">
-                <th scope="row" className="py-1 pr-2 text-left font-normal text-ink-soft">
-                  {componentLabels[c.component]}
-                  <span className="block text-dim">
-                    {describeRaw(c.component, c.raw)} · weight {Math.round(c.weight * 100)}%
-                  </span>
-                </th>
-                <td className="py-1 text-right font-mono">
-                  {c.contribution === null ? "—" : c.contribution.toFixed(1)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t border-line-strong">
-              <th scope="row" className="pt-1 text-left font-medium">Total</th>
-              <td className="pt-1 text-right font-mono font-medium">
-                {measured.length === 0 ? "—" : row.score.toFixed(1)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+        <ScoreComponentsTable components={row.components} score={row.score} />
         {row.latestObservationAt ? (
           <p className="mt-2 text-[11px] text-dim">
             Newest observation: {row.latestObservationAt.toISOString().slice(0, 16).replace("T", " ")} UTC
@@ -112,5 +80,48 @@ export function ScoreBreakdown({ row }: { row: TrendingRow }) {
         ) : null}
       </div>
     </details>
+  );
+}
+
+export function ScoreComponentsTable({
+  components,
+  score,
+}: {
+  components: ScoreComponentView[];
+  score: number | null;
+}) {
+  return (
+    <table className="mt-2 w-full text-[11px]">
+      <caption className="sr-only">Trend score components</caption>
+      <thead className="text-dim">
+        <tr>
+          <th scope="col" className="pb-1 text-left font-medium">Component</th>
+          <th scope="col" className="pb-1 text-right font-medium">Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        {components.map((c) => (
+          <tr key={c.component} className="border-t border-line-soft align-top">
+            <th scope="row" className="py-1 pr-2 text-left font-normal text-ink-soft">
+              {componentLabels[c.component]}
+              <span className="block text-dim">
+                {describeRaw(c.component, c.raw)} · weight {Math.round(c.weight * 100)}%
+              </span>
+            </th>
+            <td className="py-1 text-right font-mono">
+              {c.contribution === null ? "—" : c.contribution.toFixed(1)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr className="border-t border-line-strong">
+          <th scope="row" className="pt-1 text-left font-medium">Total</th>
+          <td className="pt-1 text-right font-mono font-medium">
+            {score === null || !components.some((c) => c.contribution !== null) ? "—" : score.toFixed(1)}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
   );
 }

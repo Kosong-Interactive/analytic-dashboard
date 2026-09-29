@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import Link from "next/link";
 
 import { formatCount, formatRelative, initials } from "@/lib/format/format";
 import { platformLabels } from "@/lib/overview/filters";
@@ -34,14 +35,9 @@ export function DiscoveredList({ data }: { data: OverviewData }) {
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <div className="flex items-center gap-2">
-                  <a
-                    href={game.storeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="truncate font-medium hover:underline"
-                  >
+                  <Link href={`/games/${game.id}`} className="truncate font-medium hover:underline">
                     {game.title}
-                  </a>
+                  </Link>
                   <span className="shrink-0 text-[11.5px] text-dim">{game.category ?? "—"}</span>
                 </div>
                 <p className="truncate text-[11.5px] text-dim">

@@ -41,3 +41,11 @@ export {
   loadSourceHealth,
   type SourceHealthRow,
 } from "./queries/source-health";
+export {
+  loadGameHistory,
+  type GameChartRow,
+  type GameHistory,
+  type GameHistoryQuery,
+  type GameSiblingListing,
+  type GameSnapshotRow,
+} from "./queries/game-history";

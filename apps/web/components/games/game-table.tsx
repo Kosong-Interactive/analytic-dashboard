@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowDown, ArrowUp, Minus, Star } from "lucide-react";
 
 import { formatCount, formatSigned, initials } from "@/lib/format/format";
@@ -54,12 +55,7 @@ function PerDay({ value }: { value: number | null }) {
 
 function GameLink({ row }: { row: TrendingRow }) {
   return (
-    <a
-      href={row.storeUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2.5 font-medium hover:underline"
-    >
+    <Link href={`/games/${row.id}`} className="flex items-center gap-2.5 font-medium hover:underline">
       <span
         aria-hidden
         className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-accent/80 font-mono text-[11px] font-medium text-canvas"
@@ -67,7 +63,7 @@ function GameLink({ row }: { row: TrendingRow }) {
         {initials(row.title)}
       </span>
       <span className="max-w-[16rem] truncate">{row.title}</span>
-    </a>
+    </Link>
   );
 }
 
