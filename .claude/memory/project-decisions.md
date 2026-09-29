@@ -8,7 +8,9 @@
 - Web: Next.js App Router with strict TypeScript.
 - Package manager: npm workspaces with a single root `package-lock.json`.
 - Database: user's existing Supabase account, using managed PostgreSQL.
+- Database migrations: Drizzle code-first SQL migrations, validated against an empty PostgreSQL database in CI.
 - Collector: separate Node.js/TypeScript worker with replaceable store adapters.
+- Shared runtime contracts: Zod schemas in `packages/shared` for source, country, snapshot, and taxonomy boundaries.
 - Historical snapshots are the basis for trends.
 - Initial scheduler: GitHub Actions unless measured requirements justify another runtime.
 - Initial queue: PostgreSQL jobs table; no Redis by default.

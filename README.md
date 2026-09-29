@@ -15,11 +15,12 @@ npm install
 npm run dev
 npm run lint
 npm run typecheck
+npm test
 npm run build
 npm run check
 ```
 
-The Next.js application lives in `apps/web`. The Drizzle schema and SQL migrations live in `packages/db`.
+The Next.js application lives in `apps/web`, the scheduled worker foundation lives in `apps/collector`, shared runtime contracts live in `packages/shared`, and the Drizzle schema and SQL migrations live in `packages/db`.
 
 Copy `apps/web/.env.example` to `apps/web/.env.local` when Phase 0.2 connects Supabase. Never commit `.env.local`.
 

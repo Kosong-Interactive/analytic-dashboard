@@ -1,0 +1,21 @@
+{
+  "name": "@analytic-dashboard/collector",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "tsx --test src/descriptor.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@analytic-dashboard/shared": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}
