@@ -20,7 +20,7 @@ export default async function OverviewPage({ searchParams }: HomePageProps) {
   return (
     <AppShell filters={filters} active="overview">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Mobile Game Market</h1>
+        <h1 className="text-[22px] font-semibold tracking-tight">Game Market Overview</h1>
         <p className="text-[13px] text-dim">
           Emerging games and momentum signals from our own historical observations.
         </p>
