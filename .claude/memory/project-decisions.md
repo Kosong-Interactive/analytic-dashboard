@@ -11,6 +11,7 @@
 - Database migrations: Drizzle code-first SQL migrations, validated against an empty PostgreSQL database in CI.
 - Collector: separate Node.js/TypeScript worker with replaceable store adapters.
 - Shared runtime contracts: Zod schemas in `packages/shared` for source, country, snapshot, and taxonomy boundaries.
+- Apple collection: official iTunes Search/Lookup endpoints behind `AppleSearchCollector`; filter software results to Games and preserve missing review counts as `null`.
 - Historical snapshots are the basis for trends.
 - Initial scheduler: GitHub Actions unless measured requirements justify another runtime.
 - Initial queue: PostgreSQL jobs table; no Redis by default.
