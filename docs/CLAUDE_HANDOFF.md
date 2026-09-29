@@ -41,6 +41,13 @@ observations exist.
 
 Never print, paste, or commit `.env.local` values. Preserve unrelated user changes.
 
+## Platform registry
+
+`packages/shared/src/platforms.ts` is the one place that says what each platform is and publishes
+(label, kind, markets, rating scale, review count, install range, chart rank). UI and classifier
+code read labels and capabilities from it; `packages/db` derives `StoreId` from the `store` enum.
+Add Steam there, and to the database enum, only when its adapter and observation semantics exist.
+
 ## Product semantics that must not drift
 
 - This is sampled market research, not a complete catalogue.
@@ -152,7 +159,10 @@ spacing, model rotation, and token counts. Manual overrides are never touched.
   continues at up to 200 apps per run.
 - Once an app has an AI run for a taxonomy version, its rule labels are ignored by
   `loadLabelMembership` and `loadListingLabels` (`notSupersededByAi`); manual labels still win.
-  Known AI miss to review: Shadowgun Legends ("Online FPS") lost the rule's `shooting` label.
+  Prompt `ai-v2` (platform-neutral wording, title/store genre words count as evidence, and a
+  wrong evidence field is corrected to the field that contains the verbatim quote) re-queues every
+  app. Known model inconsistency: Shadowgun Legends ("Online FPS") gets `shooting` when classified
+  alone but not always in a batch; correct it with a manual Confirm.
 - One early live run stalled with only an idle database socket open and was killed; it did not
   reproduce. The DB client now has `connect_timeout`, and the classification steps have
   `timeout-minutes`.
