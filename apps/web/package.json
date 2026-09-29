@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/overview/filters.test.ts lib/overview/view-model.test.ts lib/trending/query.test.ts lib/trending/list.test.ts lib/auth/redirect.test.ts lib/root-env.test.ts lib/games/view-model.test.ts lib/releases/releases.test.ts lib/labels/labels.test.ts lib/labels/resolve.test.ts lib/explorer/explorer.test.ts lib/watchlist/watchlist.test.ts lib/compare/compare.test.ts lib/search/search.test.ts"
+    "test": "tsx --test lib/overview/filters.test.ts lib/overview/view-model.test.ts lib/trending/query.test.ts lib/trending/list.test.ts lib/auth/redirect.test.ts lib/root-env.test.ts lib/games/view-model.test.ts lib/releases/releases.test.ts lib/labels/labels.test.ts lib/labels/resolve.test.ts lib/explorer/explorer.test.ts lib/watchlist/watchlist.test.ts lib/compare/compare.test.ts lib/search/search.test.ts lib/research/research.test.ts"
   },
   "dependencies": {
     "@analytic-dashboard/analytics": "0.0.0",

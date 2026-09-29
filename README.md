@@ -13,7 +13,7 @@ waktu ke waktu.
 
 | Halaman | Isi |
 |---|---|
-| **Overview** | Ringkasan game yang dipantau, game yang baru ditemukan, game trending, dan kesegaran data |
+| **Overview** | Ringkasan game yang dipantau, **Game Opportunities** (arah riset berbasis bukti), game trending, dan kesegaran data |
 | **Trending Games** | Game diurutkan berdasarkan Trend Score, dengan filter dan rincian komponen skor |
 | **New Releases** | Game dengan tanggal rilis dari store dalam 7, 30, atau 90 hari terakhir |
 | **Genres / Mechanics** | Sebaran game per genre, subgenre, mechanic, tema, dan mode multiplayer |
@@ -39,6 +39,9 @@ oleh admin (tidak ada pendaftaran publik).
    memperbaiki dan melengkapinya. Setiap label AI wajib mengutip teks dari listing store. Label
    manual selalu menang dan tidak pernah ditimpa otomatis.
 4. **Scoring.** Trend Score dihitung dari riwayat snapshot kita sendiri.
+5. **Riset.** Sekali sehari, setiap cohort genre dan mechanic (minimal 5 game) diberi Opportunity
+   Score dan Research Confidence yang terpisah, lengkap dengan game pembanding, sinyal positif,
+   dan risiko. Skor ini arah riset, bukan prediksi keberhasilan komersial.
 
 Semua job aman dijalankan ulang. Dashboard hanya **membaca** database: membuka halaman atau mencari
 tidak pernah memicu pengambilan data maupun job AI.

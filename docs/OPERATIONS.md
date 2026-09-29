@@ -18,6 +18,14 @@ npm run classify-ai --workspace @analytic-dashboard/collector -- --dry-run --lim
 `classify-ai` sends listing text to the AI provider and uses its quota, even in a dry run. Keep
 manual runs small.
 
+Opportunity research runs once a day from `.github/workflows/research.yml` (01:43 UTC). It reads
+stored data only, and a rerun within the same UTC hour over unchanged data writes nothing.
+
+```bash
+npm run research --workspace @analytic-dashboard/collector -- --dry-run
+npm run research --workspace @analytic-dashboard/collector -- --country id
+```
+
 ## Database
 
 ```bash
