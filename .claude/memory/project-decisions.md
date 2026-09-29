@@ -12,6 +12,7 @@
 - Collector: separate Node.js/TypeScript worker with replaceable store adapters.
 - Shared runtime contracts: Zod schemas in `packages/shared` for source, country, snapshot, and taxonomy boundaries.
 - Apple collection: official iTunes Search/Lookup endpoints behind `AppleSearchCollector`; filter software results to Games and preserve missing review counts as `null`.
+- Google Play collection: `@mradex77/google-play-scraper@1.3.0` is isolated behind `GooglePlayCollector` (Node baseline 22.12+); the Node-20-compatible `google-play-scraper` was rejected after a live smoke test returned zero records; source calls are throttled, cached, and retried only for transient failures.
 - Historical snapshots are the basis for trends.
 - Initial scheduler: GitHub Actions unless measured requirements justify another runtime.
 - Initial queue: PostgreSQL jobs table; no Redis by default.

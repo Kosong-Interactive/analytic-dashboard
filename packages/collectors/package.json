@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "types": "./src/index.ts",
   "exports": {
     ".": {
@@ -12,16 +15,22 @@
     "./apple": {
       "types": "./src/apple/index.ts",
       "import": "./dist/apple/index.js"
+    },
+    "./google-play": {
+      "types": "./src/google-play/index.ts",
+      "import": "./dist/google-play/index.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "smoke:apple": "tsx src/apple/smoke.ts",
-    "test": "tsx --test src/apple/apple-search-collector.test.ts",
+    "smoke:google-play": "tsx src/google-play/smoke.ts",
+    "test": "tsx --test src/apple/apple-search-collector.test.ts src/google-play/google-play-collector.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@analytic-dashboard/shared": "0.0.0",
+    "@mradex77/google-play-scraper": "1.3.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

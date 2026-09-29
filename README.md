@@ -37,6 +37,7 @@ Run the Apple adapter's small live contract check separately from deterministic 
 
 ```bash
 npm run smoke:apple --workspace @analytic-dashboard/collectors
+npm run smoke:google-play --workspace @analytic-dashboard/collectors
 ```
 
 See `docs/MVP_IMPLEMENTATION_PLAN.md` for product scope and architecture.
