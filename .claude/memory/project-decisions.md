@@ -6,6 +6,7 @@
 - Initial stores: Apple App Store and Google Play.
 - Initial storefronts: Indonesia and United States.
 - Web: Next.js App Router with strict TypeScript.
+- Package manager: npm workspaces with a single root `package-lock.json`.
 - Database: user's existing Supabase account, using managed PostgreSQL.
 - Collector: separate Node.js/TypeScript worker with replaceable store adapters.
 - Historical snapshots are the basis for trends.

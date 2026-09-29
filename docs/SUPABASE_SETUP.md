@@ -21,7 +21,7 @@ The user already has a Supabase account. Do not request or paste secrets into ch
 ### Server-only secrets
 
 - Direct or pooled database connection string used by migrations/server code.
-- Service-role key only if a server-side operation truly requires it.
+- Secret key only if a trusted server operation truly requires bypassing Row Level Security.
 - Database password if the chosen connection string embeds it.
 
 Server-only values must never use a `NEXT_PUBLIC_` prefix.
@@ -34,8 +34,27 @@ Final variable names should be added to `.env.example` during scaffolding. Expec
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 DATABASE_URL
-SUPABASE_SERVICE_ROLE_KEY          # only if actually required
+DIRECT_URL                         # optional migration connection
+SUPABASE_SECRET_KEY                # only if actually required
 ```
+
+For a new project, use Supabase's current `sb_publishable_...` and `sb_secret_...` key types. Do not start a new integration with the legacy JWT-based `anon` or `service_role` keys.
+
+## Where to get each value
+
+1. Open the Supabase Dashboard and select the project.
+2. Click **Connect** at the top of the project page.
+3. Copy **Project URL** to `NEXT_PUBLIC_SUPABASE_URL`.
+4. Copy **Publishable key** to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+5. In the same **Connect** dialog, open the database connection section:
+   - use the transaction pooler for short-lived serverless application connections;
+   - use direct connection for migrations when the machine supports IPv6;
+   - otherwise use the session pooler for migrations or other IPv4-only environments.
+6. Replace `[YOUR-PASSWORD]` locally with the database password. Percent-encode reserved characters in the password.
+7. Put the application connection in `DATABASE_URL` and, when a separate migration connection is needed, put it in `DIRECT_URL`.
+8. Leave `SUPABASE_SECRET_KEY` empty initially. If a later server-only job requires elevated API access, create/copy a secret key from **Settings > API Keys** and store it only in server-side secret storage.
+
+The publishable key is intentionally safe to ship to a browser only when Row Level Security and grants are configured correctly. A secret key bypasses RLS and must never use a `NEXT_PUBLIC_` prefix.
 
 ## Setup sequence for Phase 0
 

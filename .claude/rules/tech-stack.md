@@ -11,14 +11,14 @@
 - Supabase PostgreSQL
 - Drizzle ORM and SQL migrations
 - Node.js/TypeScript collector runtime
-- pnpm workspaces and Turborepo
+- npm workspaces and Turborepo
 
 ## Dependency rules
 
 - Check existing workspace packages before adding a dependency.
 - Do not add a second library for an existing responsibility without justification.
 - Scraper packages are collector-only dependencies.
-- Database drivers and service-role credentials are server-only.
+- Database drivers and Supabase secret credentials are server-only.
 - AI SDK usage is isolated behind a provider interface in `packages/classifier`.
 - Avoid Redis or an external queue until PostgreSQL job processing is demonstrably insufficient.
 

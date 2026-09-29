@@ -18,7 +18,7 @@ The product is a research signal, not a complete store catalog. Never present sa
 - Apache ECharts for analytical charts
 - Supabase PostgreSQL with Drizzle ORM
 - Node.js/TypeScript collector worker
-- pnpm workspaces and Turborepo
+- npm workspaces and Turborepo
 - Zod at external and asynchronous boundaries
 
 Do not introduce a different framework, database, queue, cache, or state library without a measured need and explicit approval.

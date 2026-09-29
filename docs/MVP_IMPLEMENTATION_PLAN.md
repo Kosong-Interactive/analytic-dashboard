@@ -48,7 +48,7 @@ The MVP is a research signal, not a complete copy of either store catalog. Every
 
 | Layer | Primary choice | Reason |
 |---|---|---|
-| Monorepo | pnpm workspaces + Turborepo | Familiar TypeScript workflow and shared packages |
+| Monorepo | npm workspaces + Turborepo | Familiar TypeScript workflow and shared packages |
 | Web | Next.js App Router + TypeScript | React-first UI plus a lightweight backend-for-frontend |
 | UI | Tailwind CSS + shadcn/ui | Fast dashboard delivery with maintainable primitives |
 | Charts | Apache ECharts | Strong time-series, ranking, heatmap, and tooltip support |
@@ -117,7 +117,8 @@ analytic-dashboard/
 ├── docs/
 ├── .github/workflows/
 ├── turbo.json
-└── pnpm-workspace.yaml
+├── package-lock.json
+└── package.json
 ```
 
 ## 6. Data model
@@ -352,7 +353,7 @@ Before approaching the hosted database limit, the first actions are review pruni
 
 ## 14. Security and configuration
 
-- Keep service-role database keys and AI keys server-side only.
+- Keep Supabase secret keys, database credentials, and AI keys server-side only.
 - Protect manual collection and reclassification endpoints with admin authentication and a shared internal authorization layer.
 - Validate every collector payload before persistence.
 - Use least-privilege database roles where practical.
