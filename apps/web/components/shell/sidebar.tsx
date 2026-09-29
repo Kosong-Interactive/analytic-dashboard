@@ -13,7 +13,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games";
+export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games" | "watchlist";
 
 interface NavItem {
   label: string;
@@ -30,7 +30,7 @@ const NAV: NavItem[] = [
   { label: "Genres", icon: Layers, key: "genres", href: "/genres" },
   { label: "Mechanics", icon: SlidersHorizontal, key: "mechanics", href: "/mechanics" },
   { label: "Games", icon: Gamepad2, key: "games", href: "/games" },
-  { label: "Watchlist", icon: Eye },
+  { label: "Watchlist", icon: Eye, key: "watchlist", href: "/watchlist" },
 ];
 
 export function Sidebar({ active }: { active: NavKey }) {

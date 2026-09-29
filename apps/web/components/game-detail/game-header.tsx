@@ -1,5 +1,6 @@
 import { ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { GameIcon } from "../games/game-icon";
 import type { GameDetailView } from "@/lib/games/view-model";
@@ -9,13 +10,14 @@ function countryLabel(code: string): string {
   return countryLabels[code as keyof typeof countryLabels] ?? code.toUpperCase();
 }
 
-export function GameHeader({ view }: { view: GameDetailView }) {
+/** `actions` sits next to the store link, e.g. the watchlist control. */
+export function GameHeader({ view, actions }: { view: GameDetailView; actions?: ReactNode }) {
   const { listing, siblings } = view;
 
   return (
     <div className="flex flex-col gap-4">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-dim">
-        <Link href="/trending" className="hover:text-ink">Games</Link>
+        <Link href="/games" className="hover:text-ink">Games</Link>
         <ChevronRight aria-hidden className="size-3" />
         <span aria-current="page" className="truncate text-ink-soft">{listing.title}</span>
       </nav>
@@ -41,6 +43,7 @@ export function GameHeader({ view }: { view: GameDetailView }) {
             <li className="text-dim">First observed {listing.firstSeenAt.toISOString().slice(0, 10)}</li>
           </ul>
         </div>
+        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
         <a
           href={listing.storeUrl}
           target="_blank"
@@ -51,6 +54,8 @@ export function GameHeader({ view }: { view: GameDetailView }) {
           <ExternalLink aria-hidden className="size-3" />
           <span className="sr-only">(opens in a new tab)</span>
         </a>
+        {actions}
+        </div>
       </div>
 
       {siblings.length > 0 ? (

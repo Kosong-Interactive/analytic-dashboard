@@ -328,6 +328,45 @@ export const classificationRuns = pgTable(
   ],
 ).enableRLS();
 
+export const watchlistStatusEnum = pgEnum("watchlist_status", [
+  "watching",
+  "priority",
+  "archived",
+]);
+
+/**
+ * The team's shared watchlist: one entry per store listing, so store and country context stay
+ * attached. The baseline is the latest observation when the game was added, kept to show
+ * movement since then; it stays null when nothing had been observed.
+ */
+export const watchlistEntries = pgTable(
+  "watchlist_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    storeAppId: uuid("store_app_id")
+      .notNull()
+      .references(() => storeApps.id, { onDelete: "cascade" }),
+    status: watchlistStatusEnum("status").default("watching").notNull(),
+    note: text("note"),
+    addedBy: text("added_by").notNull(),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedBy: text("updated_by").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    baselineCapturedAt: timestamp("baseline_captured_at", { withTimezone: true }),
+    baselineRating: numeric("baseline_rating", { precision: 3, scale: 2 }),
+    baselineRatingCount: bigint("baseline_rating_count", { mode: "number" }),
+  },
+  (table) => [
+    uniqueIndex("watchlist_entries_store_app_uidx").on(table.storeAppId),
+    index("watchlist_entries_status_idx").on(table.status),
+    check("watchlist_entries_note_length_chk", sql`${table.note} is null or char_length(${table.note}) <= 2000`),
+  ],
+).enableRLS();
+
 export const collectorRuns = pgTable(
   "collector_runs",
   {

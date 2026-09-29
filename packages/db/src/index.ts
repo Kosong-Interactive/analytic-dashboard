@@ -76,3 +76,12 @@ export {
   type LabelMembershipRow,
 } from "./queries/label-membership";
 export { findListingAppId, loadListingLabels, type ListingLabelRow } from "./queries/listing-labels";
+export {
+  addWatchlistEntry,
+  findWatchlistEntry,
+  loadWatchlist,
+  removeWatchlistEntry,
+  updateWatchlistEntry,
+  type WatchlistEntryRow,
+  type WatchlistStatus,
+} from "./repositories/watchlist";
