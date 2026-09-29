@@ -1,3 +1,5 @@
+import { platformLabel, supports } from "@analytic-dashboard/shared";
+
 import { formatCount } from "@/lib/format/format";
 import type { GameDetailView } from "@/lib/games/view-model";
 import { platformLabels } from "@/lib/overview/filters";
@@ -6,6 +8,10 @@ import { EmptyState, Panel } from "../overview/panel";
 
 export function ObservationsTable({ view }: { view: GameDetailView }) {
   const { observations, listing, historyDays } = view;
+  // Columns a platform never publishes are left out rather than shown as a column of dashes.
+  const showReviews = supports(listing.store, "reviewCount");
+  const showInstalls = supports(listing.store, "installs");
+  const unpublished = [!showReviews && "review counts", !showInstalls && "installs"].filter(Boolean);
   return (
     <Panel
       title="Source observations"
@@ -25,8 +31,8 @@ export function ObservationsTable({ view }: { view: GameDetailView }) {
                   <th scope="col" className="px-4 text-left font-medium">Captured at</th>
                   <th scope="col" className="px-2 text-right font-medium">Rating</th>
                   <th scope="col" className="px-2 text-right font-medium">Ratings</th>
-                  <th scope="col" className="px-2 text-right font-medium">Reviews</th>
-                  <th scope="col" className="px-2 text-right font-medium">Installs (range)</th>
+                  {showReviews ? <th scope="col" className="px-2 text-right font-medium">Reviews</th> : null}
+                  {showInstalls ? <th scope="col" className="px-2 text-right font-medium">Installs (range)</th> : null}
                   <th scope="col" className="px-4 text-left font-medium">Version</th>
                 </tr>
               </thead>
@@ -36,8 +42,8 @@ export function ObservationsTable({ view }: { view: GameDetailView }) {
                     <td className="whitespace-nowrap px-4">{row.capturedAt.toISOString().slice(0, 16).replace("T", " ")}</td>
                     <td className="px-2 text-right">{row.rating === null ? "—" : row.rating.toFixed(2)}</td>
                     <td className="px-2 text-right">{formatCount(row.ratingCount)}</td>
-                    <td className="px-2 text-right">{formatCount(row.reviewCount)}</td>
-                    <td className="px-2 text-right">{row.installs ?? "—"}</td>
+                    {showReviews ? <td className="px-2 text-right">{formatCount(row.reviewCount)}</td> : null}
+                    {showInstalls ? <td className="px-2 text-right">{row.installs ?? "—"}</td> : null}
                     <td className="px-4">{row.version ?? "—"}</td>
                   </tr>
                 ))}
@@ -48,6 +54,7 @@ export function ObservationsTable({ view }: { view: GameDetailView }) {
             {observations.length} snapshots over {historyDays === null ? "0" : historyDays.toFixed(1)} days. A new
             snapshot is stored only when a value changes, plus a daily heartbeat. “—” means the store did not report
             the value.
+            {unpublished.length > 0 ? ` ${platformLabel(listing.store)} does not publish ${unpublished.join(" or ")}.` : ""}
           </p>
         </>
       )}

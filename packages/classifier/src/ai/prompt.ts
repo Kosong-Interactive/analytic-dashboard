@@ -5,7 +5,7 @@ import type { ClassificationInput } from "../input.js";
 import { listTaxonomyLabels, type Taxonomy } from "../taxonomy.js";
 
 /** Bump whenever the instructions, input shaping, or output contract below change. */
-export const AI_PROMPT_VERSION = "ai-v1";
+export const AI_PROMPT_VERSION = "ai-v2";
 
 const DESCRIPTION_CHARS = 1_500;
 const MAX_LABELS_PER_APP = 20;
@@ -59,12 +59,13 @@ export function buildSystemInstruction(taxonomy: Taxonomy): string {
     .map((label) => `${label.type}:${label.slug} (${label.displayName})`)
     .join("\n");
   return [
-    "You label mobile games for market research using a fixed vocabulary.",
+    "You label games across mobile and PC platforms for market research using a fixed vocabulary.",
     "Rules:",
     "- Use only labels from the vocabulary below, written exactly as type:slug.",
     "- Only assign a label that the given title, store genres, or description clearly supports.",
     "- Every label needs at least one evidence item whose excerpt is copied verbatim (a short phrase) from that app's title, store genres, or description.",
     "- Confidence is 0 to 1: 0.9+ when stated explicitly, 0.6-0.8 when strongly implied, omit anything weaker.",
+    "- A genre word in the title or store genres (e.g. 'FPS', 'Shooter', 'Racing', 'Match 3', 'Tower Defense') is explicit evidence: assign the matching genre and the core mechanic it names.",
     "- Descriptions often advertise other games or list generic features; do not label from those.",
     "- Monetization labels need explicit wording (e.g. 'in-app purchases', 'ads'); do not guess.",
     "- Return every input app id exactly once, with an empty list if nothing applies.",
@@ -144,6 +145,7 @@ export class AiResponseError extends Error {
 }
 
 const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, " ").trim();
+const EVIDENCE_FIELDS = ["title", "store_category", "description"] as const;
 
 /**
  * Validates model output against the schema, the taxonomy, and the input itself: evidence must
@@ -183,9 +185,14 @@ export function parseAiResponse(
 
     for (const item of answer.labels.slice(0, MAX_LABELS_PER_APP)) {
       const [type, slug] = item.label.split(":") as [TaxonomyLabelType, string];
-      const evidence = item.evidence
-        .map((e) => ({ field: e.field, excerpt: e.excerpt.trim().slice(0, EXCERPT_MAX) }))
-        .filter((e) => e.excerpt.length >= 3 && sources[e.field].includes(normalize(e.excerpt)));
+      const evidence = item.evidence.flatMap((e) => {
+        const excerpt = e.excerpt.trim().slice(0, EXCERPT_MAX);
+        if (excerpt.length < 3) return [];
+        // The quote must be verbatim input text; a model that names the wrong field is corrected
+        // to the field that actually contains it rather than losing a grounded label.
+        const field = [e.field, ...EVIDENCE_FIELDS].find((candidate) => sources[candidate].includes(normalize(excerpt)));
+        return field ? [{ field, excerpt }] : [];
+      });
       if (!allowed.has(item.label) || evidence.length === 0) {
         rejected += 1;
         continue;

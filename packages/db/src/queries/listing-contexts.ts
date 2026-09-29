@@ -1,11 +1,11 @@
 import { inArray } from "drizzle-orm";
 
-import { storeApps } from "../schema/index";
+import { storeApps, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
 export interface ListingContextRow {
   storeAppId: string;
-  store: "app_store" | "google_play";
+  store: StoreId;
   country: string;
 }
 

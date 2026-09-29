@@ -1,4 +1,5 @@
 import type { TrendingScore } from "@analytic-dashboard/analytics";
+import type { Store } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 import { parseOverviewFilters, type OverviewFilters } from "../overview/filters";
@@ -49,7 +50,7 @@ export interface WatchlistEntryInput {
   baselineCapturedAt: Date | null;
   baselineRating: number | null;
   baselineRatingCount: number | null;
-  store: "app_store" | "google_play";
+  store: Store;
   country: string;
   title: string;
   developerName: string | null;

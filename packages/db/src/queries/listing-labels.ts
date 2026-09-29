@@ -2,6 +2,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 
 import { appLabels, storeApps, taxonomyLabels } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
+import { notSupersededByAi } from "./rule-superseded";
 import type { LabelType } from "../repositories/classification";
 
 export interface ListingLabelRow {
@@ -18,7 +19,7 @@ export interface ListingLabelRow {
   updatedAt: Date;
 }
 
-/** Every label of the listing's canonical app, strongest first, with full provenance. */
+/** Every label of the listing's canonical app, strongest first, with full provenance. Rule labels an AI result replaced are left out. */
 export async function loadListingLabels(
   db: DatabaseExecutor,
   query: { storeAppId: string; taxonomyVersion: string },
@@ -39,7 +40,9 @@ export async function loadListingLabels(
     .from(appLabels)
     .innerJoin(taxonomyLabels, eq(taxonomyLabels.id, appLabels.labelId))
     .innerJoin(storeApps, eq(storeApps.appId, appLabels.appId))
-    .where(and(eq(storeApps.id, query.storeAppId), eq(appLabels.taxonomyVersion, query.taxonomyVersion)))
+    .where(
+      and(eq(storeApps.id, query.storeAppId), eq(appLabels.taxonomyVersion, query.taxonomyVersion), notSupersededByAi()),
+    )
     .orderBy(asc(taxonomyLabels.type), desc(appLabels.confidence), asc(taxonomyLabels.slug));
 
   return rows.map((row) => ({ ...row, confidence: Number(row.confidence) }));

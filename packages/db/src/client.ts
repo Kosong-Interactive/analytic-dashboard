@@ -18,6 +18,8 @@ export function createDatabaseConnection(
   const client = postgres(connectionString, {
     max: options.maxConnections ?? 1,
     prepare: false,
+    // Fail fast instead of waiting forever when the pooler cannot be reached.
+    connect_timeout: 30,
   });
 
   return {

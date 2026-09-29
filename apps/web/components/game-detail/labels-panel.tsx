@@ -146,7 +146,8 @@ export function LabelsPanel({
         <AddLabelForm storeAppId={storeAppId} options={addOptions} />
       </div>
       <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
-        Labels are inferences from store data and keywords, not store facts. Dimmed labels are below{" "}
+        Labels are inferences from store data, not store facts: keyword rules first, then an AI classification that
+        replaces the rule labels once it exists and must quote the listing as evidence. Dimmed labels are below{" "}
         {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence and are not counted. Your confirmations and rejections
         are recorded with your email, override automated labels in every view, and are never overwritten by
         reclassification.

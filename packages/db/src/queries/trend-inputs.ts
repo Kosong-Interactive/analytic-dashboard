@@ -4,6 +4,7 @@ import {
   appSnapshots,
   chartEntries,
   storeApps,
+  type StoreId,
 } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
@@ -11,7 +12,7 @@ import type { DatabaseExecutor } from "../repositories/executor";
 const DAY_MS = 86_400_000;
 
 export interface TrendInputsQuery {
-  store: "app_store" | "google_play";
+  store: StoreId;
   country: string;
   asOf: Date;
   /** Analysis window; history is loaded for twice this so a baseline reading exists. */
@@ -39,7 +40,7 @@ export interface TrendRankReading {
 export interface TrendCandidateRow {
   storeAppId: string;
   appId: string;
-  store: "app_store" | "google_play";
+  store: StoreId;
   externalId: string;
   country: string;
   locale: string;

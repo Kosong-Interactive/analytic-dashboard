@@ -1,11 +1,12 @@
 import { and, eq, gte, inArray, or } from "drizzle-orm";
 
-import { appLabels, storeApps, taxonomyLabels } from "../schema/index";
+import { appLabels, storeApps, taxonomyLabels, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 import type { LabelType } from "../repositories/classification";
+import { notSupersededByAi } from "./rule-superseded";
 
 export interface LabelMembershipQuery {
-  stores: ReadonlyArray<"app_store" | "google_play">;
+  stores: ReadonlyArray<StoreId>;
   country: string;
   taxonomyVersion: string;
   types: readonly LabelType[];
@@ -27,7 +28,8 @@ const SOURCE_PRIORITY = { manual: 3, ai: 2, rule: 1 } as const;
 /**
  * Which listings of one storefront carry which labels. Labels belong to the canonical app, so
  * every listing of that app inherits them. One row per (listing, label): a manual label wins,
- * otherwise the most confident automated one. A manual rejection removes the label.
+ * otherwise the most confident automated one. A manual rejection removes the label. Rule labels
+ * of an app the AI has classified are ignored (see `notSupersededByAi`).
  */
 export async function loadLabelMembership(
   db: DatabaseExecutor,
@@ -56,6 +58,7 @@ export async function loadLabelMembership(
         eq(taxonomyLabels.isActive, true),
         inArray(taxonomyLabels.type, [...query.types]),
         or(eq(appLabels.source, "manual"), gte(appLabels.confidence, query.minConfidence.toFixed(3))),
+        notSupersededByAi(),
       ),
     );
 

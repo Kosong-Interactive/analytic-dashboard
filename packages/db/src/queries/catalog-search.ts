@@ -1,6 +1,6 @@
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, or, sql } from "drizzle-orm";
 
-import { storeApps, taxonomyLabels } from "../schema/index";
+import { storeApps, taxonomyLabels, type StoreId } from "../schema/index";
 import type { LabelType } from "../repositories/classification";
 import type { DatabaseExecutor } from "../repositories/executor";
 
@@ -16,7 +16,7 @@ export interface CatalogGameHit {
   storeAppId: string;
   title: string;
   developerName: string | null;
-  store: "app_store" | "google_play";
+  store: StoreId;
   country: string;
   iconUrl: string | null;
 }

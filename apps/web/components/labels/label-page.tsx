@@ -77,7 +77,7 @@ export async function LabelPage<T extends LabelType>({ config, query, active, ti
       </Panel>
 
       <p className="text-xs leading-5 text-dim">
-        Labels come from store-declared genres and keyword rules (taxonomy v1, rules v1); manual labels take precedence.
+        Labels come from store-declared genres and keyword rules (taxonomy v1), replaced by an AI classification once a game has one; manual labels take precedence over both.
         Automated labels below {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence are not counted. Labels are
         inferences, not store facts: open a game to see the evidence behind each one. Momentum is the average Trend
         Score of member games and stays empty until they have enough history.

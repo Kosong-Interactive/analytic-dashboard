@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 
+import type { Store } from "@analytic-dashboard/shared";
+
 /** One store listing of a canonical app, reduced to the fields classification may read. */
 export interface ClassificationListing {
-  store: "app_store" | "google_play";
+  store: Store;
   country: string;
   title: string;
   description: string | null;

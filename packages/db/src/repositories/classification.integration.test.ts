@@ -7,6 +7,7 @@ import { createDatabaseConnection } from "../client";
 import { appLabels, classificationRuns, storeApps } from "../schema/index";
 import { loadClassificationInputs } from "../queries/classification-inputs";
 import { loadLabelMembership } from "../queries/label-membership";
+import { loadListingLabels } from "../queries/listing-labels";
 import {
   clearManualLabel,
   loadInputHashes,
@@ -299,6 +300,65 @@ describe("classification repositories", { skip: connection === null }, () => {
         .from(appLabels)
         .where(eq(appLabels.appId, listing.appId));
       assert.deepEqual(rows.map((r) => `${r.source}:${r.confidence}`).sort(), ["manual:0.000", "rule:0.950"]);
+    });
+  });
+
+  it("lets an AI result replace the app's rule labels, including rule false positives, but never manual ones", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const stored = await persistStoreApps(tx, [game]);
+      const storeAppId = [...stored.storeAppIds.values()][0] ?? "";
+      const [listing] = await tx.select({ appId: storeApps.appId }).from(storeApps).where(eq(storeApps.id, storeAppId));
+      assert.ok(listing);
+      const ids = await syncTaxonomyLabels(tx, { taxonomyVersion: "taxonomy-test", labels });
+      const puzzle = ids.get("genre:puzzle");
+      const merge = ids.get("subgenre:merge");
+      assert.ok(puzzle && merge);
+      const membership = async () =>
+        (
+          await loadLabelMembership(tx, {
+            stores: ["google_play"],
+            country: "us",
+            taxonomyVersion: "taxonomy-test",
+            types: ["genre", "subgenre"],
+            minConfidence: 0.6,
+          })
+        ).map((r) => `${r.slug}:${r.source}`).sort();
+
+      await replaceRuleLabels(tx, {
+        appId: listing.appId,
+        taxonomyVersion: "taxonomy-test",
+        rulesVersion: "rules-test",
+        inputHash: "r1",
+        labels: [
+          { labelId: puzzle, confidence: 0.95, evidence: [] },
+          { labelId: merge, confidence: 0.8, evidence: [] },
+        ],
+      });
+      assert.deepEqual(await membership(), ["merge:rule", "puzzle:rule"]);
+
+      // The AI keeps "merge" but not the rule's "puzzle".
+      await replaceAutomatedLabels(tx, {
+        source: "ai",
+        appId: listing.appId,
+        taxonomyVersion: "taxonomy-test",
+        classifierVersion: "prompt-test",
+        model: "model-a",
+        inputHash: "a1",
+        labels: [{ labelId: merge, confidence: 0.9, evidence: [] }],
+      });
+      assert.deepEqual(await membership(), ["merge:ai"]);
+      const detail = await loadListingLabels(tx, { storeAppId, taxonomyVersion: "taxonomy-test" });
+      assert.deepEqual(detail.map((r) => `${r.slug}:${r.source}`), ["merge:ai"]);
+
+      await setManualLabel(tx, {
+        appId: listing.appId,
+        labelId: puzzle,
+        taxonomyVersion: "taxonomy-test",
+        decision: "confirm",
+        actor: "analyst@example.com",
+        decidedAt: new Date("2026-09-30T10:00:00Z"),
+      });
+      assert.deepEqual(await membership(), ["merge:ai", "puzzle:manual"]);
     });
   });
 });

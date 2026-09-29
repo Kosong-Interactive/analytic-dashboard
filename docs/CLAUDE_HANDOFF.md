@@ -41,6 +41,13 @@ observations exist.
 
 Never print, paste, or commit `.env.local` values. Preserve unrelated user changes.
 
+## Platform registry
+
+`packages/shared/src/platforms.ts` is the one place that says what each platform is and publishes
+(label, kind, markets, rating scale, review count, install range, chart rank). UI and classifier
+code read labels and capabilities from it; `packages/db` derives `StoreId` from the `store` enum.
+Add Steam there, and to the database enum, only when its adapter and observation semantics exist.
+
 ## Product semantics that must not drift
 
 - This is sampled market research, not a complete catalogue.
@@ -147,11 +154,24 @@ spacing, model rotation, and token counts. Manual overrides are never touched.
 - The scheduled workflow runs `classify-ai --limit 200` (at most 25 requests per run). It skips with
   exit 0 until the `GEMINI_API_KEY` repository secret is added; that secret is not set yet.
 - Database integration tests for AI persistence exist but need a disposable `TEST_DATABASE_URL`.
+- AI is live: the `GEMINI_API_KEY` secret exists, and 32 apps were classified manually on
+  2026-09-30 (two runs of 8 and 16, `gemini-3.5-flash-lite`, 18 s for 16 apps). The schedule
+  continues at up to 200 apps per run.
+- Once an app has an AI run for a taxonomy version, its rule labels are ignored by
+  `loadLabelMembership` and `loadListingLabels` (`notSupersededByAi`); manual labels still win.
+  Prompt `ai-v2` (platform-neutral wording, title/store genre words count as evidence, and a
+  wrong evidence field is corrected to the field that contains the verbatim quote) re-queues every
+  app. Known model inconsistency: Shadowgun Legends ("Online FPS") gets `shooting` when classified
+  alone but not always in a batch; correct it with a manual Confirm.
+- One early live run stalled with only an idle database socket open and was killed; it did not
+  reproduce. The DB client now has `connect_timeout`, and the classification steps have
+  `timeout-minutes`.
 
 ### Agent/tooling files
 
-`.agents/` and `.codex/` are untracked project skills and reviewer agent configuration. Decide
-explicitly whether repository tooling should be versioned before committing them.
+`.agents/skills/` holds the project skills for Codex and other AGENTS.md-compatible tools (it
+replaced the old `.agent/` folder); Claude Code reads `.claude/`. Keep skill text in sync between
+them. `.codex/` (reviewer agent configuration) is still untracked.
 
 ## Newly approved future roadmap
 

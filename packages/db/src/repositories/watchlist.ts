@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
-import { appSnapshots, storeApps, watchlistEntries } from "../schema/index";
+import { appSnapshots, storeApps, watchlistEntries, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 
 export type WatchlistStatus = (typeof watchlistEntries.$inferSelect)["status"];
@@ -17,7 +17,7 @@ export interface WatchlistEntryRow {
   baselineCapturedAt: Date | null;
   baselineRating: number | null;
   baselineRatingCount: number | null;
-  store: "app_store" | "google_play";
+  store: StoreId;
   country: string;
   title: string;
   developerName: string | null;
@@ -91,7 +91,7 @@ export async function removeWatchlistEntry(db: DatabaseExecutor, storeAppId: str
 /** Watchlist entries of the selected storefronts with listing context, most recently changed first. */
 export async function loadWatchlist(
   db: DatabaseExecutor,
-  query: { stores: ReadonlyArray<"app_store" | "google_play">; country: string },
+  query: { stores: ReadonlyArray<StoreId>; country: string },
 ): Promise<WatchlistEntryRow[]> {
   if (query.stores.length === 0) return [];
   const rows = await db

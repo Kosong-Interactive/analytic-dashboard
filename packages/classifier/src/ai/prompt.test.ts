@@ -72,6 +72,21 @@ describe("parseAiResponse", () => {
     assert.equal(result?.rejected, 3);
   });
 
+  it("keeps verbatim evidence quoted under the wrong field and records the field that contains it", () => {
+    const [result] = parseAiResponse(
+      answer([
+        {
+          id: "app1",
+          labels: [{ label: "genre:puzzle", confidence: 0.9, evidence: [{ field: "title", excerpt: "Match 3 candies" }] }],
+        },
+      ]),
+      inputs,
+      taxonomy,
+    );
+    assert.equal(result?.rejected, 0);
+    assert.deepEqual(result?.labels[0]?.evidence, [{ field: "description", excerpt: "Match 3 candies" }]);
+  });
+
   it("treats a missing app as no labels and keeps the stronger duplicate", () => {
     const results = parseAiResponse(
       answer([

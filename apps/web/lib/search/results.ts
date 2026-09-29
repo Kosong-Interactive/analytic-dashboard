@@ -1,3 +1,4 @@
+import type { Store } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 import { countryLabels, platformLabels } from "../overview/filters";
@@ -53,7 +54,7 @@ export interface CatalogResultInput {
     storeAppId: string;
     title: string;
     developerName: string | null;
-    store: "app_store" | "google_play";
+    store: Store;
     country: string;
     iconUrl: string | null;
   }>;

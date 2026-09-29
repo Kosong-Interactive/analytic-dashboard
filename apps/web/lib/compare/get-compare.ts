@@ -2,7 +2,7 @@ import "server-only";
 
 import type { TrendingScore } from "@analytic-dashboard/analytics";
 import { loadLabelMembership, loadListingContexts, type LabelMembershipRow, type TrendCandidateRow } from "@analytic-dashboard/db";
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import { countryCodeSchema, type Store } from "@analytic-dashboard/shared";
 
 import { getDatabase } from "../database";
 import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "../labels/constants";
@@ -26,7 +26,7 @@ export async function getCompare(query: CompareQuery): Promise<CompareView> {
   const asOf = new Date();
   const contexts = await loadListingContexts(db, query.ids);
 
-  const groups = new Map<string, { store: "app_store" | "google_play"; country: "id" | "us"; ids: string[] }>();
+  const groups = new Map<string, { store: Store; country: "id" | "us"; ids: string[] }>();
   for (const context of contexts) {
     const country = countryCodeSchema.safeParse(context.country);
     if (!country.success) continue;

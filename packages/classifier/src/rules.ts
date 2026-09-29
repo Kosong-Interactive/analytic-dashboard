@@ -1,4 +1,4 @@
-import type { TaxonomyLabelType } from "@analytic-dashboard/shared";
+import { platformLabel, type TaxonomyLabelType } from "@analytic-dashboard/shared";
 
 import type { ClassificationInput, ClassificationListing } from "./input.js";
 
@@ -238,7 +238,7 @@ function excerptAround(text: string, index: number): string {
 }
 
 function storeName(listing: ClassificationListing): string {
-  return listing.store === "app_store" ? "App Store" : "Google Play";
+  return platformLabel(listing.store);
 }
 
 /** One label per (type, slug): the strongest confidence wins; evidence is kept, deduplicated. */

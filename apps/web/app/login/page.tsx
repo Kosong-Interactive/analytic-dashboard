@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <p className="text-xs leading-none text-dim">by Kosong Interactive</p>
           </div>
         </div>
-        <p className="mb-5 text-[13px] text-dim">Sign in to view the mobile game market dashboard.</p>
+        <p className="mb-5 text-[13px] text-dim">Sign in to view the game market dashboard.</p>
         <LoginForm next={next} />
       </div>
     </main>
