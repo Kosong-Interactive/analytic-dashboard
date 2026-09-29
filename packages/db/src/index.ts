@@ -51,11 +51,15 @@ export {
 } from "./queries/game-history";
 export {
   clearManualLabel,
+  loadInputHashes,
   loadRuleInputHashes,
   loadTaxonomyLabels,
+  replaceAutomatedLabels,
   replaceRuleLabels,
   setManualLabel,
   syncTaxonomyLabels,
+  type AutomatedLabelRow,
+  type AutomatedSource,
   type LabelType,
   type ManualDecision,
   type RuleLabelRow,

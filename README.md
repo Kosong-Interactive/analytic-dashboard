@@ -65,6 +65,19 @@ genre, subgenre, mechanic, tema, mode multiplayer, dan petunjuk monetisasi dari 
 npm run classify --workspace @analytic-dashboard/collector -- --dry-run
 ```
 
+Setelah itu **klasifikasi AI** (Google Gemini) memperbaiki dan melengkapi label rule. Tiap run
+memproses maksimal 200 game yang datanya berubah, 8 game per request. Model dicoba berurutan
+(`gemini-3.5-flash-lite` dulu); kalau satu model kehabisan kuota, run pindah ke model berikutnya,
+dan kalau semua habis, sisanya dilanjutkan di run berikutnya. Setiap label AI harus mengutip
+teks yang benar-benar ada di judul, deskripsi, atau genre store; label tanpa kutipan valid dibuang.
+Butuh repository secret `GEMINI_API_KEY`; tanpa itu langkah ini dilewati.
+
+```bash
+npm run classify-ai --workspace @analytic-dashboard/collector -- --dry-run --limit 16
+```
+
+Label manual (Confirm/Reject di halaman Game Detail) selalu menang atas label AI dan rule.
+
 Dashboard hanya **membaca** database. Membuka halaman tidak pernah memicu pengambilan data.
 
 ## Trend Score
@@ -120,6 +133,7 @@ dashboard maupun collector. Jangan pernah commit `.env.local`.
 | `NEXT_PUBLIC_SUPABASE_URL` | URL project Supabase, untuk login |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key Supabase, untuk login |
 | `TEST_DATABASE_URL` | Opsional, database sekali pakai untuk integration test |
+| `GEMINI_API_KEY` | Opsional, klasifikasi AI (hanya collector) |
 
 Jalankan dashboard di `http://localhost:3000`:
 

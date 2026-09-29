@@ -63,3 +63,12 @@ jobs:
         run: npm run classify --workspace @analytic-dashboard/collector
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # At most 200 changed apps per run (8 per request); the input-hash cache carries the rest to
+      # later runs. Exits 0 when every model is out of free-tier quota or the key is not set.
+      - name: Classify games with AI
+        if: ${{ !cancelled() }}
+        run: npm run classify-ai --workspace @analytic-dashboard/collector -- --limit 200
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

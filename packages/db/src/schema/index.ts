@@ -296,6 +296,38 @@ export const appLabels = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * The last automated classification of each app per source and taxonomy version. It is the
+ * input-hash cache: an app whose input is unchanged is skipped even when the result had no labels.
+ */
+export const classificationRuns = pgTable(
+  "classification_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => apps.id, { onDelete: "cascade" }),
+    source: labelSourceEnum("source").notNull(),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    classifierVersion: text("classifier_version").notNull(),
+    model: text("model"),
+    inputHash: text("input_hash").notNull(),
+    labelCount: integer("label_count").notNull(),
+    classifiedAt: timestamp("classified_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("classification_runs_app_source_version_uidx").on(
+      table.appId,
+      table.source,
+      table.taxonomyVersion,
+    ),
+    check("classification_runs_automated_source_chk", sql`${table.source} <> 'manual'`),
+    check("classification_runs_label_count_nonnegative_chk", sql`${table.labelCount} >= 0`),
+  ],
+).enableRLS();
+
 export const collectorRuns = pgTable(
   "collector_runs",
   {

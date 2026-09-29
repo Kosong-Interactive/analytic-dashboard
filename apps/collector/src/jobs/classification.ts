@@ -32,7 +32,7 @@ export interface ClassificationSummary {
   classified: number;
   labelsWritten: number;
   labelsRemoved: number;
-  /** Apps where no rule matched; they are revisited next run at no write cost. */
+  /** Apps where no rule matched; the empty result is cached by input hash like any other. */
   withoutLabels: number;
   errorCount: number;
   errorSample: string | null;
@@ -84,11 +84,6 @@ export async function runRuleClassification(
       if (!labelId || !hasLabel(taxonomy, label.type, label.slug)) return [];
       return [{ labelId, confidence: label.confidence, evidence: label.evidence }];
     });
-
-    if (labels.length === 0 && !storedHashes.has(input.appId)) {
-      summary.withoutLabels += 1;
-      continue;
-    }
 
     try {
       const result = await store.replaceRuleLabels({

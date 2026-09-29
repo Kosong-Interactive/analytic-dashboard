@@ -7,10 +7,11 @@
     "build": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts src/jobs/classification.test.ts",
+    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts src/jobs/classification.test.ts src/jobs/ai-classification.test.ts",
     "typecheck": "tsc --noEmit",
     "discover": "tsx src/index.ts discover",
-    "classify": "tsx src/index.ts classify"
+    "classify": "tsx src/index.ts classify",
+    "classify-ai": "tsx src/index.ts classify-ai"
   },
   "dependencies": {
     "@analytic-dashboard/classifier": "0.0.0",

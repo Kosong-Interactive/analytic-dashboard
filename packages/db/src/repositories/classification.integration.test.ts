@@ -4,12 +4,14 @@ import { after, describe, it } from "node:test";
 import { and, eq } from "drizzle-orm";
 
 import { createDatabaseConnection } from "../client";
-import { appLabels, storeApps } from "../schema/index";
+import { appLabels, classificationRuns, storeApps } from "../schema/index";
 import { loadClassificationInputs } from "../queries/classification-inputs";
 import { loadLabelMembership } from "../queries/label-membership";
 import {
   clearManualLabel,
+  loadInputHashes,
   loadRuleInputHashes,
+  replaceAutomatedLabels,
   replaceRuleLabels,
   setManualLabel,
   syncTaxonomyLabels,
@@ -235,6 +237,68 @@ describe("classification repositories", { skip: connection === null }, () => {
 
       assert.equal(await clearManualLabel(tx, decision), true);
       assert.deepEqual((await membership()).map((r) => `${r.slug}:${r.source}`), ["puzzle:rule"]);
+    });
+  });
+
+  it("caches AI results by input hash, including empty ones, without touching rule or manual labels", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const stored = await persistStoreApps(tx, [game]);
+      const [listing] = await tx
+        .select({ appId: storeApps.appId })
+        .from(storeApps)
+        .where(eq(storeApps.id, [...stored.storeAppIds.values()][0] ?? ""));
+      assert.ok(listing);
+      const ids = await syncTaxonomyLabels(tx, { taxonomyVersion: "taxonomy-test", labels });
+      const puzzle = ids.get("genre:puzzle");
+      const merge = ids.get("subgenre:merge");
+      assert.ok(puzzle && merge);
+
+      await replaceRuleLabels(tx, {
+        appId: listing.appId,
+        taxonomyVersion: "taxonomy-test",
+        rulesVersion: "rules-test",
+        inputHash: "r1",
+        labels: [{ labelId: puzzle, confidence: 0.95, evidence: [] }],
+      });
+      await setManualLabel(tx, {
+        appId: listing.appId,
+        labelId: merge,
+        taxonomyVersion: "taxonomy-test",
+        decision: "reject",
+        actor: "analyst@example.com",
+        decidedAt: new Date("2026-09-30T10:00:00Z"),
+      });
+      const ai = { source: "ai" as const, appId: listing.appId, taxonomyVersion: "taxonomy-test", classifierVersion: "prompt-test" };
+
+      const first = await replaceAutomatedLabels(tx, {
+        ...ai,
+        model: "model-a",
+        inputHash: "a1",
+        labels: [{ labelId: merge, confidence: 0.8, evidence: [{ field: "title", excerpt: "Merge" }] }],
+      });
+      assert.deepEqual(first, { written: 1, removed: 0 });
+      assert.equal((await loadInputHashes(tx, "ai", "taxonomy-test")).get(listing.appId), "a1");
+
+      // A changed input whose correct result is empty removes the old AI label and is still cached.
+      const empty = await replaceAutomatedLabels(tx, { ...ai, model: "model-b", inputHash: "a2", labels: [] });
+      assert.deepEqual(empty, { written: 0, removed: 1 });
+      assert.equal((await loadInputHashes(tx, "ai", "taxonomy-test")).get(listing.appId), "a2");
+      assert.equal((await loadInputHashes(tx, "rule", "taxonomy-test")).get(listing.appId), "r1");
+
+      const runs = await tx
+        .select({ source: classificationRuns.source, model: classificationRuns.model, labelCount: classificationRuns.labelCount })
+        .from(classificationRuns)
+        .where(eq(classificationRuns.appId, listing.appId));
+      assert.deepEqual(
+        runs.map((r) => `${r.source}:${r.model}:${r.labelCount}`).sort(),
+        ["ai:model-b:0", "rule:null:1"],
+      );
+
+      const rows = await tx
+        .select({ source: appLabels.source, confidence: appLabels.confidence })
+        .from(appLabels)
+        .where(eq(appLabels.appId, listing.appId));
+      assert.deepEqual(rows.map((r) => `${r.source}:${r.confidence}`).sort(), ["manual:0.000", "rule:0.950"]);
     });
   });
 });

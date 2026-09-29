@@ -1,6 +1,6 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 
-import { appLabels, taxonomyLabels } from "../schema/index";
+import { appLabels, classificationRuns, taxonomyLabels } from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 
 export type LabelType = (typeof taxonomyLabels.$inferInsert)["type"];
@@ -43,16 +43,26 @@ export async function syncTaxonomyLabels(
   return new Map(rows.map((row) => [`${row.type}:${row.slug}`, row.id]));
 }
 
-/** Input hashes already classified by rules, per app, for one taxonomy version. */
-export async function loadRuleInputHashes(
+export type AutomatedSource = "rule" | "ai";
+
+/**
+ * Input hashes already classified by one automated source, per app, for one taxonomy version.
+ * Read from the run record, so an app whose last result had no labels is still skipped.
+ */
+export async function loadInputHashes(
   db: DatabaseExecutor,
+  source: AutomatedSource,
   taxonomyVersion: string,
 ): Promise<Map<string, string>> {
   const rows = await db
-    .selectDistinct({ appId: appLabels.appId, inputHash: appLabels.inputHash })
-    .from(appLabels)
-    .where(and(eq(appLabels.source, "rule"), eq(appLabels.taxonomyVersion, taxonomyVersion)));
+    .select({ appId: classificationRuns.appId, inputHash: classificationRuns.inputHash })
+    .from(classificationRuns)
+    .where(and(eq(classificationRuns.source, source), eq(classificationRuns.taxonomyVersion, taxonomyVersion)));
   return new Map(rows.map((row) => [row.appId, row.inputHash]));
+}
+
+export function loadRuleInputHashes(db: DatabaseExecutor, taxonomyVersion: string): Promise<Map<string, string>> {
+  return loadInputHashes(db, "rule", taxonomyVersion);
 }
 
 export interface RuleLabelRow {
@@ -61,19 +71,25 @@ export interface RuleLabelRow {
   evidence: unknown[];
 }
 
+export type AutomatedLabelRow = RuleLabelRow;
+
 /**
- * Rule labels are derived data: when an app's input changes, its previous rule labels for the
- * same taxonomy version are replaced. AI and manual labels are never touched here, so a manual
- * decision always survives reclassification.
+ * Automated labels are derived data: when an app's input changes, its previous labels from the
+ * same source and taxonomy version are replaced. Other sources, and manual labels in particular,
+ * are never touched here, so a manual decision always survives reclassification. The run record
+ * is written in the same transaction, including for an empty result, so it is cached too.
  */
-export async function replaceRuleLabels(
+export async function replaceAutomatedLabels(
   db: DatabaseExecutor,
   input: {
+    source: AutomatedSource;
     appId: string;
     taxonomyVersion: string;
-    rulesVersion: string;
+    /** Rules version or prompt version that produced the labels. */
+    classifierVersion: string;
+    model: string | null;
     inputHash: string;
-    labels: readonly RuleLabelRow[];
+    labels: readonly AutomatedLabelRow[];
   },
 ): Promise<{ written: number; removed: number }> {
   return db.transaction(async (tx) => {
@@ -82,12 +98,27 @@ export async function replaceRuleLabels(
       .where(
         and(
           eq(appLabels.appId, input.appId),
-          eq(appLabels.source, "rule"),
+          eq(appLabels.source, input.source),
           eq(appLabels.taxonomyVersion, input.taxonomyVersion),
           ne(appLabels.inputHash, input.inputHash),
         ),
       )
       .returning({ id: appLabels.id });
+
+    const run = {
+      classifierVersion: input.classifierVersion,
+      model: input.model,
+      inputHash: input.inputHash,
+      labelCount: input.labels.length,
+      classifiedAt: sql`now()`,
+    };
+    await tx
+      .insert(classificationRuns)
+      .values({ appId: input.appId, source: input.source, taxonomyVersion: input.taxonomyVersion, ...run })
+      .onConflictDoUpdate({
+        target: [classificationRuns.appId, classificationRuns.source, classificationRuns.taxonomyVersion],
+        set: run,
+      });
 
     if (input.labels.length === 0) return { written: 0, removed: removed.length };
 
@@ -97,12 +128,12 @@ export async function replaceRuleLabels(
         input.labels.map((label) => ({
           appId: input.appId,
           labelId: label.labelId,
-          source: "rule" as const,
+          source: input.source,
           confidence: label.confidence.toFixed(3),
           evidence: label.evidence,
           taxonomyVersion: input.taxonomyVersion,
-          promptVersion: input.rulesVersion,
-          model: null,
+          promptVersion: input.classifierVersion,
+          model: input.model,
           inputHash: input.inputHash,
           isManualOverride: false,
         })),
@@ -114,6 +145,26 @@ export async function replaceRuleLabels(
   });
 }
 
+export function replaceRuleLabels(
+  db: DatabaseExecutor,
+  input: {
+    appId: string;
+    taxonomyVersion: string;
+    rulesVersion: string;
+    inputHash: string;
+    labels: readonly RuleLabelRow[];
+  },
+): Promise<{ written: number; removed: number }> {
+  return replaceAutomatedLabels(db, {
+    source: "rule",
+    appId: input.appId,
+    taxonomyVersion: input.taxonomyVersion,
+    classifierVersion: input.rulesVersion,
+    model: null,
+    inputHash: input.inputHash,
+    labels: input.labels,
+  });
+}
 
 export type ManualDecision = "confirm" | "reject";
 

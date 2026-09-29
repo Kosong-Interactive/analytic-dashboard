@@ -13,11 +13,12 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "tsx --test src/taxonomy.test.ts src/input.test.ts src/rules.test.ts",
+    "test": "tsx --test src/taxonomy.test.ts src/input.test.ts src/rules.test.ts src/ai/prompt.test.ts src/ai/gemini.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@analytic-dashboard/shared": "0.0.0",
+    "@google/genai": "^2.24.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

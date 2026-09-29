@@ -53,7 +53,9 @@ describe("runRuleClassification", () => {
     const summary = await runRuleClassification(taxonomy, store);
 
     assert.equal(summary.apps, 2);
-    assert.equal(summary.classified, 1);
+    // The app without a matching rule is still recorded, so its empty result is cached.
+    assert.equal(summary.classified, 2);
+    assert.deepEqual(writes.map((w) => `${w.appId}:${w.slugs}`), ["app-merge:4", "app-plain:0"]);
     // genre:puzzle, subgenre:merge, core_mechanic:merging, monetization_clue:free_to_play
     assert.equal(writes[0]?.slugs, 4);
     assert.equal(writes[0]?.rulesVersion, RULES_VERSION);
