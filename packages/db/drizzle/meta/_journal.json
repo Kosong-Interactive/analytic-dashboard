@@ -22,6 +22,13 @@
       "when": 1790697673733,
       "tag": "0002_watchlist",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790724186362,
+      "tag": "0003_research",
+      "breakpoints": true
     }
   ]
 }

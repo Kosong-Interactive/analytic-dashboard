@@ -1,0 +1,101 @@
+import assert from "node:assert/strict";
+import { after, describe, it } from "node:test";
+
+import { createDatabaseConnection } from "../client";
+import type { DatabaseExecutor } from "./executor";
+import { loadLatestOpportunities, recordFailedResearchRun, recordResearchRun, type OpportunityRowInput } from "./research";
+
+// Needs a migrated PostgreSQL. Every test rolls back, so nothing is left behind.
+const connectionString = process.env.TEST_DATABASE_URL;
+const connection = connectionString ? createDatabaseConnection(connectionString) : null;
+
+class Rollback extends Error {}
+
+async function inRolledBackTransaction(run: (tx: DatabaseExecutor) => Promise<void>): Promise<void> {
+  const database = connection?.db;
+  assert.ok(database);
+  await assert.rejects(
+    () =>
+      database.transaction(async (tx) => {
+        await run(tx);
+        throw new Rollback();
+      }),
+    Rollback,
+  );
+}
+
+const run = {
+  formulaVersion: "opportunity-test",
+  taxonomyVersion: "taxonomy-test",
+  store: "google_play" as const,
+  country: "id",
+  windowDays: 7,
+  trackedGames: 50,
+  historyDays: 7,
+  freshness: "fresh",
+};
+
+function opportunity(key: string, score: number | null): OpportunityRowInput {
+  return {
+    opportunityKey: key,
+    dimensions: [{ type: "genre", slug: key, displayName: key }],
+    memberCount: 6,
+    score,
+    reason: score === null ? "demand is not measurable yet" : null,
+    weightCoverage: 0.7,
+    confidence: 0.5,
+    confidenceBand: "medium",
+    insightType: score === null ? null : "build_opportunity",
+    components: [],
+    facts: {},
+    comparables: [],
+    positives: [],
+    counterSignals: [],
+    caveats: [],
+  };
+}
+
+after(async () => {
+  await connection?.client.end();
+});
+
+describe("research repository", { skip: connection === null }, () => {
+  it("skips a rerun with identical inputs and keeps earlier runs", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const first = await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-01T02:00:00Z"), inputHash: "h1" },
+        opportunities: [opportunity("puzzle", 70), opportunity("rpg", null)],
+      });
+      const again = await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-01T03:00:00Z"), inputHash: "h1" },
+        opportunities: [opportunity("puzzle", 70)],
+      });
+      assert.equal(first.created, true);
+      assert.deepEqual(again, { created: false, runId: null });
+
+      const later = await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-02T02:00:00Z"), inputHash: "h2" },
+        opportunities: [opportunity("puzzle", 60), opportunity("arcade", 80), opportunity("rpg", null)],
+      });
+      assert.equal(later.created, true);
+
+      const latest = await loadLatestOpportunities(tx, { stores: ["google_play"], country: "id", formulaVersion: "opportunity-test", limit: 5 });
+      assert.deepEqual(latest.opportunities.map((o) => `${o.opportunityKey}:${o.score}`), ["arcade:80", "puzzle:60"]);
+      assert.equal(latest.runs[0]?.cohortsEvaluated, 3);
+      assert.equal(latest.runs[0]?.opportunitiesScored, 2);
+    });
+  });
+
+  it("reports a newer failed run while still showing the last successful results", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-01T02:00:00Z"), inputHash: "h1" },
+        opportunities: [opportunity("puzzle", 70)],
+      });
+      await recordFailedResearchRun(tx, { ...run, asOf: new Date("2026-10-02T02:00:00Z"), errorSample: "load failed" });
+      const latest = await loadLatestOpportunities(tx, { stores: ["google_play"], country: "id", formulaVersion: "opportunity-test", limit: 5 });
+      assert.equal(latest.runs[0]?.status, "failed");
+      assert.deepEqual(latest.opportunities.map((o) => o.opportunityKey), ["puzzle"]);
+    });
+  });
+});
