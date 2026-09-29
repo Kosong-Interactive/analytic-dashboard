@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The database package exports TypeScript source, which Next must compile.
+  transpilePackages: ["@analytic-dashboard/db"],
 };
 
 export default nextConfig;

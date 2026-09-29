@@ -201,3 +201,13 @@ function changeOf(
   const change = windowedChange(observations, options);
   return change.status === "ok" ? pick(change) : null;
 }
+
+export type TrendTier = "exploding" | "trending" | "growing" | "low";
+
+/** Display bands for `trend_score_v1`; a change to these cut-offs is a new formula version. */
+export function trendTier(score: number): TrendTier {
+  if (score >= 81) return "exploding";
+  if (score >= 61) return "trending";
+  if (score >= 31) return "growing";
+  return "low";
+}

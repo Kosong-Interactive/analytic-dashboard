@@ -44,6 +44,7 @@ export interface TrendCandidateRow {
   country: string;
   locale: string;
   title: string;
+  developerName: string | null;
   iconUrl: string | null;
   storeUrl: string;
   storeCategory: string | null;
@@ -155,6 +156,7 @@ export async function loadTrendCandidates(
     country: listing.country,
     locale: listing.locale,
     title: listing.title,
+    developerName: listing.developerName,
     iconUrl: listing.iconUrl,
     storeUrl: listing.storeUrl,
     storeCategory: listing.storeCategory,

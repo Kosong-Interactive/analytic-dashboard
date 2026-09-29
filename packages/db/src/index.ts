@@ -37,3 +37,7 @@ export {
   type TrendRankReading,
   type TrendSnapshotReading,
 } from "./queries/trend-inputs";
+export {
+  loadSourceHealth,
+  type SourceHealthRow,
+} from "./queries/source-health";

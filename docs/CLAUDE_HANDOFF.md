@@ -54,7 +54,10 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - `packages/analytics`: `windowedChange`, `percentileRanks`, `trend_score_v1` (`computeRawComponents`, `scoreCohort`) and `scoreTrending` (cohorts default to store+country).
 - `packages/db/src/queries/trend-inputs.ts`: `loadTrendCandidates` returns snapshots, chart ranks, and country breadth in a constant number of queries. Its integration test needs `TEST_DATABASE_URL` (runs in CI). Raw `sql` fragments must pass dates as ISO strings with `::timestamptz`.
 - Live check: the query runs against Supabase, but no candidate is scored yet because history is under a day; velocity needs several days of scheduled collection.
-- Next: dashboard pages from the design artifact (Overview first), calling `loadTrendCandidates` then `scoreTrending` from Server Components.
+- Overview page is built (`apps/web/app/page.tsx`, `components/overview/`, `lib/overview/`): KPI cards, trending table with score breakdown, newly discovered list, data coverage, filters via `?country=&platform=`. Genres/mechanics are an explicit "not available yet" panel until Phase 3; there is no Market Signals panel.
+- The trending table stays empty ("No games scored yet") until about 3.5 days of history exist; verified live against Supabase and, for the populated state, with a temporary fixture page (removed).
+- Web deploys to Vercel; steps for this monorepo are in `docs/DEPLOYMENT_VERCEL.md` (not yet run against a real project).
+- Next: remaining pages from the design artifact (Trending, Game Detail, New Releases, then Genres/Mechanics after Phase 3).
 
 ## Known gaps / next
 

@@ -6,6 +6,7 @@ import {
   scoreCohort,
   TREND_COMPONENTS,
   TREND_SCORE_V1,
+  trendTier,
   type RawComponents,
 } from "./trend-score.js";
 import type { Observation } from "./velocity.js";
@@ -155,5 +156,14 @@ describe("scoreCohort", () => {
     for (const result of forward) {
       assert.equal(backward.find((r) => r.id === result.id)?.score, result.score);
     }
+  });
+});
+
+describe("trendTier", () => {
+  it("uses the documented band edges", () => {
+    assert.deepEqual(
+      [0, 30.9, 31, 60.9, 61, 80.9, 81, 100].map(trendTier),
+      ["low", "low", "growing", "growing", "trending", "trending", "exploding", "exploding"],
+    );
   });
 });
