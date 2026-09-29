@@ -44,6 +44,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Workspace packages such as collectors and shared are imported from dist/, so build them first.
+      - name: Build collector dependencies
+        run: npx turbo run build --filter=@analytic-dashboard/collector...
+
       # Non-zero exit when any job hit an error, so failures show up in the Actions UI.
       - name: Run discovery
         run: npm run discover --workspace @analytic-dashboard/collector -- ${SOURCE:+--source "$SOURCE"} ${COUNTRY:+--country "$COUNTRY"}
