@@ -30,3 +30,10 @@ export {
   decideSnapshotWrite,
   type SnapshotDecision,
 } from "./repositories/snapshot-policy";
+export {
+  loadTrendCandidates,
+  type TrendCandidateRow,
+  type TrendInputsQuery,
+  type TrendRankReading,
+  type TrendSnapshotReading,
+} from "./queries/trend-inputs";

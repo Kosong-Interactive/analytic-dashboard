@@ -49,6 +49,13 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - Live run against Supabase verified: two consecutive runs; unchanged Apple listings wrote no new snapshots, changed Google counters wrote new ones.
 - The collector app now runs through `tsx` and its `build` only typechecks, because `packages/db` exports TypeScript source.
 
+## Phase 2 progress
+
+- `packages/analytics`: `windowedChange`, `percentileRanks`, `trend_score_v1` (`computeRawComponents`, `scoreCohort`) and `scoreTrending` (cohorts default to store+country).
+- `packages/db/src/queries/trend-inputs.ts`: `loadTrendCandidates` returns snapshots, chart ranks, and country breadth in a constant number of queries. Its integration test needs `TEST_DATABASE_URL` (runs in CI). Raw `sql` fragments must pass dates as ISO strings with `::timestamptz`.
+- Live check: the query runs against Supabase, but no candidate is scored yet because history is under a day; velocity needs several days of scheduled collection.
+- Next: dashboard pages from the design artifact (Overview first), calling `loadTrendCandidates` then `scoreTrending` from Server Components.
+
 ## Known gaps / next
 
 - Adapters report skipped items (`invalid`, `non_game`) and Google retries through optional `CollectorEvents`; discovery records them as `retry_count` and `metadata.invalidSkipped`/`nonGameSkipped`. Cached responses do not re-emit skips.
