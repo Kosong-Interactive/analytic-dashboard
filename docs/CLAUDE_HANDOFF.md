@@ -147,6 +147,15 @@ spacing, model rotation, and token counts. Manual overrides are never touched.
 - The scheduled workflow runs `classify-ai --limit 200` (at most 25 requests per run). It skips with
   exit 0 until the `GEMINI_API_KEY` repository secret is added; that secret is not set yet.
 - Database integration tests for AI persistence exist but need a disposable `TEST_DATABASE_URL`.
+- AI is live: the `GEMINI_API_KEY` secret exists, and 32 apps were classified manually on
+  2026-09-30 (two runs of 8 and 16, `gemini-3.5-flash-lite`, 18 s for 16 apps). The schedule
+  continues at up to 200 apps per run.
+- Once an app has an AI run for a taxonomy version, its rule labels are ignored by
+  `loadLabelMembership` and `loadListingLabels` (`notSupersededByAi`); manual labels still win.
+  Known AI miss to review: Shadowgun Legends ("Online FPS") lost the rule's `shooting` label.
+- One early live run stalled with only an idle database socket open and was killed; it did not
+  reproduce. The DB client now has `connect_timeout`, and the classification steps have
+  `timeout-minutes`.
 
 ### Agent/tooling files
 
