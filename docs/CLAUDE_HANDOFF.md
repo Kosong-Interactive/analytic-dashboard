@@ -150,8 +150,9 @@ spacing, model rotation, and token counts. Manual overrides are never touched.
 
 ### Agent/tooling files
 
-`.agents/` and `.codex/` are untracked project skills and reviewer agent configuration. Decide
-explicitly whether repository tooling should be versioned before committing them.
+`.agents/skills/` holds the project skills for Codex and other AGENTS.md-compatible tools (it
+replaced the old `.agent/` folder); Claude Code reads `.claude/`. Keep skill text in sync between
+them. `.codex/` (reviewer agent configuration) is still untracked.
 
 ## Newly approved future roadmap
 
