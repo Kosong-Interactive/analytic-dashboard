@@ -57,6 +57,8 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - Overview page is built (`apps/web/app/page.tsx`, `components/overview/`, `lib/overview/`): KPI cards, trending table with score breakdown, newly discovered list, data coverage, filters via `?country=&platform=`. Genres/mechanics are an explicit "not available yet" panel until Phase 3; there is no Market Signals panel.
 - The trending table stays empty ("No games scored yet") until about 3.5 days of history exist; verified live against Supabase and, for the populated state, with a temporary fixture page (removed).
 - Web deploys to Vercel; steps for this monorepo are in `docs/DEPLOYMENT_VERCEL.md` (not yet run against a real project).
+- Auth: Supabase Auth email + password. `proxy.ts` refreshes the session and redirects to `/login`; every page also calls `requireUser()`. Users are created in the Supabase dashboard (sign-ups off); no app table is needed. Not yet verified with a real sign-in.
+- Trending Games page (`/trending`) is built with URL filters, sort, pagination; layouts are responsive (cards below `md`, mobile nav below `lg`).
 - Next: remaining pages from the design artifact (Trending, Game Detail, New Releases, then Genres/Mechanics after Phase 3).
 
 ## Known gaps / next

@@ -52,8 +52,8 @@ Set these in **Settings → Environment Variables**. Never commit real values.
 | Variable | Scope | Notes |
 |---|---|---|
 | `DATABASE_URL` | Production, Preview | Use the Supabase **transaction pooler** URL (port `6543`). Serverless functions open many short connections and a direct connection will exhaust the limit. |
-| `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview | Only needed once Supabase Auth/browser access is used. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production, Preview | Same as above. Publishable key only, never the secret key. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview | **Required**: the dashboard login uses Supabase Auth. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production, Preview | **Required**. Publishable key only, never the secret/service-role key. |
 
 `DIRECT_URL`, `TEST_DATABASE_URL`, and all collector settings are **not** needed on Vercel.
 The dashboard only reads: it never starts collection, so the database role can be read-only
@@ -64,12 +64,12 @@ dashboard, but use a separate `DATABASE_URL` for Preview if you ever add write p
 
 ## 4. Protect the deployment
 
-The dashboard has **no application login yet**, and it exposes internal market research.
-Before sharing the URL:
+The dashboard has its own email + password login (Supabase Auth); every page redirects to
+`/login` when signed out. Before sharing the URL:
 
-1. **Settings → Deployment Protection**: enable *Vercel Authentication* for Production and
-   Preview (or password protection on a plan that offers it).
-2. Only add a public domain after application-level authentication exists.
+1. In Supabase, **Authentication → Sign In / Providers**: turn **off** "Allow new users to sign up",
+   then create each teammate under **Authentication → Users → Add user**.
+2. Optionally also enable Vercel *Deployment Protection* for Preview deployments.
 
 ## 5. Region
 

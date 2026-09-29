@@ -1,10 +1,11 @@
 import Link from "next/link";
 
+import { signOut } from "@/app/login/actions";
+
 import { supportedCountryCodes } from "@analytic-dashboard/shared";
 
 import {
   countryLabels,
-  overviewHref,
   platformLabels,
   platformValues,
   type OverviewFilters,
@@ -39,7 +40,15 @@ function Segmented({ label, items }: SegmentedProps) {
   );
 }
 
-export function Topbar({ filters }: { filters: OverviewFilters }) {
+export function Topbar({
+  filters,
+  buildHref,
+  userEmail,
+}: {
+  filters: OverviewFilters;
+  buildHref: (change: Partial<OverviewFilters>) => string;
+  userEmail: string | null;
+}) {
   return (
     <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-2 sm:px-7">
       <p className="text-[13px] font-semibold tracking-[0.16em] lg:invisible">GAME INTEL</p>
@@ -49,7 +58,7 @@ export function Topbar({ filters }: { filters: OverviewFilters }) {
           items={supportedCountryCodes.map((code) => ({
             key: code,
             label: countryLabels[code],
-            href: overviewHref(filters, { country: code }),
+            href: buildHref({ country: code }),
             active: filters.country === code,
           }))}
         />
@@ -58,10 +67,23 @@ export function Topbar({ filters }: { filters: OverviewFilters }) {
           items={platformValues.map((value) => ({
             key: value,
             label: platformLabels[value],
-            href: overviewHref(filters, { platform: value }),
+            href: buildHref({ platform: value }),
             active: filters.platform === value,
           }))}
         />
+        {userEmail ? (
+          <form action={signOut} className="flex items-center gap-2">
+            <span className="hidden max-w-[12rem] truncate text-xs text-dim sm:inline" title={userEmail}>
+              {userEmail}
+            </span>
+            <button
+              type="submit"
+              className="h-8 rounded-md border border-line-strong px-2.5 text-xs text-ink-soft hover:bg-surface"
+            >
+              Sign out
+            </button>
+          </form>
+        ) : null}
       </div>
     </header>
   );

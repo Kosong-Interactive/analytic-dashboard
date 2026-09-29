@@ -2,6 +2,8 @@ import "server-only";
 
 import { createDatabaseConnection, type Database } from "@analytic-dashboard/db";
 
+import { loadRootEnv } from "./root-env";
+
 const globalForDatabase = globalThis as typeof globalThis & {
   __analyticsDatabase?: Database;
 };
@@ -12,6 +14,7 @@ const globalForDatabase = globalThis as typeof globalThis & {
  */
 export function getDatabase(): Database {
   if (!globalForDatabase.__analyticsDatabase) {
+    if (!process.env.DATABASE_URL) loadRootEnv();
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
       throw new Error("DATABASE_URL is not configured");

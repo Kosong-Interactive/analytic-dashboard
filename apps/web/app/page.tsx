@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth/session";
 import { AppShell } from "@/components/shell/app-shell";
 import { ClassificationPending } from "@/components/overview/classification-pending";
 import { CoveragePanel } from "@/components/overview/coverage-panel";
@@ -12,11 +13,12 @@ interface HomePageProps {
 }
 
 export default async function OverviewPage({ searchParams }: HomePageProps) {
+  await requireUser("/");
   const filters = parseOverviewFilters(await searchParams);
   const data = await getOverview(filters);
 
   return (
-    <AppShell filters={filters}>
+    <AppShell filters={filters} active="overview">
       <div className="flex flex-col gap-1">
         <h1 className="text-[22px] font-semibold tracking-tight">Mobile Game Market</h1>
         <p className="text-[13px] text-dim">

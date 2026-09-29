@@ -60,10 +60,14 @@ export interface TrendingRow {
   ratingCount: number | null;
   ratingCountPerDay: number | null;
   rankChange: number | null;
-  score: number;
-  tier: TrendTier;
+  /** `null` when the game could not be scored yet (not the same as a score of zero). */
+  score: number | null;
+  scoreNote: string | null;
+  tier: TrendTier | null;
   weightCoverage: number;
   latestObservationAt: Date | null;
+  firstSeenAt: Date;
+  releaseDate: Date | null;
   components: ScoreComponentView[];
 }
 
@@ -154,30 +158,9 @@ export function buildOverview(input: {
       observed.length === 0
         ? null
         : (asOf.getTime() - Math.min(...observed)) / DAY_MS,
-    trending: scored.slice(0, TRENDING_ROWS).map(({ candidate, score, value }, index) => ({
-      id: candidate.storeAppId,
-      rank: index + 1,
-      title: candidate.title,
-      developer: candidate.developerName,
-      store: candidate.store,
-      country: candidate.country,
-      category: candidate.storeCategory,
-      storeUrl: candidate.storeUrl,
-      rating: latestRating(candidate),
-      ratingCount: latestRatingCount(candidate),
-      ratingCountPerDay: rawOf(score, "ratingCountVelocity7d"),
-      rankChange: rawOf(score, "rankGain7d"),
-      score: value,
-      tier: trendTier(value),
-      weightCoverage: score.weightCoverage,
-      latestObservationAt: score.latestObservationAt,
-      components: score.components.map((c) => ({
-        component: c.component,
-        raw: c.raw,
-        weight: c.weight,
-        contribution: c.contribution,
-      })),
-    })),
+    trending: scored
+      .slice(0, TRENDING_ROWS)
+      .map(({ candidate, score }, index) => toTrendingRow(candidate, score, index + 1)),
     discovered: [...candidates]
       .sort((a, b) => b.firstSeenAt.getTime() - a.firstSeenAt.getTime())
       .slice(0, DISCOVERED_ROWS)
@@ -232,4 +215,39 @@ function latestRating(candidate: OverviewCandidate): number | null {
 
 function latestRatingCount(candidate: OverviewCandidate): number | null {
   return latest(candidate)?.ratingCount ?? null;
+}
+
+export function toTrendingRow(
+  candidate: OverviewCandidate,
+  score: TrendingScore | undefined,
+  rank: number,
+): TrendingRow {
+  const value = score?.score ?? null;
+  return {
+    id: candidate.storeAppId,
+    rank,
+    title: candidate.title,
+    developer: candidate.developerName,
+    store: candidate.store,
+    country: candidate.country,
+    category: candidate.storeCategory,
+    storeUrl: candidate.storeUrl,
+    rating: latestRating(candidate),
+    ratingCount: latestRatingCount(candidate),
+    ratingCountPerDay: score ? rawOf(score, "ratingCountVelocity7d") : null,
+    rankChange: score ? rawOf(score, "rankGain7d") : null,
+    score: value,
+    scoreNote: score?.reason ?? null,
+    tier: value === null ? null : trendTier(value),
+    weightCoverage: score?.weightCoverage ?? 0,
+    latestObservationAt: score?.latestObservationAt ?? null,
+    firstSeenAt: candidate.firstSeenAt,
+    releaseDate: candidate.releaseDate,
+    components: (score?.components ?? []).map((c) => ({
+      component: c.component,
+      raw: c.raw,
+      weight: c.weight,
+      contribution: c.contribution,
+    })),
+  };
 }

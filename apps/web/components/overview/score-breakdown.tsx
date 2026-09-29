@@ -38,6 +38,13 @@ function describeRaw(component: TrendComponent, raw: number | null): string {
 }
 
 export function ScoreBreakdown({ row }: { row: TrendingRow }) {
+  if (row.score === null || row.tier === null) {
+    return (
+      <span className="text-[11.5px] text-dim" title={row.scoreNote ?? "Not enough history yet"}>
+        Not scored yet
+      </span>
+    );
+  }
   const style = tierStyles[row.tier];
   const measured = row.components.filter((c) => c.contribution !== null);
 
@@ -58,7 +65,7 @@ export function ScoreBreakdown({ row }: { row: TrendingRow }) {
         </span>
         <span className={cn("text-[11px]", style.text)}>{style.label}</span>
       </summary>
-      <div className="absolute right-0 z-10 mt-2 w-80 rounded-lg border border-line-strong bg-surface-alt p-3 text-left shadow-xl">
+      <div className="absolute right-0 z-10 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-lg border border-line-strong bg-surface-alt p-3 text-left shadow-xl">
         <p className="text-xs font-medium">How this score was built</p>
         <p className="mt-1 text-[11px] leading-4 text-dim">
           trend_score_v1 · based on {Math.round(row.weightCoverage * 100)}% of the score weight.
