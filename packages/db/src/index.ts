@@ -50,10 +50,14 @@ export {
   type GameSnapshotRow,
 } from "./queries/game-history";
 export {
+  clearManualLabel,
   loadRuleInputHashes,
+  loadTaxonomyLabels,
   replaceRuleLabels,
+  setManualLabel,
   syncTaxonomyLabels,
   type LabelType,
+  type ManualDecision,
   type RuleLabelRow,
   type TaxonomyLabelInput,
 } from "./repositories/classification";
@@ -67,4 +71,4 @@ export {
   type LabelMembershipQuery,
   type LabelMembershipRow,
 } from "./queries/label-membership";
-export { loadListingLabels, type ListingLabelRow } from "./queries/listing-labels";
+export { findListingAppId, loadListingLabels, type ListingLabelRow } from "./queries/listing-labels";

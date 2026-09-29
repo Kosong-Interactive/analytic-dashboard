@@ -5,6 +5,7 @@ import type { DatabaseExecutor } from "../repositories/executor";
 import type { LabelType } from "../repositories/classification";
 
 export interface ListingLabelRow {
+  labelId: string;
   type: LabelType;
   slug: string;
   displayName: string;
@@ -24,6 +25,7 @@ export async function loadListingLabels(
 ): Promise<ListingLabelRow[]> {
   const rows = await db
     .select({
+      labelId: taxonomyLabels.id,
       type: taxonomyLabels.type,
       slug: taxonomyLabels.slug,
       displayName: taxonomyLabels.displayName,
@@ -41,4 +43,17 @@ export async function loadListingLabels(
     .orderBy(asc(taxonomyLabels.type), desc(appLabels.confidence), asc(taxonomyLabels.slug));
 
   return rows.map((row) => ({ ...row, confidence: Number(row.confidence) }));
+}
+
+/** Canonical app of a listing; manual labels are stored per app, never trusted from the client. */
+export async function findListingAppId(
+  db: DatabaseExecutor,
+  storeAppId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ appId: storeApps.appId })
+    .from(storeApps)
+    .where(eq(storeApps.id, storeAppId))
+    .limit(1);
+  return row?.appId ?? null;
 }

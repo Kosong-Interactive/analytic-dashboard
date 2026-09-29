@@ -9,6 +9,8 @@ import { LabelsPanel } from "@/components/game-detail/labels-panel";
 import { AppShell } from "@/components/shell/app-shell";
 import { requireUser } from "@/lib/auth/session";
 import { getGameDetail } from "@/lib/games/get-game";
+import { listTaxonomyOptions } from "@/lib/labels/manual-labels";
+import { resolveListingLabels } from "@/lib/labels/resolve";
 import { overviewHref, type OverviewFilters } from "@/lib/overview/filters";
 
 interface GamePageProps {
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: GamePageProps) {
 export default async function GamePage({ params }: GamePageProps) {
   const { id } = await params;
   await requireUser(`/games/${id}`);
-  const view = await getGameDetail(id);
+  const [view, taxonomy] = await Promise.all([getGameDetail(id), listTaxonomyOptions()]);
   if (!view) notFound();
 
   const country = view.listing.country === "us" ? "us" : "id";
@@ -45,7 +47,11 @@ export default async function GamePage({ params }: GamePageProps) {
           <ObservationsTable view={view} />
         </div>
       </div>
-      <LabelsPanel labels={view.labels} />
+      <LabelsPanel
+        storeAppId={view.listing.storeAppId}
+        labels={resolveListingLabels(view.labels)}
+        options={taxonomy}
+      />
     </AppShell>
   );
 }

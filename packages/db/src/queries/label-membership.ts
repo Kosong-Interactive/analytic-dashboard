@@ -27,7 +27,7 @@ const SOURCE_PRIORITY = { manual: 3, ai: 2, rule: 1 } as const;
 /**
  * Which listings of one storefront carry which labels. Labels belong to the canonical app, so
  * every listing of that app inherits them. One row per (listing, label): a manual label wins,
- * otherwise the most confident automated one.
+ * otherwise the most confident automated one. A manual rejection removes the label.
  */
 export async function loadLabelMembership(
   db: DatabaseExecutor,
@@ -79,5 +79,6 @@ export async function loadLabelMembership(
       best.set(key, candidate);
     }
   }
-  return [...best.values()];
+  // A manual rejection (confidence 0) is a decision that the label does not apply.
+  return [...best.values()].filter((row) => !(row.source === "manual" && row.confidence === 0));
 }

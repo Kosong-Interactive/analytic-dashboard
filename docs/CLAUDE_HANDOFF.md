@@ -67,6 +67,7 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - Rule confidence: store genre/price 0.95, title keyword 0.8, repeated description keyword 0.7, single mention 0.55 (hide below 0.6 in UI).
 - Genres (`/genres`: genre, subgenre) and Mechanics (`/mechanics`: core, meta, theme, multiplayer) pages roll up label membership per storefront: games, share, new in 7 days, average rating, momentum (mean Trend Score of scored members), top games. `loadLabelMembership` resolves manual > AI > rule and drops automated labels below 0.6.
 - Game Detail shows every label with confidence, source, version, and evidence (`loadListingLabels`). Known rule false positives exist (e.g. Candy Crush Saga tagged Solitaire from its description); AI or manual review should correct them.
+- Manual override on Game Detail: Confirm (manual, confidence 1), Reject (manual, confidence 0, hides the automated label everywhere), Undo (deletes the manual row). Server action `app/games/[id]/actions.ts` → `lib/labels/manual-labels.ts` validates with Zod, requires a session, looks the app id up from the listing, and checks the label is in taxonomy-v1. The actor email and time are stored in the evidence. Not yet exercised by a real click.
 - Next: Phase 3 classification (taxonomy, rules, AI provider) to unlock Genres/Mechanics.
 
 ## Known gaps / next

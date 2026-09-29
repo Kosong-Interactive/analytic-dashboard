@@ -7,7 +7,13 @@ import { createDatabaseConnection } from "../client";
 import { appLabels, storeApps } from "../schema/index";
 import { loadClassificationInputs } from "../queries/classification-inputs";
 import { loadLabelMembership } from "../queries/label-membership";
-import { loadRuleInputHashes, replaceRuleLabels, syncTaxonomyLabels } from "./classification";
+import {
+  clearManualLabel,
+  loadRuleInputHashes,
+  replaceRuleLabels,
+  setManualLabel,
+  syncTaxonomyLabels,
+} from "./classification";
 import type { DatabaseExecutor } from "./executor";
 import { persistStoreApps, type PersistableStoreApp } from "./store-app-persistence";
 
@@ -171,6 +177,64 @@ describe("classification repositories", { skip: connection === null }, () => {
         rows.map((r) => `${r.storeAppId === storeAppId}:${r.slug}:${r.source}`),
         ["true:puzzle:manual"],
       );
+    });
+  });
+
+  it("records one manual decision per label, hides a rejected label, and can be cleared", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const stored = await persistStoreApps(tx, [game]);
+      const [listing] = await tx
+        .select({ appId: storeApps.appId })
+        .from(storeApps)
+        .where(eq(storeApps.id, [...stored.storeAppIds.values()][0] ?? ""));
+      assert.ok(listing);
+      const ids = await syncTaxonomyLabels(tx, { taxonomyVersion: "taxonomy-test", labels });
+      const puzzle = ids.get("genre:puzzle");
+      assert.ok(puzzle);
+      await replaceRuleLabels(tx, {
+        appId: listing.appId,
+        taxonomyVersion: "taxonomy-test",
+        rulesVersion: "rules-test",
+        inputHash: "h1",
+        labels: [{ labelId: puzzle, confidence: 0.95, evidence: [] }],
+      });
+      const decision = {
+        appId: listing.appId,
+        labelId: puzzle,
+        taxonomyVersion: "taxonomy-test",
+        actor: "analyst@example.com",
+        decidedAt: new Date("2026-09-30T10:00:00Z"),
+      };
+      const membership = () =>
+        loadLabelMembership(tx, {
+          stores: ["google_play"],
+          country: "us",
+          taxonomyVersion: "taxonomy-test",
+          types: ["genre"],
+          minConfidence: 0.6,
+        });
+
+      await setManualLabel(tx, { ...decision, decision: "confirm" });
+      await setManualLabel(tx, { ...decision, decision: "reject" });
+      const manualRows = await tx
+        .select({ confidence: appLabels.confidence })
+        .from(appLabels)
+        .where(and(eq(appLabels.appId, listing.appId), eq(appLabels.source, "manual")));
+      assert.deepEqual(manualRows.map((r) => r.confidence), ["0.000"]);
+      assert.deepEqual(await membership(), []);
+
+      // Reclassification never removes the manual decision.
+      await replaceRuleLabels(tx, {
+        appId: listing.appId,
+        taxonomyVersion: "taxonomy-test",
+        rulesVersion: "rules-test",
+        inputHash: "h2",
+        labels: [{ labelId: puzzle, confidence: 0.95, evidence: [] }],
+      });
+      assert.deepEqual(await membership(), []);
+
+      assert.equal(await clearManualLabel(tx, decision), true);
+      assert.deepEqual((await membership()).map((r) => `${r.slug}:${r.source}`), ["puzzle:rule"]);
     });
   });
 });

@@ -114,3 +114,96 @@ export async function replaceRuleLabels(
   });
 }
 
+
+export type ManualDecision = "confirm" | "reject";
+
+/** Manual labels live under a fixed provenance so there is at most one per app and label. */
+const MANUAL_PROMPT_VERSION = "none";
+const MANUAL_INPUT_HASH = "manual";
+
+/**
+ * Records a person's decision on one label. `confirm` asserts the label (confidence 1);
+ * `reject` asserts it is wrong (confidence 0), which hides the automated label of the same slug.
+ * Automated jobs never write manual rows, so the decision survives every reclassification.
+ */
+export async function setManualLabel(
+  db: DatabaseExecutor,
+  input: {
+    appId: string;
+    labelId: string;
+    taxonomyVersion: string;
+    decision: ManualDecision;
+    actor: string;
+    decidedAt: Date;
+  },
+): Promise<void> {
+  const evidence = [
+    {
+      field: "metadata",
+      excerpt: `${input.decision === "confirm" ? "Confirmed" : "Rejected"} by ${input.actor} at ${input.decidedAt.toISOString()}`,
+    },
+  ];
+  const confidence = input.decision === "confirm" ? "1.000" : "0.000";
+
+  await db
+    .insert(appLabels)
+    .values({
+      appId: input.appId,
+      labelId: input.labelId,
+      source: "manual",
+      confidence,
+      evidence,
+      taxonomyVersion: input.taxonomyVersion,
+      promptVersion: MANUAL_PROMPT_VERSION,
+      model: null,
+      inputHash: MANUAL_INPUT_HASH,
+      isManualOverride: true,
+    })
+    .onConflictDoUpdate({
+      target: [
+        appLabels.appId,
+        appLabels.labelId,
+        appLabels.source,
+        appLabels.taxonomyVersion,
+        appLabels.promptVersion,
+        appLabels.inputHash,
+      ],
+      set: { confidence, evidence, updatedAt: sql`now()` },
+    });
+}
+
+/** Removes a manual decision so the automated labels apply again. Returns whether one existed. */
+export async function clearManualLabel(
+  db: DatabaseExecutor,
+  input: { appId: string; labelId: string; taxonomyVersion: string },
+): Promise<boolean> {
+  const removed = await db
+    .delete(appLabels)
+    .where(
+      and(
+        eq(appLabels.appId, input.appId),
+        eq(appLabels.labelId, input.labelId),
+        eq(appLabels.taxonomyVersion, input.taxonomyVersion),
+        eq(appLabels.source, "manual"),
+      ),
+    )
+    .returning({ id: appLabels.id });
+  return removed.length > 0;
+}
+
+/** All labels of one taxonomy version, for pickers that add a label manually. */
+export async function loadTaxonomyLabels(
+  db: DatabaseExecutor,
+  taxonomyVersion: string,
+): Promise<Array<{ id: string; type: LabelType; slug: string; displayName: string }>> {
+  return db
+    .select({
+      id: taxonomyLabels.id,
+      type: taxonomyLabels.type,
+      slug: taxonomyLabels.slug,
+      displayName: taxonomyLabels.displayName,
+    })
+    .from(taxonomyLabels)
+    .where(and(eq(taxonomyLabels.taxonomyVersion, taxonomyVersion), eq(taxonomyLabels.isActive, true)))
+    .orderBy(taxonomyLabels.type, taxonomyLabels.displayName);
+}
