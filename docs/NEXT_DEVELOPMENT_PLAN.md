@@ -53,6 +53,26 @@ Remaining dashboard work, in order:
    existing pages without triggering collection.
 5. Final navigation, responsive, accessibility, and browser-flow pass across all pages.
 
+## Requested dashboard additions
+
+### Genre and mechanic detail (requested 2026-09-30)
+
+On **Genres** and **Mechanics**, clicking a label row opens the full list of tracked games that
+carry that label in the selected storefront.
+
+- Covers every label type on those pages: genre, subgenre, core mechanic, meta mechanic, theme,
+  and multiplayer mode.
+- Shows the label's roll-up figures (member count, momentum, new in 7 days, average rating) above
+  a paginated, sortable game list with the same missing-value, freshness, and
+  sampled-catalogue language as Games.
+- Each game shows how it got the label: rule, AI, or manual, with its confidence, so an inferred
+  membership is never presented as a store fact. Membership uses the same resolution as the
+  roll-ups (manual first, AI replacing rules, automated labels below 60% confidence excluded).
+- Rows keep the watchlist star and Compare toggle.
+- Preferred implementation: extend the Games explorer with a generic `label=type:slug` filter and
+  a label summary header, and link each Genres/Mechanics row to it, instead of a second game-list
+  implementation. Today the explorer can only filter by genre and core mechanic.
+
 ## Automated Game Research
 
 ### Product question

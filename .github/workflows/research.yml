@@ -1,0 +1,45 @@
+name: Daily research
+
+on:
+  schedule:
+    # Daily, after the 00:17 UTC collection and classification run. Non-round minute; GitHub
+    # Actions schedules are best-effort and may run late.
+    - cron: "43 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Reruns within the same hour over unchanged data write nothing, but overlapping runs are pointless.
+concurrency:
+  group: daily-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    name: Score game opportunities
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build collector dependencies
+        run: npx turbo run build --filter=@analytic-dashboard/collector...
+
+      # Reads stored observations and labels only; non-zero exit when any storefront failed.
+      - name: Run research
+        timeout-minutes: 10
+        run: npm run research --workspace @analytic-dashboard/collector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

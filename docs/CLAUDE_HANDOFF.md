@@ -188,14 +188,34 @@ The roadmap was also referenced from `docs/MVP_IMPLEMENTATION_PLAN.md`. These do
 changes requested by the user, but they have not been committed. Current dashboard completion takes
 priority over implementing them.
 
-## Next dashboard work
+## Automated Game Research (stage 1)
 
-Games, Watchlist, Compare, and Search are done. Remaining, in order:
+- `packages/analytics/src/opportunity.ts`: `opportunity_score_v1`, a pure, versioned formula over
+  label cohorts (single genre/subgenre/core mechanic/theme, plus genre+mechanic and
+  subgenre+mechanic pairs, at least 5 games). Components are percentiles across the cohorts of the
+  same storefront; studio fit has no input yet, so its weight is redistributed. **Demand momentum
+  is required**: without Trend Scores no opportunity is scored. Research Confidence is separate
+  (cohort size, history, component coverage, freshness, label quality).
+- Tables `research_runs` and `market_opportunities` (migration `0003`, applied). Runs are
+  append-only; `input_hash` makes a rerun over identical results a no-op, and `asOf` is floored to
+  the UTC hour so reruns within the hour match.
+- `npm run research --workspace @analytic-dashboard/collector` and `.github/workflows/research.yml`
+  (daily 01:43 UTC).
+- Overview shows **Game Opportunities** after the KPI cards. As of 2026-09-29 no cohort is scored
+  because history is under 1 day; 226 cohorts are tracked across the four storefronts. The card
+  layout is covered by view-model tests but has not been seen with real scored data yet.
+- Next stages: `/research/[id]` with Shortlist/Reject/Prototype, Studio Fit, AI research brief,
+  and 30/90-day durability.
 
-1. Final navigation, responsive, accessibility, and browser-flow pass. Games, Compare, the
-   watchlist star, Reset, and the Cmd+K palette were exercised in a signed-in Chrome session;
-   the Watchlist page editor and mobile layouts still need a pass.
-2. Only then Automated Game Research / Steam, and the Vercel deployment.
+## Next work
+
+1. **Requested:** Genres/Mechanics label detail with the full game list (see
+   `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions).
+2. Research stage 1 follow-up: once Trend Scores exist (about 3.5 days of history, around
+   2026-10-02/03), check that scored opportunities are sensible and review the card layout with
+   real data.
+3. Research stage 2: `/research/[id]` with the full calculation and Shortlist/Reject/Prototype.
+4. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:
 

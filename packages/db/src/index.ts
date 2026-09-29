@@ -95,3 +95,12 @@ export {
   type CatalogSearchQuery,
   type CatalogSearchResult,
 } from "./queries/catalog-search";
+export {
+  loadLatestOpportunities,
+  recordFailedResearchRun,
+  recordResearchRun,
+  type OpportunityRowInput,
+  type ResearchRunInput,
+  type ResearchRunSummary,
+  type StoredOpportunity,
+} from "./repositories/research";

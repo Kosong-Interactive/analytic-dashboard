@@ -53,3 +53,6 @@ export const appLabelAssignmentSchema = z.discriminatedUnion("source", [
 export type TaxonomyLabelType = z.infer<typeof taxonomyLabelTypeSchema>;
 export type LabelSource = z.infer<typeof labelSourceSchema>;
 export type AppLabelAssignment = z.infer<typeof appLabelAssignmentSchema>;
+
+/** Automated labels below this are too weak to count (e.g. a single passing mention in a description). */
+export const MIN_LABEL_CONFIDENCE = 0.6;

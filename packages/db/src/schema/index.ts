@@ -370,6 +370,81 @@ export const watchlistEntries = pgTable(
   ],
 ).enableRLS();
 
+export const researchRunStatusEnum = pgEnum("research_run_status", ["succeeded", "failed"]);
+
+/**
+ * One research calculation for one storefront. Runs are append-only so earlier recommendations
+ * stay explainable; `input_hash` makes a rerun over identical inputs a no-op.
+ */
+export const researchRuns = pgTable(
+  "research_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    formulaVersion: text("formula_version").notNull(),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    store: storeEnum("store").notNull(),
+    country: varchar("country", { length: 2 }).notNull(),
+    windowDays: integer("window_days").notNull(),
+    asOf: timestamp("as_of", { withTimezone: true }).notNull(),
+    inputHash: text("input_hash").notNull(),
+    status: researchRunStatusEnum("status").notNull(),
+    trackedGames: integer("tracked_games").notNull(),
+    cohortsEvaluated: integer("cohorts_evaluated").notNull(),
+    opportunitiesScored: integer("opportunities_scored").notNull(),
+    historyDays: numeric("history_days", { precision: 6, scale: 2 }),
+    freshness: text("freshness").notNull(),
+    errorSample: text("error_sample"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("research_runs_input_uidx").on(
+      table.formulaVersion,
+      table.taxonomyVersion,
+      table.store,
+      table.country,
+      table.inputHash,
+    ),
+    index("research_runs_latest_idx").on(table.store, table.country, table.formulaVersion, table.asOf),
+    check("research_runs_country_lowercase_chk", sql`${table.country} = lower(${table.country})`),
+  ],
+).enableRLS();
+
+/** One evaluated label cohort of a research run, with its score, confidence, and evidence. */
+export const marketOpportunities = pgTable(
+  "market_opportunities",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    runId: uuid("run_id")
+      .notNull()
+      .references(() => researchRuns.id, { onDelete: "cascade" }),
+    opportunityKey: text("opportunity_key").notNull(),
+    dimensions: jsonb("dimensions").notNull(),
+    memberCount: integer("member_count").notNull(),
+    score: numeric("score", { precision: 5, scale: 2 }),
+    reason: text("reason"),
+    weightCoverage: numeric("weight_coverage", { precision: 4, scale: 3 }).notNull(),
+    confidence: numeric("confidence", { precision: 4, scale: 3 }).notNull(),
+    confidenceBand: text("confidence_band").notNull(),
+    insightType: text("insight_type"),
+    components: jsonb("components").notNull(),
+    facts: jsonb("facts").notNull(),
+    comparables: jsonb("comparables").notNull(),
+    positives: jsonb("positives").notNull(),
+    counterSignals: jsonb("counter_signals").notNull(),
+    caveats: jsonb("caveats").notNull(),
+  },
+  (table) => [
+    uniqueIndex("market_opportunities_run_key_uidx").on(table.runId, table.opportunityKey),
+    index("market_opportunities_run_score_idx").on(table.runId, table.score),
+    check(
+      "market_opportunities_score_range_chk",
+      sql`${table.score} is null or (${table.score} >= 0 and ${table.score} <= 100)`,
+    ),
+  ],
+).enableRLS();
+
 export const collectorRuns = pgTable(
   "collector_runs",
   {
