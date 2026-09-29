@@ -62,5 +62,10 @@ jobs:
       - name: Verify migrated database security
         run: npm run db:verify
 
+      - name: Run database integration tests
+        run: npm test --workspace @analytic-dashboard/db
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/analytics_test
+
       - name: Run repository checks
         run: npm run check

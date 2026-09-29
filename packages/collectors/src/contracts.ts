@@ -34,6 +34,11 @@ export const normalizedStoreAppSchema = z.object({
 
 export type NormalizedStoreApp = z.infer<typeof normalizedStoreAppSchema>;
 
+export interface ChartObservation {
+  rank: number;
+  app: NormalizedStoreApp;
+}
+
 export interface StoreCollectorAdapter<
   TSearchInput,
   TLookupInput = TSearchInput,

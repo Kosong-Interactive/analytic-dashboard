@@ -1,0 +1,6 @@
+{
+  "version": "mvp-v1",
+  "limit": 10,
+  "appleSearchTerms": ["puzzle", "idle", "match 3"],
+  "googleCharts": ["TOP_FREE"]
+}

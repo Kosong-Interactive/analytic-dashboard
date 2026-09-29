@@ -40,4 +40,11 @@ npm run smoke:apple --workspace @analytic-dashboard/collectors
 npm run smoke:google-play --workspace @analytic-dashboard/collectors
 ```
 
+Sample discovery for `id` and `us` (small, seed/chart based, not a full catalog). `--dry-run` collects and counts without touching the database; without it, results and a `collector_runs` record are written using `DATABASE_URL`:
+
+```bash
+npm run discover --workspace @analytic-dashboard/collector -- --dry-run
+npm run discover --workspace @analytic-dashboard/collector -- --source google_play --country us
+```
+
 See `docs/MVP_IMPLEMENTATION_PLAN.md` for product scope and architecture.

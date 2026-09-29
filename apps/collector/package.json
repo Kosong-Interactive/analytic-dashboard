@@ -4,18 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
-    "test": "tsx --test src/descriptor.test.ts",
-    "typecheck": "tsc --noEmit"
+    "start": "tsx src/index.ts",
+    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts",
+    "typecheck": "tsc --noEmit",
+    "discover": "tsx src/index.ts discover"
   },
   "dependencies": {
-    "@analytic-dashboard/shared": "0.0.0"
+    "@analytic-dashboard/collectors": "0.0.0",
+    "@analytic-dashboard/db": "0.0.0",
+    "@analytic-dashboard/shared": "0.0.0",
+    "dotenv": "^17.2.3",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^20",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

@@ -143,4 +143,30 @@ describe("GooglePlayCollector", () => {
     assert.equal(collection, "TOP_FREE");
     assert.equal(results[0]?.country, "id");
   });
+
+  it("keeps provider chart positions when an entry is dropped", async () => {
+    const collector = new GooglePlayCollector({
+      client: createClient({
+        list: async () => [
+          gameFixture,
+          { ...gameFixture, appId: "com.example.invalid", url: "not-a-url" },
+          { ...gameFixture, appId: "com.example.third" },
+        ],
+      }),
+      minimumRequestIntervalMs: 0,
+    });
+
+    const entries = await collector.discoverTopGameEntries({
+      country: "us",
+      locale: "en_US",
+    });
+
+    assert.deepEqual(
+      entries.map((entry) => [entry.rank, entry.app.externalId]),
+      [
+        [1, "com.example.puzzle"],
+        [3, "com.example.third"],
+      ],
+    );
+  });
 });

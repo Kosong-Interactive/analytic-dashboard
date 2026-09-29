@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import {
   normalizedStoreAppSchema,
+  type ChartObservation,
   type NormalizedStoreApp,
   type StoreCollectorAdapter,
 } from "../contracts.js";
@@ -111,7 +112,7 @@ export class GooglePlayCollectorError extends Error {
 
 interface CacheEntry {
   expiresAt: number;
-  value: NormalizedStoreApp[];
+  value: unknown;
 }
 
 /** Collector-only boundary for the unofficial provider, so it can be replaced without changing consumers. */
@@ -180,9 +181,15 @@ export class GooglePlayCollector
   }
 
   async discoverTopGames(input: GooglePlayChartInput): Promise<NormalizedStoreApp[]> {
+    const entries = await this.discoverTopGameEntries(input);
+    return entries.map((entry) => entry.app);
+  }
+
+  /** Ranks are the provider's 1-based list positions, kept even when an earlier item is dropped. */
+  async discoverTopGameEntries(input: GooglePlayChartInput): Promise<ChartObservation[]> {
     const parsed = chartInputSchema.parse(input);
 
-    return this.getOrFetch(`chart:${JSON.stringify(parsed)}`, async () => {
+    return this.getOrFetch(`chart-entries:${JSON.stringify(parsed)}`, async () => {
       const results = await this.execute(() =>
         this.client.list({
           category: "GAME",
@@ -194,7 +201,7 @@ export class GooglePlayCollector
           throttle: 1,
         }),
       );
-      return this.normalizeGames(results, parsed.country, parsed.locale);
+      return this.normalizeEntries(results, parsed.country, parsed.locale);
     });
   }
 
@@ -202,13 +209,10 @@ export class GooglePlayCollector
     this.cache.clear();
   }
 
-  private async getOrFetch(
-    key: string,
-    request: () => Promise<NormalizedStoreApp[]>,
-  ): Promise<NormalizedStoreApp[]> {
+  private async getOrFetch<T>(key: string, request: () => Promise<T>): Promise<T> {
     const cached = this.cache.get(key);
     if (cached && cached.expiresAt > this.now().getTime()) {
-      return cached.value;
+      return cached.value as T;
     }
 
     const value = await request();
@@ -253,17 +257,30 @@ export class GooglePlayCollector
     country: CountryCode,
     locale: string,
   ): NormalizedStoreApp[] {
-    const capturedAt = this.now().toISOString();
-    const games: NormalizedStoreApp[] = [];
+    return this.normalizeEntries(results, country, locale).map(
+      (entry) => entry.app,
+    );
+  }
 
-    for (const result of results) {
+  private normalizeEntries(
+    results: unknown[],
+    country: CountryCode,
+    locale: string,
+  ): ChartObservation[] {
+    const capturedAt = this.now().toISOString();
+    const entries: ChartObservation[] = [];
+
+    results.forEach((result, index) => {
       const parsed = appSchema.safeParse(result);
       if (parsed.success && parsed.data.genreId?.startsWith("GAME") === true) {
-        games.push(normalizeGame(parsed.data, country, locale, capturedAt));
+        entries.push({
+          rank: index + 1,
+          app: normalizeGame(parsed.data, country, locale, capturedAt),
+        });
       }
-    }
+    });
 
-    return games;
+    return entries;
   }
 }
 

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "countries": {
+    "id": { "locale": "id_ID" },
+    "us": { "locale": "en_US" }
+  }
+}

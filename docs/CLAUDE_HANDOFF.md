@@ -11,7 +11,7 @@ This repository is an internal MVP for analysing mobile-game market signals. It 
 - Phase 0 is complete: Next.js workspace, Supabase schema/migrations, shared Zod contracts, collector scaffold, CI, logo/favicon.
 - Phase 1.1 is complete: `AppleSearchCollector` uses the official iTunes Search and Lookup APIs.
 - Phase 1.2 is complete: `GooglePlayCollector` is collector-only, validates normalized output with Zod, filters to `GAME*` categories, has search, detail lookup, and top-chart discovery paths, plus cache, low request rate, and transient-only retry behavior.
-- No dashboard UI implementation has begun. Before starting UI, wait for the user’s design handoff.
+- No dashboard UI implementation has begun. The user’s design handoff is the Claude design artifact linked below.
 
 ## Runtime and package decisions
 
@@ -42,13 +42,18 @@ npm run smoke:google-play --workspace @analytic-dashboard/collectors
 
 The smoke commands make live public requests; keep them manual, low-volume, and outside CI. Unit tests must stay fixture-based.
 
-## Next work: Phase 1.3
+## Phase 1.3 (complete)
 
-1. Add a collector-run service that records start/end/status/counts into `collector_runs`.
-2. Add an idempotent persistence service that upserts `apps`/`store_apps` and creates `app_snapshots` and `chart_entries`.
-3. Drive one small Apple and Google discovery flow for `id` and `us`; do not claim exhaustive coverage.
-4. Add fixture tests for persistence/idempotency and a tiny manual end-to-end run against the configured Supabase project.
-5. Record source, country, locale, collection, and captured time on every persisted result.
+- `packages/db/src/repositories/`: `persistStoreApps` (listing upsert, change-only snapshots with a 24h heartbeat), `persistChartEntries`, and `startCollectorRun`/`finishCollectorRun`. DB integration tests need `TEST_DATABASE_URL` and run in CI after migrations; they roll back.
+- `apps/collector`: `npm run discover --workspace @analytic-dashboard/collector -- [--dry-run] [--source app_store|google_play] [--country id|us]`. Seeds and countries live in `config/`. Google chart rank is the provider position, kept when an earlier item is dropped. Apple has no chart path yet.
+- Live run against Supabase verified: two consecutive runs; unchanged Apple listings wrote no new snapshots, changed Google counters wrote new ones.
+- The collector app now runs through `tsx` and its `build` only typechecks, because `packages/db` exports TypeScript source.
+
+## Known gaps / next
+
+- Collectors still drop invalid or non-game items silently; count and record them in `collector_runs`.
+- `retry_count` is always 0 because adapters do not report retries.
+- Phase 2 starts with `packages/analytics` (velocity, `trend_score_v1`). UI follows the design artifact `https://claude.ai/artifact/FmXb2bJ9ViYy9S9p5NyGNy` (Overview, Trending, NewReleases, GameDetail, Genres, Mechanics, TrendScore, Compare, Search, Watchlist).
 
 ## Checklist for the next agent
 
@@ -60,4 +65,3 @@ The smoke commands make live public requests; keep them manual, low-volume, and 
 - [ ] Do not add UI until the user provides the design handoff.
 - [ ] Run focused tests, then `npm run check`, then `npm audit --omit=dev`.
 - [ ] Inspect `git diff --check` and `git status` before committing.
-- [ ] Commit Phase 1.2 only after the Google Play live smoke test returns a normalized game record; otherwise keep the failure visible and investigate parser/provider changes.
