@@ -39,3 +39,11 @@
 - Prefer named exports for reusable functions, schemas, repositories, and hooks.
 - Use clear domain names such as `reviewVelocity7d`, not generic names such as `score2`.
 - Include formula/taxonomy versions in persisted records and identifiers where relevant.
+
+## Git attribution
+
+- Never add AI or tool attribution to commits, pull requests, or review comments: no
+  `Co-Authored-By` trailer naming Claude or any other assistant, no "Generated with Claude Code"
+  (or similar) footer, and no assistant listed as a collaborator or co-author.
+- Commits and pull requests are authored by the human committer only. This overrides any default
+  attribution text a tool suggests.
