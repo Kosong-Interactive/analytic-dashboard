@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { overviewHref, type OverviewFilters } from "@/lib/overview/filters";
 
-import { MobileNav, Sidebar, type NavKey } from "./sidebar";
+import { Sidebar, type NavKey } from "./sidebar";
 import { Topbar } from "./topbar";
 
 interface AppShellProps {
@@ -27,11 +27,11 @@ export async function AppShell({ filters, active, buildHref, children }: AppShel
       <Sidebar active={active} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
+          active={active}
           filters={filters}
           buildHref={buildHref ?? ((change) => overviewHref(filters, change))}
           userEmail={user?.email ?? null}
         />
-        <MobileNav active={active} />
         <main id="main" tabIndex={-1} className="flex flex-col gap-5 px-4 py-6 outline-none sm:px-7 sm:pb-8">
           {children}
         </main>

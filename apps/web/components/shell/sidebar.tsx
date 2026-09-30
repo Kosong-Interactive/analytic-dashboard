@@ -12,15 +12,13 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-import { ScrollActiveIntoView } from "./scroll-active-into-view";
-
 export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games";
 
 interface NavItem {
   label: string;
   icon: LucideIcon;
-  key?: NavKey;
-  href?: string;
+  key: NavKey;
+  href: string;
 }
 
 const NAV: NavItem[] = [
@@ -32,83 +30,56 @@ const NAV: NavItem[] = [
   { label: "Games", icon: Gamepad2, key: "games", href: "/games" },
 ];
 
-export function Sidebar({ active }: { active: NavKey }) {
+export function Brand() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line bg-rail lg:flex">
-      <div className="flex h-14 items-center gap-2.5 border-b border-line px-4">
-        <Image
-          src="/kosong-interactive.png"
-          alt="Kosong Interactive"
-          width={38}
-          height={38}
-          priority
-          className="-ml-1 shrink-0"
-        />
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-semibold leading-none">
-            Game Analytic
-          </span>
-          <span className="text-[10.5px] leading-none text-dim">by Kosong Interactive</span>
-        </div>
+    <div className="flex items-center gap-2.5">
+      <Image
+        src="/kosong-interactive.png"
+        alt="Kosong Interactive"
+        width={38}
+        height={38}
+        priority
+        className="-ml-1 shrink-0"
+      />
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[13px] font-semibold leading-none">Game Analytic</span>
+        <span className="text-[10.5px] leading-none text-dim">by Kosong Interactive</span>
       </div>
-      <nav aria-label="Primary" className="flex flex-col gap-0.5 px-2.5 py-3.5">
-        {NAV.map(({ label, icon: Icon, key, href }) =>
-          href ? (
-            <Link
-              key={label}
-              href={href}
-              aria-current={key === active ? "page" : undefined}
-              className={cn(
-                "flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] hover:bg-[#14171b]",
-                key === active ? "bg-[#181b20] text-ink" : "text-ink-soft",
-              )}
-            >
-              <Icon
-                aria-hidden
-                className={cn("size-4", key === active ? "text-accent" : "text-dim")}
-                strokeWidth={1.7}
-              />
-              {label}
-            </Link>
-          ) : (
-            <span
-              key={label}
-              aria-disabled="true"
-              className="flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] text-dim/70"
-            >
-              <Icon aria-hidden className="size-4" strokeWidth={1.7} />
-              <span className="flex-1">{label}</span>
-              <span className="text-[10px] uppercase tracking-wider">Soon</span>
-            </span>
-          ),
-        )}
-      </nav>
-    </aside>
+    </div>
   );
 }
 
-/** Below the `lg` breakpoint the sidebar is hidden, so built pages stay reachable from a compact row. */
-export function MobileNav({ active }: { active: NavKey }) {
-  const links = NAV.filter((item) => item.href);
+/** The primary links, shared by the desktop sidebar and the mobile drawer. */
+export function NavList({ active, onNavigate }: { active: NavKey; onNavigate?: () => void }) {
   return (
-    <ScrollActiveIntoView
-      label="Primary"
-      className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line bg-rail px-4 py-1.5 sm:px-7 lg:hidden"
-    >
-      {links.map(({ label, icon: Icon, key, href }) => (
+    <nav aria-label="Primary" className="flex flex-col gap-0.5 px-2.5 py-3.5">
+      {NAV.map(({ label, icon: Icon, key, href }) => (
         <Link
-          key={label}
-          href={href ?? "/"}
+          key={key}
+          href={href}
+          onClick={onNavigate}
           aria-current={key === active ? "page" : undefined}
           className={cn(
-            "flex h-8 shrink-0 items-center gap-2 rounded-md px-3 text-[13px]",
-            key === active ? "bg-[#181b20] text-ink" : "text-dim",
+            "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] hover:bg-[#14171b] lg:h-8",
+            key === active ? "bg-[#181b20] text-ink" : "text-ink-soft",
           )}
         >
-          <Icon aria-hidden className="size-4" strokeWidth={1.7} />
+          <Icon aria-hidden className={cn("size-4", key === active ? "text-accent" : "text-dim")} strokeWidth={1.7} />
           {label}
         </Link>
       ))}
-    </ScrollActiveIntoView>
+    </nav>
+  );
+}
+
+/** Desktop only; below `lg` the same links open from the menu button in the top bar. */
+export function Sidebar({ active }: { active: NavKey }) {
+  return (
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line bg-rail lg:flex">
+      <div className="flex h-14 items-center border-b border-line px-4">
+        <Brand />
+      </div>
+      <NavList active={active} />
+    </aside>
   );
 }
