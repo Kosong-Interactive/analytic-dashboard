@@ -89,8 +89,9 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
       </Panel>
 
       <p className="text-xs leading-5 text-dim">
-        Steam labels come from Steam user tags and keyword rules (taxonomy v1). User tags are community-voted and noisy,
-        so tag-derived labels carry 75% confidence, and labels below {Math.round(MIN_LABEL_CONFIDENCE * 100)}% are not
+        Steam labels come from Steam user tags and keyword rules (taxonomy v1, 75% confidence because user tags are
+        community-voted and noisy), replaced by an AI classification once a game has one; the AI must quote the game&apos;s
+        title, tags, or description as evidence. Labels below {Math.round(MIN_LABEL_CONFIDENCE * 100)}% are not
         counted. Only games from the sampled Most Played and Top Sellers charts are tracked, so shares describe that
         sample, not the Steam catalog. Players and reviews are Steam&apos;s own figures; “—” means Steam gave no value.
       </p>

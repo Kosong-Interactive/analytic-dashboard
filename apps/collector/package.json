@@ -12,6 +12,7 @@
     "discover": "tsx src/index.ts discover",
     "classify": "tsx src/index.ts classify",
     "classify-steam": "tsx src/index.ts classify-steam",
+    "classify-steam-ai": "tsx src/index.ts classify-steam-ai",
     "classify-ai": "tsx src/index.ts classify-ai",
     "research": "tsx src/index.ts research",
     "research-brief": "tsx src/index.ts research-brief",

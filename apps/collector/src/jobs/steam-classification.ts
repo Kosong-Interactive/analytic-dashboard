@@ -8,11 +8,13 @@ import {
   type Taxonomy,
 } from "@analytic-dashboard/classifier";
 import type {
+  AutomatedLabelRow,
   RuleLabelRow,
   SteamClassificationInputRow,
   TaxonomyLabelInput,
 } from "@analytic-dashboard/db";
 
+import type { AiClassificationStore } from "./ai-classification.js";
 import type { ClassificationSummary } from "./classification.js";
 
 /** Everything the Steam rule classification job needs from storage, so it is testable without a database. */
@@ -46,6 +48,51 @@ export function toClassificationInput(row: SteamClassificationInputRow): Classif
         price: row.isFree ? 0 : row.usPrice,
       },
     ],
+  };
+}
+
+/**
+ * What the AI reads for one Steam game. The model only sees title, "store genres", and description,
+ * and its evidence must quote one of them, so Steam's genres and user tags go in as store genres.
+ */
+export function toAiClassificationInput(row: SteamClassificationInputRow): ClassificationInput {
+  return {
+    appId: row.steamAppId,
+    listings: [
+      {
+        store: "steam",
+        country: "global",
+        title: row.title,
+        description: row.description,
+        storeGenres: [...new Set([...row.genres, ...row.tags])],
+        price: row.isFree ? 0 : row.usPrice,
+      },
+    ],
+  };
+}
+
+/** Storage the Steam AI job needs; the generic AI job sees it as `appId` = Steam game id. */
+export interface SteamAiBackend {
+  syncTaxonomy(taxonomyVersion: string, labels: TaxonomyLabelInput[]): Promise<Map<string, string>>;
+  loadInputs(): Promise<SteamClassificationInputRow[]>;
+  loadAiInputHashes(taxonomyVersion: string): Promise<Map<string, string>>;
+  replaceAiLabels(input: {
+    steamAppId: string;
+    taxonomyVersion: string;
+    promptVersion: string;
+    model: string;
+    inputHash: string;
+    labels: AutomatedLabelRow[];
+  }): Promise<{ written: number; removed: number }>;
+}
+
+/** Lets the shared AI classification job run over Steam games without knowing about Steam. */
+export function toAiClassificationStore(backend: SteamAiBackend): AiClassificationStore {
+  return {
+    syncTaxonomy: (version, labels) => backend.syncTaxonomy(version, labels),
+    loadInputs: async () => (await backend.loadInputs()).map(toAiClassificationInput),
+    loadAiInputHashes: (version) => backend.loadAiInputHashes(version),
+    replaceAiLabels: ({ appId, ...rest }) => backend.replaceAiLabels({ steamAppId: appId, ...rest }),
   };
 }
 

@@ -4,8 +4,11 @@ import { describe, it } from "node:test";
 import { parseTaxonomy, STEAM_RULES_VERSION } from "@analytic-dashboard/classifier";
 import type { SteamClassificationInputRow } from "@analytic-dashboard/db";
 
+import { runAiClassification } from "./ai-classification.js";
 import {
   runSteamRuleClassification,
+  toAiClassificationInput,
+  toAiClassificationStore,
   toClassificationInput,
   type SteamClassificationStore,
 } from "./steam-classification.js";
@@ -86,5 +89,75 @@ describe("runSteamRuleClassification", () => {
     const summary = await runSteamRuleClassification(taxonomy, store);
     assert.equal(summary.errorCount, 1);
     assert.equal(summary.classified, 1);
+  });
+});
+
+describe("Steam AI classification", () => {
+  it("sends Steam genres and tags as store genres, without duplicates", () => {
+    const input = toAiClassificationInput(row({ genres: ["Action"], tags: ["Roguelike", "Action"], isFree: true }));
+    assert.equal(input.appId, "s1");
+    assert.deepEqual(input.listings[0]?.storeGenres, ["Action", "Roguelike"]);
+    assert.equal(input.listings[0]?.price, 0);
+    assert.equal(input.listings[0]?.store, "steam");
+  });
+
+  it("runs the shared AI job over Steam games and stores labels per Steam game", async () => {
+    const written: Array<{ steamAppId: string; labels: number; model: string; inputHash: string }> = [];
+    const store = toAiClassificationStore({
+      syncTaxonomy: async (_v, labels) => new Map(labels.map((l) => [`${l.type}:${l.slug}`, `id-${l.slug}`])),
+      loadInputs: async () => [row(), row({ steamAppId: "s2" })],
+      loadAiInputHashes: async () => new Map(),
+      replaceAiLabels: async (input) => {
+        written.push({ steamAppId: input.steamAppId, labels: input.labels.length, model: input.model, inputHash: input.inputHash });
+        return { written: input.labels.length, removed: 0 };
+      },
+    });
+    const classifier = {
+      classifyBatch: async (inputs: readonly { appId: string }[]) => ({
+        model: "test-model",
+        promptVersion: "ai-test",
+        inputTokens: 10,
+        outputTokens: 5,
+        results: inputs.map((input) => ({
+          appId: input.appId,
+          rejected: 0,
+          labels: input.appId === "s1"
+            ? [{ type: "subgenre" as const, slug: "roguelike", confidence: 0.9, evidence: [{ field: "store_category" as const, excerpt: "Roguelike" }] }]
+            : [],
+        })),
+      }),
+    };
+
+    const summary = await runAiClassification(taxonomy, classifier, store, { maxApps: 10, batchSize: 8 });
+
+    assert.equal(summary.classified, 2);
+    assert.equal(summary.emptyResults, 1);
+    assert.deepEqual(written.map((w) => [w.steamAppId, w.labels, w.model]), [["s1", 1, "test-model"], ["s2", 0, "test-model"]]);
+  });
+
+  it("skips a Steam game whose AI input hash is unchanged", async () => {
+    const hashes = new Map<string, string>();
+    const first = toAiClassificationStore({
+      syncTaxonomy: async (_v, labels) => new Map(labels.map((l) => [`${l.type}:${l.slug}`, `id-${l.slug}`])),
+      loadInputs: async () => [row()],
+      loadAiInputHashes: async () => hashes,
+      replaceAiLabels: async (input) => {
+        hashes.set(input.steamAppId, input.inputHash);
+        return { written: 0, removed: 0 };
+      },
+    });
+    const classifier = {
+      classifyBatch: async (inputs: readonly { appId: string }[]) => ({
+        model: "m",
+        promptVersion: "ai-test",
+        inputTokens: 0,
+        outputTokens: 0,
+        results: inputs.map((input) => ({ appId: input.appId, rejected: 0, labels: [] })),
+      }),
+    };
+    await runAiClassification(taxonomy, classifier, first, { maxApps: 10, batchSize: 8 });
+    const second = await runAiClassification(taxonomy, classifier, first, { maxApps: 10, batchSize: 8 });
+    assert.equal(second.pending, 0);
+    assert.equal(second.attempted, 0);
   });
 });

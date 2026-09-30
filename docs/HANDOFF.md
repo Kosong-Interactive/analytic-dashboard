@@ -131,11 +131,16 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - Rules (`rules-v1`) and Gemini (`ai-v2`, model rotation via `models.list`, SDK retries disabled,
   `maxOutputTokens` capped, evidence must quote the input). Resolution manual > AI > rule; once an
   app has an AI run its rule labels are ignored. Roll-ups hide automated labels below 0.6.
-- Steam games: rules only (`steam-rules-v1`: Steam user tags at 0.75 confidence, keyword rules on
-  title/description, price). Stored in `steam_app_labels` / `steam_classification_runs`; run
+- Steam games: rules (`steam-rules-v1`: Steam user tags at 0.75 confidence, keyword rules on
+  title/description, price) and Gemini (`ai-v2`, same prompt and provider as mobile; Steam genres
+  and tags are sent as "store genres", so evidence may quote a tag). Stored in `steam_app_labels` / `steam_classification_runs`; run
   `npm run classify-steam --workspace @analytic-dashboard/collector` (also a step in `collect.yml`).
-  No AI classification for Steam yet. Migration `0008` is applied to Supabase; the first
-  `classify-steam` run labelled 150 games (1,196 rule labels, no errors).
+  Resolution and the AI-over-rule rule are the same as mobile. Run
+  `npm run classify-steam-ai --workspace @analytic-dashboard/collector -- --limit 200` (a step in
+  `collect.yml`; `--dry-run` calls the model but writes nothing). Migration `0008` is applied. First
+  runs on 2026-10-01: rules labelled 150 games (1,196 labels); AI labelled all 150 (973 labels, 3
+  rejected by validation, 2 empty, about 100k tokens, no errors). AI still leans on noisy tags
+  (Dota 2 keeps Simulation and Tower defense), so judge quality before trusting Steam labels.
 
 ### Dashboard
 
@@ -203,8 +208,9 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Next work (recommended order)
 
-1. **Steam:** check `/steam*` in a browser (restart `next dev` after the migration), then decide on
-   Steam AI classification (rules exist; needs approval for Gemini quota) and Steam stage 6.
+1. **Steam:** review the AI labels on `/steam/genres` and `/steam/games` (tag noise), then Steam
+   stage 6 (normalized cross-platform score; needs a few days of Steam history) and manual
+   Confirm/Reject for Steam labels.
 2. **Verify Apple charts** after the first scheduled run: `chart_entries` for `app_store` and rank
    gain appearing in Trend Score components after about 3.5 days.
 3. **World market** from several countries for Mobile (team must choose countries; mind Google
