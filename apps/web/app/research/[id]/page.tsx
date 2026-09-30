@@ -38,7 +38,14 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
   };
   return (
     <AppShell filters={filters} active="overview" buildHref={(change) => overviewHref(filters, change)}>
-      <OpportunityDetail view={result.view} profile={result.profile} studioFit={result.studioFit} brief={result.brief} now={new Date()} />
+      <OpportunityDetail
+        view={result.view}
+        profile={result.profile}
+        studioFit={result.studioFit}
+        brief={result.brief}
+        history={result.history}
+        now={new Date()}
+      />
     </AppShell>
   );
 }

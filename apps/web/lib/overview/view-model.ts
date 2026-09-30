@@ -257,3 +257,23 @@ export function toTrendingRow(
     })),
   };
 }
+
+export interface SteamSourceStatus {
+  state: SourceState;
+  lastCollectedAt: Date | null;
+  latestErrorCount: number;
+  trackedGames: number;
+}
+
+/** Steam is a Global desktop source, reported apart from the country-scoped mobile sources. */
+export function toSteamSourceStatus(
+  row: { latestStatus: string | null; latestErrorCount: number; lastCollectedAt: Date | null; trackedGames: number },
+  asOf: Date,
+): SteamSourceStatus {
+  let state: SourceState;
+  if (row.latestStatus === "failed") state = "failed";
+  else if (row.lastCollectedAt === null) state = "never";
+  else if (asOf.getTime() - row.lastCollectedAt.getTime() > STALE_AFTER_MS) state = "stale";
+  else state = "fresh";
+  return { state, lastCollectedAt: row.lastCollectedAt, latestErrorCount: row.latestErrorCount, trackedGames: row.trackedGames };
+}

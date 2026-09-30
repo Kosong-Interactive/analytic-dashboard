@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 
 import {
   marketOpportunities,
@@ -100,6 +100,7 @@ export interface ResearchRunSummary {
   status: "succeeded" | "failed";
   asOf: Date;
   formulaVersion: string;
+  taxonomyVersion: string;
   trackedGames: number;
   cohortsEvaluated: number;
   opportunitiesScored: number;
@@ -114,6 +115,8 @@ export interface StoredOpportunity {
   store: StoreId;
   country: string;
   asOf: Date;
+  formulaVersion: string;
+  taxonomyVersion: string;
   opportunityKey: string;
   dimensions: unknown;
   memberCount: number;
@@ -128,6 +131,26 @@ export interface StoredOpportunity {
   positives: unknown;
   counterSignals: unknown;
   caveats: unknown;
+}
+
+export interface OpportunityHistoryIdentity {
+  store: StoreId;
+  country: string;
+  formulaVersion: string;
+  taxonomyVersion: string;
+  opportunityKey: string;
+  asOf: Date;
+}
+
+export interface OpportunityHistoryRow extends OpportunityHistoryIdentity {
+  id: string;
+  createdAt: Date;
+  score: number | null;
+  confidence: number;
+  confidenceBand: string;
+  insightType: string | null;
+  comparables: unknown;
+  counterSignals: unknown;
 }
 
 export interface StoredOpportunityPreview extends Omit<StoredOpportunity, "score"> {
@@ -196,6 +219,7 @@ export async function loadLatestOpportunities(
       status: researchRuns.status,
       asOf: researchRuns.asOf,
       formulaVersion: researchRuns.formulaVersion,
+      taxonomyVersion: researchRuns.taxonomyVersion,
       trackedGames: researchRuns.trackedGames,
       cohortsEvaluated: researchRuns.cohortsEvaluated,
       opportunitiesScored: researchRuns.opportunitiesScored,
@@ -242,6 +266,8 @@ export async function loadLatestOpportunities(
         store: run.store,
         country: run.country,
         asOf: run.asOf,
+        formulaVersion: run.formulaVersion,
+        taxonomyVersion: run.taxonomyVersion,
         opportunityKey: row.opportunityKey,
         dimensions: row.dimensions,
         memberCount: row.memberCount,
@@ -277,6 +303,8 @@ export async function loadLatestOpportunities(
         store: previewRun.store,
         country: previewRun.country,
         asOf: previewRun.asOf,
+        formulaVersion: previewRun.formulaVersion,
+        taxonomyVersion: previewRun.taxonomyVersion,
         opportunityKey: previewRow.opportunityKey,
         dimensions: previewRow.dimensions,
         memberCount: previewRow.memberCount,
@@ -300,6 +328,57 @@ export async function loadLatestOpportunities(
     opportunities,
     preview,
   };
+}
+
+/**
+ * Immutable history for a bounded set of opportunity identities. Formula and taxonomy versions
+ * stay in the identity so a scoring semantic change never looks like market acceleration.
+ */
+export async function loadOpportunityHistories(
+  db: DatabaseExecutor,
+  identities: readonly OpportunityHistoryIdentity[],
+  lookbackDays = 95,
+): Promise<OpportunityHistoryRow[]> {
+  if (identities.length === 0) return [];
+  const clauses = identities.map((identity) => {
+    const start = new Date(identity.asOf.getTime() - lookbackDays * 86_400_000);
+    return and(
+      eq(researchRuns.store, identity.store),
+      eq(researchRuns.country, identity.country),
+      eq(researchRuns.formulaVersion, identity.formulaVersion),
+      eq(researchRuns.taxonomyVersion, identity.taxonomyVersion),
+      eq(marketOpportunities.opportunityKey, identity.opportunityKey),
+      gte(researchRuns.asOf, start),
+      lte(researchRuns.asOf, identity.asOf),
+    );
+  });
+  const rows = await db
+    .select({
+      id: marketOpportunities.id,
+      createdAt: researchRuns.createdAt,
+      store: researchRuns.store,
+      country: researchRuns.country,
+      formulaVersion: researchRuns.formulaVersion,
+      taxonomyVersion: researchRuns.taxonomyVersion,
+      opportunityKey: marketOpportunities.opportunityKey,
+      asOf: researchRuns.asOf,
+      score: marketOpportunities.score,
+      confidence: marketOpportunities.confidence,
+      confidenceBand: marketOpportunities.confidenceBand,
+      insightType: marketOpportunities.insightType,
+      comparables: marketOpportunities.comparables,
+      counterSignals: marketOpportunities.counterSignals,
+    })
+    .from(marketOpportunities)
+    .innerJoin(researchRuns, eq(researchRuns.id, marketOpportunities.runId))
+    .where(or(...clauses))
+    .orderBy(asc(researchRuns.asOf), asc(researchRuns.createdAt));
+
+  return rows.map((row) => ({
+    ...row,
+    score: toNumber(row.score),
+    confidence: Number(row.confidence),
+  }));
 }
 
 /** Full stored calculation and run context for one evidence page. */

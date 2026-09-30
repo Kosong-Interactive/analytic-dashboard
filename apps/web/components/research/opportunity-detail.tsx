@@ -3,7 +3,7 @@ import Link from "next/link";
 import { platformLabel } from "@analytic-dashboard/shared";
 import type { StudioFitResult } from "@analytic-dashboard/analytics";
 
-import { formatCount, formatRelative } from "@/lib/format/format";
+import { formatCount, formatRelative, formatSigned } from "@/lib/format/format";
 import { countryLabels } from "@/lib/overview/filters";
 import {
   opportunityDecisionLabels,
@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { capabilityLabels, monetizationLabels, type StudioProfileView } from "@/lib/research/studio-profile";
 import type { ResearchBriefView } from "@/lib/research/research-brief-view";
+import type { OpportunityHistoryView } from "@/lib/research/history-view-model";
 
 import { EmptyState, Panel } from "../overview/panel";
 import { DecisionForm } from "./decision-form";
@@ -350,17 +351,149 @@ function ResearchBriefPanel({ brief, score }: { brief: ResearchBriefView | null;
   );
 }
 
+function durabilityStatus(window: OpportunityHistoryView["windows"][number]): string {
+  if (window.status === "ready") return "Measured";
+  if (window.status === "unavailable") return "Not measurable";
+  return `${window.daysUntilReady}d until sufficient coverage`;
+}
+
+function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
+  if (!history) {
+    return (
+      <Panel title="Opportunity history" description="30/90-day durability, acceleration, and material changes">
+        <EmptyState title="History could not be validated">
+          The current research result remains available, but malformed historical evidence is not shown.
+        </EmptyState>
+      </Panel>
+    );
+  }
+
+  const recent = history.timeline.slice(-12);
+  const acceleration = history.acceleration;
+  return (
+    <Panel
+      title="Opportunity history"
+      description={`${history.version} · same storefront, market, formula, taxonomy, and opportunity dimensions only`}
+    >
+      <div className="grid grid-cols-1 border-t border-line-soft md:grid-cols-3">
+        {history.windows.map((window) => (
+          <div key={window.windowDays} className="border-b border-line-soft p-4 md:border-b-0 md:border-r">
+            <p className="text-[11px] uppercase tracking-wider text-dim">{window.windowDays}-day durability</p>
+            <p className="mt-2 text-2xl font-semibold">
+              {window.durableShare === null ? "Pending" : `${Math.round(window.durableShare * 100)}%`}
+            </p>
+            <p className="mt-1 text-xs text-dim">
+              {durabilityStatus(window)} · {window.sampleCount} scored snapshots · {window.observedDays.toFixed(1)}d observed
+            </p>
+            {window.averageScore !== null ? (
+              <p className="mt-2 text-[11px] text-ink-soft">
+                Average {window.averageScore.toFixed(1)} · change {formatSigned(window.scoreChange, 1)} pts
+              </p>
+            ) : null}
+          </div>
+        ))}
+        <div className="p-4">
+          <p className="text-[11px] uppercase tracking-wider text-dim">7-day acceleration</p>
+          <p className="mt-2 text-2xl font-semibold capitalize">
+            {acceleration.direction ?? (acceleration.status === "collecting" ? "Collecting" : "Pending")}
+          </p>
+          <p className="mt-1 text-xs text-dim">
+            {acceleration.status === "ready"
+              ? `${formatSigned(acceleration.value, 1)} pts versus the preceding 7-day change`
+              : `Requires ${acceleration.requiredHistoryDays} days of comparable score history`}
+          </p>
+          {acceleration.status === "ready" ? (
+            <p className="mt-2 text-[11px] text-ink-soft">
+              Latest 7d {formatSigned(acceleration.recentChange, 1)} · prior 7d {formatSigned(acceleration.previousChange, 1)}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {history.alerts.length > 0 ? (
+        <div className="border-t border-line-soft p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Latest material changes</p>
+          <ul className="mt-3 grid grid-cols-1 gap-2 xl:grid-cols-2">
+            {history.alerts.map((alert) => (
+              <li
+                key={alert.key}
+                className={cn(
+                  "rounded-md border px-3 py-2 text-xs leading-5",
+                  alert.severity === "high" ? "border-down/40 bg-down/10" : "border-star/40 bg-star/10",
+                )}
+              >
+                <p className="font-medium text-ink">{alert.title}</p>
+                <p className="text-dim">{alert.detail}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+          {history.points.length < 2
+            ? "Collecting a second comparable research snapshot before change detection starts."
+            : "No material change was detected in the latest comparable research run."}
+        </p>
+      )}
+
+      {recent.length > 0 ? (
+        <div className="border-t border-line-soft p-4">
+          {recent.length >= 2 ? (
+            <div className="flex h-28 items-end gap-1" aria-hidden="true">
+              {recent.map((point) => (
+                <div key={point.id} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
+                  <span className="text-[9px] text-dim">{point.score === null ? "—" : Math.round(point.score)}</span>
+                  <div
+                    className={cn("w-full max-w-8 rounded-t-sm", point.score === null ? "h-1 bg-line-strong" : "bg-accent/70")}
+                    style={point.score === null ? undefined : { height: `${Math.max(4, point.score)}%` }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <details className={recent.length >= 2 ? "mt-3" : undefined}>
+            <summary className="cursor-pointer text-xs font-medium text-accent">View accessible snapshot timeline</summary>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[560px] border-collapse text-left text-xs">
+                <thead className="text-[11px] uppercase tracking-wider text-dim">
+                  <tr><th className="py-2 font-medium">Calculated</th><th className="py-2 text-right font-medium">Score</th><th className="py-2 text-right font-medium">Change</th><th className="py-2 text-right font-medium">Confidence</th></tr>
+                </thead>
+                <tbody>
+                  {[...recent].reverse().map((point) => (
+                    <tr key={point.id} className="border-t border-line-soft">
+                      <td className="py-2 text-ink-soft">{formatDate(point.asOf)}</td>
+                      <td className="py-2 text-right font-medium">{point.score === null ? "—" : point.score.toFixed(1)}</td>
+                      <td className="py-2 text-right text-ink-soft">{formatSigned(point.delta, 1)}</td>
+                      <td className="py-2 text-right text-ink-soft">{Math.round(point.confidence * 100)}% · {point.confidenceBand}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+          {history.skipped > 0 ? <p className="mt-2 text-[11px] text-down">{history.skipped} malformed historical snapshot(s) were hidden.</p> : null}
+        </div>
+      ) : null}
+      <p className="border-t border-line-soft px-4 py-3 text-[11px] leading-5 text-dim">
+        Durability is the share of measurable snapshots at or above a 60 Opportunity Score. It is an internal research signal, not a probability of commercial success.
+      </p>
+    </Panel>
+  );
+}
+
 export function OpportunityDetail({
   view,
   profile,
   studioFit,
   brief,
+  history,
   now,
 }: {
   view: OpportunityDetailView;
   profile: StudioProfileView | null;
   studioFit: StudioFitResult | null;
   brief: ResearchBriefView | null;
+  history: OpportunityHistoryView | null;
   now: Date;
 }) {
   return (
@@ -381,6 +514,8 @@ export function OpportunityDetail({
 
       <RecommendationPanel view={view} profile={profile} studioFit={studioFit} />
       <SummaryCards view={view} />
+
+      <HistoryPanel history={history} />
 
       <ResearchBriefPanel brief={brief} score={view.score} />
 

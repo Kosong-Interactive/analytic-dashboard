@@ -1,5 +1,6 @@
 import { runClassifyAiCommand } from "./commands/classify-ai.js";
 import { runClassifyCommand } from "./commands/classify.js";
+import { runDiscoverSteamCommand } from "./commands/discover-steam.js";
 import { runDiscoverCommand } from "./commands/discover.js";
 import { runResearchCommand } from "./commands/research.js";
 import { runResearchBriefCommand } from "./commands/research-brief.js";
@@ -22,6 +23,18 @@ if (command === "info") {
     console.error(
       JSON.stringify({
         event: "discovery.failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+    process.exitCode = 1;
+  }
+} else if (command === "discover-steam") {
+  try {
+    process.exitCode = await runDiscoverSteamCommand(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "steam.discovery.failed",
         message: error instanceof Error ? error.message : "Unknown error",
       }),
     );

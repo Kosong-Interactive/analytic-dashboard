@@ -97,6 +97,7 @@ export {
 } from "./queries/catalog-search";
 export {
   loadLatestOpportunities,
+  loadOpportunityHistories,
   loadOpportunityDecisions,
   loadOpportunityDetail,
   recordFailedResearchRun,
@@ -105,6 +106,8 @@ export {
   type OpportunityDecisionRow,
   type OpportunityDecisionStatus,
   type OpportunityDetailRow,
+  type OpportunityHistoryIdentity,
+  type OpportunityHistoryRow,
   type OpportunityRowInput,
   type ResearchRunInput,
   type ResearchRunSummary,
@@ -125,3 +128,20 @@ export {
   recordResearchBrief,
   type ResearchBriefRow,
 } from "./repositories/research-briefs";
+export {
+  decideSteamSnapshotWrite,
+  finishSteamCollectorRun,
+  persistSteamApps,
+  persistSteamChartEntries,
+  persistSteamPrices,
+  persistSteamSnapshots,
+  startSteamCollectorRun,
+  steamMetadataHash,
+  type PersistSteamAppsResult,
+  type PersistableSteamListing,
+  type SteamChartEntryInput,
+  type SteamPriceInput,
+  type SteamReviewTotals,
+  type SteamSnapshotInput,
+} from "./repositories/steam-persistence";
+export { loadSteamSourceHealth, type SteamSourceHealthRow } from "./queries/steam-source-health";

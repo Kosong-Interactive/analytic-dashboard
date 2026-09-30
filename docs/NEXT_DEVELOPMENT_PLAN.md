@@ -105,11 +105,25 @@ readiness** below; this request makes it the next large feature after the curren
 
 - Stage 1 of that plan is done: platform-neutral product language and the platform capability
   registry (`packages/shared/src/platforms.ts`).
-- Next: define Steam listing and observation contracts, then build a replaceable adapter in
-  `packages/collectors/src/steam/` with fixtures, throttling, caching, and a low-volume live
-  contract test. Evaluate sources before choosing one: the official Steam storefront and Web
-  API endpoints, and their rate limits and terms of use. Treat any third-party owner or player
-  figures as estimates with provenance, never as exact sales or downloads.
+- Stage 2 is done: strict Steam listing and grouped observation contracts live in
+  `packages/shared/src/steam.ts`. Review sentiment, concurrent players, chart positions, and
+  regional prices retain separate source and capture-time context. Missing groups remain missing,
+  review totals must reconcile, and Steam data cannot be coerced into mobile star/install fields.
+- Stage 3 is done: `SteamCollector` in `packages/collectors/src/steam/` uses only the official
+  Steam Web API (charts, store items, review totals, current players) with fixtures, one shared
+  throttle, caching, bounded retries, and a low-volume live smoke test. The store's `appreviews`
+  endpoint is deprecated in favour of `IUserReviewsService/GetAppReviews`. Official genres are not
+  in these responses, so Steam genres stay empty and tags are kept for classification. Treat any
+  third-party owner or player figures as estimates with provenance, never as exact sales or
+  downloads.
+- Next: Stage 4, persisting Steam Global history (database enum and registry entry together).
+  Decided 2026-09-30: Steam listings and observations get their own tables instead of reusing the
+  country-scoped `store_apps`, so Global Steam data cannot mix silently with mobile storefronts.
+- UI grouping (decided 2026-09-30): platforms are presented in two groups, **Mobile** (App Store,
+  Google Play; per country) and **Desktop** (Steam; Global). The registry `kind` becomes
+  `"mobile" | "desktop"`. Views never combine raw metrics across the groups (star ratings and
+  rating counts versus Steam positive/negative reviews); cross-platform comparison only uses
+  normalized scores in Stage 6.
 - Steam observations are platform-specific (positive/negative reviews, review score, pricing and
   discounts, chart rank where available). Never turn Steam sentiment into a five-star rating or
   compare raw Steam review counts with mobile rating counts.
@@ -274,7 +288,7 @@ idempotent.
 4. AI-authored research brief constrained to stored evidence.
 5. 30/90-day durability, acceleration, history, and material-change alerts.
 
-Stages 1 through 4 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation
+Stages 1 through 5 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation
 view, comparable-game evidence, risks and caveats, and append-only Shortlist/Reject/Prototype
 decisions with actor, optional owner, note, and timestamp. Migration `0004` adds
 `opportunity_decisions` with RLS enabled and no browser policy; writes go through an authenticated
@@ -296,6 +310,17 @@ token usage. Research Detail exposes citations and the complete supplied registr
 the deterministic score or the team's decision. The GitHub Actions step requires the opt-in
 repository variable `ENABLE_RESEARCH_BRIEFS=true` because it sends bounded opportunity evidence to
 Gemini.
+
+Stage 5 adds deterministic `opportunity_history_v1` analysis over the existing append-only
+`market_opportunities` rows. The history query compares only the same storefront, market,
+opportunity key, formula version, and taxonomy version. Research Detail shows 30/90-day durability,
+two-window 7-day acceleration, a validated snapshot timeline, and latest material changes. Overview
+cards surface the highest-priority latest change. Durability remains `collecting` until at least 80%
+of its time window is observed, acceleration requires 14 days, and missing scores stay missing.
+No migration or extra scheduled job is needed: the existing daily research run already creates the
+immutable inputs. Multiple manual runs on the same UTC day count as one daily point, using the
+latest selected result. In v1, durability means the share of measurable snapshots at or above a 60
+Opportunity Score; score changes under 10 points do not create an alert.
 
 ## Cross-platform and Steam readiness
 
@@ -363,10 +388,10 @@ labels retain their taxonomy and prompt versions so old analysis remains interpr
 ### Steam delivery stages
 
 1. Neutralize product copy and introduce a central platform capability registry. (Done)
-2. Define Steam listing and observation contracts without weakening current mobile semantics.
+2. Define Steam listing and observation contracts without weakening current mobile semantics. (Done)
 3. Implement a replaceable Steam adapter, fixtures, throttling, caching, and a low-volume live
-   contract test.
-4. Persist Steam Global history and expose freshness/coverage.
+   contract test. (Done)
+4. Persist Steam Global history and expose freshness/coverage. (Done; migration `0007` applied 2026-09-30)
 5. Add Steam pages and filter activation.
 6. Enable cross-platform normalized scoring and migration opportunities.
 

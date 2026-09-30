@@ -1,12 +1,16 @@
 import type { Store } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
+import { buildOpportunityHistoryView, opportunityHistoryIdentity, type StoredOpportunityHistoryInput } from "./history-view-model";
+
 /** Structural subsets of the database rows, so this module is testable without a database. */
 export interface StoredOpportunityInput {
   id: string;
   store: Store;
   country: string;
   asOf: Date;
+  formulaVersion: string;
+  taxonomyVersion: string;
   opportunityKey: string;
   dimensions: unknown;
   memberCount: number;
@@ -78,6 +82,7 @@ export interface OpportunityCard {
   /** Games explorer link when every dimension is filterable there; `null` otherwise. */
   browseHref: string | null;
   asOf: Date;
+  changeAlert: { severity: "high" | "medium"; title: string; detail: string } | null;
 }
 
 export interface OpportunityPreview extends Omit<OpportunityCard, "score" | "insight" | "earlySignal"> {
@@ -115,7 +120,7 @@ function browseHref(dimensions: z.infer<typeof dimensionsSchema>, country: strin
   return `/games?${query.toString()}`;
 }
 
-function toCard(row: StoredOpportunityInput): OpportunityCard | null {
+function toCard(row: StoredOpportunityInput, historyRows: readonly StoredOpportunityHistoryInput[]): OpportunityCard | null {
   const dimensions = dimensionsSchema.safeParse(row.dimensions);
   const facts = factsSchema.safeParse(row.facts);
   const comparables = comparablesSchema.safeParse(row.comparables);
@@ -126,6 +131,12 @@ function toCard(row: StoredOpportunityInput): OpportunityCard | null {
   if (!dimensions.success || !facts.success || !comparables.success || !positives.success || !counter.success || !caveats.success || !band.success) {
     return null;
   }
+  const identity = opportunityHistoryIdentity(row);
+  const history = buildOpportunityHistoryView(
+    historyRows.filter((historyRow) => opportunityHistoryIdentity(historyRow) === identity),
+    row.id,
+  );
+  const alert = history?.alerts[0];
   return {
     id: row.id,
     title: dimensions.data.map((d) => d.displayName).join(" + "),
@@ -145,11 +156,12 @@ function toCard(row: StoredOpportunityInput): OpportunityCard | null {
     comparables: comparables.data.slice(0, 3).map(({ id, title }) => ({ id, title })),
     browseHref: browseHref(dimensions.data, row.country, row.store),
     asOf: row.asOf,
+    changeAlert: alert ? { severity: alert.severity, title: alert.title, detail: alert.detail } : null,
   };
 }
 
 function toPreview(row: StoredOpportunityPreviewInput): OpportunityPreview | null {
-  const parsed = toCard({ ...row, score: 0 });
+  const parsed = toCard({ ...row, score: 0 }, []);
   if (!parsed) return null;
   return {
     id: parsed.id,
@@ -167,6 +179,7 @@ function toPreview(row: StoredOpportunityPreviewInput): OpportunityPreview | nul
     comparables: parsed.comparables,
     browseHref: parsed.browseHref,
     asOf: parsed.asOf,
+    changeAlert: null,
     reason: row.reason,
   };
 }
@@ -176,9 +189,10 @@ export function buildOpportunitiesView(input: {
   opportunities: readonly StoredOpportunityInput[];
   preview?: StoredOpportunityPreviewInput | null;
   runs: readonly ResearchRunInput[];
+  histories?: readonly StoredOpportunityHistoryInput[];
   limit: number;
 }): OpportunitiesView {
-  const parsed = input.opportunities.map(toCard);
+  const parsed = input.opportunities.map((row) => toCard(row, input.histories ?? []));
   const cards = parsed.filter((card): card is OpportunityCard => card !== null).slice(0, input.limit);
   const preview = cards.length === 0 && input.preview ? toPreview(input.preview) : null;
   const runs = input.runs.map((run) => ({ store: run.store, asOf: run.asOf, failed: run.status === "failed" }));

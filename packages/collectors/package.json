@@ -19,14 +19,19 @@
     "./google-play": {
       "types": "./src/google-play/index.ts",
       "import": "./dist/google-play/index.js"
+    },
+    "./steam": {
+      "types": "./src/steam/index.ts",
+      "import": "./dist/steam/index.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "smoke:apple": "tsx src/apple/smoke.ts",
     "smoke:google-play": "tsx src/google-play/smoke.ts",
-    "test": "tsx --test src/apple/apple-search-collector.test.ts src/google-play/google-play-collector.test.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "tsx --test src/apple/apple-search-collector.test.ts src/google-play/google-play-collector.test.ts src/steam/steam-collector.test.ts",
+    "typecheck": "tsc --noEmit",
+    "smoke:steam": "tsx src/steam/smoke.ts"
   },
   "dependencies": {
     "@analytic-dashboard/shared": "0.0.0",

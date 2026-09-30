@@ -5,6 +5,7 @@ import { createDatabaseConnection } from "../client";
 import type { DatabaseExecutor } from "./executor";
 import {
   loadLatestOpportunities,
+  loadOpportunityHistories,
   loadOpportunityDecisions,
   loadOpportunityDetail,
   recordFailedResearchRun,
@@ -94,6 +95,19 @@ describe("research repository", { skip: connection === null }, () => {
       assert.equal(latest.preview, null);
       assert.equal(latest.runs[0]?.cohortsEvaluated, 3);
       assert.equal(latest.runs[0]?.opportunitiesScored, 2);
+
+      const puzzle = latest.opportunities.find((row) => row.opportunityKey === "puzzle");
+      assert.ok(puzzle);
+      const history = await loadOpportunityHistories(tx, [{
+        store: puzzle.store,
+        country: puzzle.country,
+        formulaVersion: puzzle.formulaVersion,
+        taxonomyVersion: puzzle.taxonomyVersion,
+        opportunityKey: puzzle.opportunityKey,
+        asOf: puzzle.asOf,
+      }]);
+      assert.deepEqual(history.map((row) => row.score), [70, 60]);
+      assert.equal(history.every((row) => row.formulaVersion === "opportunity-test"), true);
     });
   });
 

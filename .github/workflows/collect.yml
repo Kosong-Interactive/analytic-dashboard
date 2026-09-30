@@ -75,3 +75,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      # Steam Global charts (about 410 requests at 1 per second for 200 games, well under the
+      # 100,000-call daily Web API limit). Skipped when a manual run targets one mobile store, and
+      # exits 0 when STEAM_WEB_API_KEY is not set.
+      - name: Discover Steam games
+        if: ${{ !cancelled() && !inputs.source }}
+        timeout-minutes: 20
+        run: npm run discover-steam --workspace @analytic-dashboard/collector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STEAM_WEB_API_KEY: ${{ secrets.STEAM_WEB_API_KEY }}

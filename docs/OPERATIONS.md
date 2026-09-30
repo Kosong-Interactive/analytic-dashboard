@@ -40,6 +40,11 @@ The scheduled brief step is disabled by default. After explicit approval to send
 evidence to Gemini, add the GitHub Actions repository variable `ENABLE_RESEARCH_BRIEFS=true`.
 The existing `GEMINI_API_KEY` secret is reused.
 
+Opportunity durability, acceleration, timeline, and material-change alerts are derived on read from
+the append-only daily research results. They do not have a separate command or table. A 30/90-day
+window stays visibly in `collecting` state until enough real history exists; do not backfill it with
+fabricated scores.
+
 ## Database
 
 ```bash
@@ -57,6 +62,20 @@ Live requests to the stores, run manually and kept out of CI:
 ```bash
 npm run smoke:apple --workspace @analytic-dashboard/collectors
 npm run smoke:google-play --workspace @analytic-dashboard/collectors
+```
+
+The Steam check needs `STEAM_WEB_API_KEY` in the environment (about 9 requests; it prints counts
+and sample values, never the key):
+
+```bash
+(set -a; . ./.env.local; set +a; npm run smoke:steam --workspace @analytic-dashboard/collectors)
+```
+
+Steam Global collection (both charts, listings, `us`/`id` prices, review totals, players). About
+410 requests and 7 minutes for 200 games; `--dry-run` calls Steam but writes nothing:
+
+```bash
+npm run discover-steam --workspace @analytic-dashboard/collector -- --dry-run --max-games 5
 ```
 
 ## Before committing

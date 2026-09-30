@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "tsx --test src/velocity.test.ts src/normalize.test.ts src/trend-score.test.ts src/trending.test.ts src/opportunity.test.ts src/studio-fit.test.ts",
+    "test": "tsx --test src/velocity.test.ts src/normalize.test.ts src/trend-score.test.ts src/trending.test.ts src/opportunity.test.ts src/studio-fit.test.ts src/opportunity-history.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

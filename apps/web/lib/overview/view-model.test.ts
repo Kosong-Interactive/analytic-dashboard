@@ -5,6 +5,7 @@ import type { TrendingScore } from "@analytic-dashboard/analytics";
 
 import {
   buildOverview,
+  toSteamSourceStatus,
   STALE_AFTER_MS,
   type OverviewCandidate,
   type OverviewSourceHealth,
@@ -132,5 +133,21 @@ describe("buildOverview", () => {
 
     assert.deepEqual(data.sources.map((s) => s.state), ["fresh", "stale", "failed", "never"]);
     assert.deepEqual(data.kpis.lastCollectedAt, hoursAgo(2));
+  });
+});
+
+describe("toSteamSourceStatus", () => {
+  const row = { latestStatus: "succeeded", latestErrorCount: 0, lastCollectedAt: hoursAgo(2), trackedGames: 180 };
+
+  it("classifies Steam freshness like the mobile sources", () => {
+    assert.equal(toSteamSourceStatus(row, asOf).state, "fresh");
+    assert.equal(toSteamSourceStatus({ ...row, lastCollectedAt: hoursAgo(20) }, asOf).state, "stale");
+    assert.equal(toSteamSourceStatus({ ...row, latestStatus: "failed" }, asOf).state, "failed");
+  });
+
+  it("reports never collected when Steam has not run", () => {
+    const status = toSteamSourceStatus({ latestStatus: null, latestErrorCount: 0, lastCollectedAt: null, trackedGames: 0 }, asOf);
+    assert.equal(status.state, "never");
+    assert.equal(status.trackedGames, 0);
   });
 });

@@ -8,10 +8,10 @@ changing code. Do not assume the working tree is clean.
 
 ## Immediate instruction from the user
 
-The existing dashboard menus are complete and Automated Game Research is now the active workstream.
-Stages 1 and 2 are committed; Stages 3 and 4 are the current local changes. The next approved stage
-is 30/90-day durability and material-change alerts. Deployment to Vercel is handled separately by
-the user.
+The existing dashboard menus and Automated Game Research stages 1 through 5 are implemented on
+`development`. Steam expansion Stage 2 is the current local work: listing and observation contracts
+exist without activating Steam in storage or UI. Deployment to Vercel is handled separately by the
+user.
 
 The approved product direction is documented in `docs/NEXT_DEVELOPMENT_PLAN.md`. The product is
 conceptually **Game Market Intelligence**, not mobile-only, but Steam must not appear as an active
@@ -53,8 +53,8 @@ Add Steam there, and to the database enum, only when its adapter and observation
 
 ## Current committed baseline
 
-Latest committed feature commit before the current uncommitted Stage 3 work:
-`b5552b4 feat: add research decision workflow`.
+Latest committed feature baseline before Stage 5:
+`c36cdd6 feat: add studio fit and cited research briefs`.
 
 ### Collection and persistence
 
@@ -202,13 +202,13 @@ priority over implementing them.
 - Migration `0004` (applied) adds append-only `opportunity_decisions`. The authenticated decision
   form records Shortlist/Reject/Prototype, actor, optional owner, note, and timestamp; earlier
   decisions remain visible as history.
-- Stage 3 is implemented locally but not yet committed: `/settings/studio-fit` stores append-only
+- Stage 3 is committed: `/settings/studio-fit` stores append-only
   profile versions and `/research/[id]` displays Market Opportunity, Studio Fit, and Recommendation
   Priority separately. `studio_fit_v1` scores only explicit platform support and preferred/avoided
   taxonomy matches; it does not guess production requirements from labels. Migration `0005` adds
   `studio_profiles` with RLS enabled and no browser policy; it has been applied and verified against
   Supabase.
-- Stage 4 is implemented locally but not yet committed. `research-brief-v1` gives Gemini only a
+- Stage 4 is committed. `research-brief-v1` gives Gemini only a
   bounded evidence registry and requires every statement/question to cite supplied evidence IDs.
   Invalid or unknown citations are rejected. Migration `0006` adds append-only
   `opportunity_research_briefs` with prompt/model/input-hash/token provenance and the exact evidence
@@ -217,7 +217,14 @@ priority over implementing them.
   The daily workflow step is gated by `ENABLE_RESEARCH_BRIEFS=true`; do not enable it without
   explicit approval to send opportunity evidence to Gemini. Live `--plan` found 0 scored candidates,
   so no model was called and no brief was written.
-- Next stage: 30/90-day durability, acceleration, history, and material-change alerts.
+- Stage 5 is implemented and verified. `opportunity_history_v1` derives 30/90-day
+  durability, two-window 7-day acceleration, timeline points, and latest material-change alerts
+  from existing append-only opportunity results. It compares only identical storefront/market,
+  opportunity key, formula, and taxonomy versions. No migration or new scheduled job is required.
+  Durability remains collecting until 80% of the requested time span exists; acceleration requires
+  14 days; missing scores remain missing. Research Detail shows the full history state and Overview
+  cards show the highest-priority latest change. Multiple reruns on one UTC day collapse to the
+  latest selected daily point so manual reruns do not overweight durability.
 
 ## Next work
 
@@ -237,12 +244,43 @@ priority over implementing them.
    Detail empty state was inspected in Chrome at desktop and mobile sizes with no console
    warnings/errors. Remaining: wait for scored opportunities, obtain explicit approval for Gemini
    transmission, then run one low-volume live brief and inspect its citations in Chrome.
-6. Research stage 5: add 30/90-day durability, acceleration, history, and material-change alerts.
+6. Done: Research stage 5 automated checks cover durability, missing scores,
+   acceleration, alert thresholds, stored JSON validation, Overview alert projection, and the
+   bounded history query. The real short-history collecting state was inspected in Chrome at
+   desktop and mobile sizes with no console warnings/errors or mobile overflow. Remaining: wait for
+   enough daily results before 30/90-day values can become measurable.
 7. Planned: replace **Global (US store)** with a **World** market built from several countries
    (see `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions). Mind the Google Play
    worldwide-metric double-counting note there.
 8. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
-   Steam as a data source, and the Steam delivery stages). Stage 1 is done.
+   Steam as a data source, and the Steam delivery stages). Stages 1–3 are done. Stage 3 is
+   `SteamCollector` in `packages/collectors/src/steam/`, over the official Web API: global
+   most-played (`ISteamChartsService/GetMostPlayedGames`) and top sellers
+   (`IStoreTopSellersService/GetWeeklyTopSellers`, `country_code: ""`; `ID` returns nothing),
+   listings and regional prices via `IStoreBrowseService/GetItems` (50 per request; tag and
+   category ids resolved with `GetTagList` / `GetStoreCategories`), lifetime review totals via
+   `IUserReviewsService/GetAppReviews` (only `query_summary` is read; review text is never kept),
+   and `ISteamUserStats/GetNumberOfCurrentPlayers`. One throttle for every endpoint (1 s), 6 h
+   cache, retries only for 429/5xx/network, errors never contain the key. Decisions: `genres`
+   stay empty because these responses carry no official genres and user tags were too noisy
+   (live: Dota 2 tagged "Simulation"); prices only for `us`/`id`, with the currency checked
+   against the formatted price; `recent` review window stays `null`. Fixtures and 16 tests are
+   deterministic; `npm run smoke:steam` passed live on 2026-09-30. Web API terms: 100,000 calls a
+   day and no implied Valve endorsement. Stage 4 (local, see below) persists Steam Global history.
+   **Stage 4:** migration `0007_steam_history` adds `steam_apps`, `steam_snapshots` (review totals
+   and current players, each group all-null or complete, totals must add up), `steam_chart_entries`,
+   `steam_prices` (change-only per country), and `steam_collector_runs`, all with RLS and no browser
+   grants. The `store` enum is deliberately **not** extended: adding `steam` rippled into 16+
+   mobile code paths (Game Detail, Trending, Search, Compare, classification) and would let Steam
+   rows reach mobile queries; a shared `mobile | desktop` platform type comes with Stage 5.
+   `npm run discover-steam --workspace @analytic-dashboard/collector -- [--dry-run] [--max-games 200] [--top-sellers 100]`
+   reads both charts, listings with `us` and `id` prices, then review totals and players per game.
+   It runs as the last step of `collect.yml` (skipped when a manual run targets one mobile store).
+   Overview's Data coverage shows a separate **Desktop · Steam (Global)** row; there are no Steam
+   filters or pages yet. Migration `0007` was applied to Supabase on 2026-09-30 (`db:verify`: 21 tables, RLS
+   enabled, 8 migrations, no public policies). The Overview reads the Steam tables, so any new
+   environment must run migrations before deploying this code. The user reports `STEAM_WEB_API_KEY` is configured locally and in
+   GitHub Actions; do not expose or print it.
 9. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:

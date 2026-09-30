@@ -15,6 +15,7 @@ import {
 } from "./detail-view-model";
 import { storedStudioProfileSchema, studioProfileSchema } from "./studio-profile";
 import { buildResearchBriefView } from "./research-brief-view";
+import { buildOpportunityHistoryView, type StoredOpportunityHistoryInput } from "./history-view-model";
 
 const asOf = new Date("2026-10-10T02:00:00Z");
 
@@ -24,6 +25,8 @@ function stored(id: string, overrides: Partial<StoredOpportunityInput> = {}): St
     store: "google_play",
     country: "id",
     asOf,
+    formulaVersion: "opportunity_score_v1",
+    taxonomyVersion: "taxonomy-v1",
     opportunityKey: "genre:puzzle+core_mechanic:matching",
     dimensions: [
       { type: "genre", slug: "puzzle", displayName: "Puzzle" },
@@ -74,6 +77,17 @@ describe("buildOpportunitiesView", () => {
     assert.equal(card?.whyNow.length, 2);
     assert.deepEqual(card?.comparables.map((c) => c.title), ["Match Town", "Gem Quest", "Candy Hop"]);
     assert.equal(card?.browseHref, "/games?genre=puzzle&mechanic=matching&platform=google_play");
+  });
+
+  it("adds only the latest material history alert to an Overview card", () => {
+    const current = stored("o1");
+    const view = buildOpportunitiesView({
+      opportunities: [current],
+      runs: [run()],
+      histories: [history("older", 1, 50), history("o1", 0, current.score)],
+      limit: 5,
+    });
+    assert.equal(view.cards[0]?.changeAlert?.title, "Opportunity Score rose materially");
   });
 
   it("has no explorer link for dimensions the explorer cannot filter", () => {
@@ -307,5 +321,50 @@ describe("buildResearchBriefView", () => {
       buildResearchBriefView({ ...storedBrief, brief: { ...storedBrief.brief, summary: { text: "Bad", evidenceIds: ["revenue.estimate"] } } }),
       null,
     );
+  });
+});
+
+function history(id: string, daysAgo: number, score: number | null, overrides: Partial<StoredOpportunityHistoryInput> = {}): StoredOpportunityHistoryInput {
+  return {
+    id,
+    createdAt: new Date(asOf.getTime() - daysAgo * 86_400_000 + 1_000),
+    store: "google_play",
+    country: "id",
+    formulaVersion: "opportunity_score_v1",
+    taxonomyVersion: "taxonomy-v1",
+    opportunityKey: "genre:puzzle+core_mechanic:matching",
+    asOf: new Date(asOf.getTime() - daysAgo * 86_400_000),
+    score,
+    confidence: 0.6,
+    confidenceBand: "medium",
+    insightType: "build_opportunity",
+    comparables: [{ id: "game-1" }],
+    counterSignals: [],
+    ...overrides,
+  };
+}
+
+describe("buildOpportunityHistoryView", () => {
+  it("validates stored evidence and builds a timeline through the selected snapshot", () => {
+    const view = buildOpportunityHistoryView([history("older", 1, 50), history("current", 0, 65)], "current");
+    assert.equal(view?.timeline[1]?.delta, 15);
+    assert.equal(view?.alerts[0]?.kind, "score_change");
+  });
+
+  it("does not substitute an older point when the selected current snapshot is malformed", () => {
+    const view = buildOpportunityHistoryView([
+      history("older", 1, 50),
+      history("current", 0, 65, { comparables: "invalid" }),
+    ], "current");
+    assert.equal(view, null);
+  });
+
+  it("uses only the latest selected research result per UTC day", () => {
+    const view = buildOpportunityHistoryView([
+      history("same-day-old", 0, 20, { createdAt: new Date("2026-10-10T01:00:00Z") }),
+      history("same-day-current", 0, 60, { createdAt: new Date("2026-10-10T02:00:00Z") }),
+    ], "same-day-current");
+    assert.equal(view?.timeline.length, 1);
+    assert.equal(view?.timeline[0]?.score, 60);
   });
 });

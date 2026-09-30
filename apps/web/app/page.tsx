@@ -33,7 +33,7 @@ export default async function OverviewPage({ searchParams }: HomePageProps) {
       <ClassificationLinks />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <DiscoveredList data={data} />
-        <CoveragePanel data={data} />
+        <CoveragePanel data={data} steam={data.steam} />
       </div>
     </AppShell>
   );
