@@ -4,7 +4,7 @@ import { platformLabel } from "@analytic-dashboard/shared";
 
 import { formatRelative } from "@/lib/format/format";
 import { countryLabels } from "@/lib/overview/filters";
-import type { ConfidenceBand, OpportunitiesView, OpportunityCard } from "@/lib/research/view-model";
+import type { ConfidenceBand, OpportunitiesView, OpportunityCard, OpportunityPreview } from "@/lib/research/view-model";
 import { cn } from "@/lib/utils";
 
 import { EmptyState, Panel } from "./panel";
@@ -84,11 +84,78 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
         <span>Calculated {formatRelative(card.asOf, asOf)}</span>
-        {card.browseHref ? (
-          <Link href={card.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
-            Browse these games
+        <span className="flex items-center gap-3">
+          {card.browseHref ? (
+            <Link href={card.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
+              Browse games
+            </Link>
+          ) : null}
+          <Link href={`/research/${card.id}`} className="text-accent underline-offset-2 hover:underline">
+            View evidence
           </Link>
+        </span>
+      </div>
+    </li>
+  );
+}
+
+function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Date }) {
+  return (
+    <li className="flex flex-col gap-3 rounded-[10px] border border-star/40 bg-star/5 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-star">Candidate preview · awaiting score</p>
+          <h3 className="text-sm font-semibold">{preview.title}</h3>
+          <p className="text-[11.5px] text-dim">
+            {platformLabel(preview.store)} · {market(preview.country)}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end text-right">
+          <span className="text-sm font-semibold text-dim">Pending</span>
+          <span className="text-[11px] text-dim">Opportunity Score</span>
+        </div>
+      </div>
+
+      <p className="text-xs leading-5 text-ink-soft">
+        This is a real tracked market cohort, shown as an early research preview. It is not a development recommendation
+        until enough demand history is available.
+      </p>
+
+      <div className="flex flex-col gap-1 text-xs">
+        <p className="text-dim">
+          Observed competition: {preview.memberCount} tracked games, {Math.round(preview.catalogueShare * 100)}% of the
+          sampled catalogue
+        </p>
+        {preview.comparables.length > 0 ? (
+          <p className="text-ink-soft">
+            Comparable:{" "}
+            {preview.comparables.map((game, index) => (
+              <span key={game.id}>
+                {index > 0 ? ", " : ""}
+                <Link href={`/games/${game.id}`} className="underline-offset-2 hover:underline">
+                  {game.title}
+                </Link>
+              </span>
+            ))}
+          </p>
         ) : null}
+      </div>
+
+      {preview.reason ? <p className="text-xs text-dim">Why pending: {preview.reason}</p> : null}
+      <EvidenceList title="Caveats" lines={preview.caveats.slice(0, 2)} />
+
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
+        <span>Evaluated {formatRelative(preview.asOf, asOf)}</span>
+        <span className="flex items-center gap-3">
+          {preview.browseHref ? (
+            <Link href={preview.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
+              Browse cohort
+            </Link>
+          ) : null}
+          <Link href={`/research/${preview.id}`} className="text-accent underline-offset-2 hover:underline">
+            View evidence
+          </Link>
+        </span>
       </div>
     </li>
   );
@@ -133,7 +200,16 @@ export function OpportunitiesPanel({ view, asOf }: { view: OpportunitiesView; as
           last successful results.
         </p>
       ) : null}
-      {view.cards.length === 0 ? (
+      {view.cards.length === 0 && view.preview ? (
+        <>
+          <div className="border-t border-line-soft px-4 pt-4">
+            <p className="text-xs leading-5 text-dim">{empty.body}</p>
+          </div>
+          <ul className="grid grid-cols-1 gap-3 p-4" aria-label="Game opportunity candidate preview">
+            <PreviewCard preview={view.preview} asOf={asOf} />
+          </ul>
+        </>
+      ) : view.cards.length === 0 ? (
         <EmptyState title={empty.title}>{empty.body}</EmptyState>
       ) : (
         <ul className="grid grid-cols-1 gap-3 border-t border-line-soft p-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Game opportunities">

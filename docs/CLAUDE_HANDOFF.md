@@ -204,8 +204,13 @@ priority over implementing them.
 - Overview shows **Game Opportunities** after the KPI cards. As of 2026-09-29 no cohort is scored
   because history is under 1 day; 226 cohorts are tracked across the four storefronts. The card
   layout is covered by view-model tests but has not been seen with real scored data yet.
-- Next stages: `/research/[id]` with Shortlist/Reject/Prototype, Studio Fit, AI research brief,
-  and 30/90-day durability.
+- Stage 2 is implemented: `/research/[id]` shows the validated calculation, market facts,
+  comparable games, positive evidence, counter-signals, caveats, freshness, and formula/taxonomy
+  versions. Overview cards and the unscored candidate preview link to it.
+- Migration `0004` (applied) adds append-only `opportunity_decisions`. The authenticated decision
+  form records Shortlist/Reject/Prototype, actor, optional owner, note, and timestamp; earlier
+  decisions remain visible as history.
+- Next stages: Studio Fit, AI research brief, and 30/90-day durability.
 
 ## Next work
 
@@ -214,8 +219,17 @@ priority over implementing them.
 2. Research stage 1 follow-up: once Trend Scores exist (about 3.5 days of history, around
    2026-10-02/03), check that scored opportunities are sensible and review the card layout with
    real data.
-3. Research stage 2: `/research/[id]` with the full calculation and Shortlist/Reject/Prototype.
-4. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
+3. Done: Research stage 2 detail and Shortlist/Reject/Prototype decision history.
+   Remaining manual check: open one real detail page and save each decision state in the browser;
+   automated tests and the production Webpack build pass, but the browser tool timed out at login.
+4. Research stage 3: configure Studio Fit and calculate Recommendation Priority separately from
+   Market Opportunity.
+5. Planned: replace **Global (US store)** with a **World** market built from several countries
+   (see `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions). Mind the Google Play
+   worldwide-metric double-counting note there.
+6. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
+   Steam as a data source, and the Steam delivery stages). Stage 1 is done.
+7. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:
 

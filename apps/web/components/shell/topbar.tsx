@@ -8,7 +8,9 @@ import {
 } from "@/lib/overview/filters";
 
 import { CommandPalette } from "../search/command-palette";
+import { MobileNavDrawer } from "./mobile-nav-drawer";
 import { SegmentedLinks } from "./segmented-links";
+import type { NavKey } from "./sidebar";
 import { UserMenu } from "./user-menu";
 
 /** Phones get a shorter storefront name; it still says "US store" so it is never read as worldwide. */
@@ -18,21 +20,26 @@ const shortCountryLabels: Record<(typeof supportedCountryCodes)[number], string>
 };
 
 /**
- * Two rows on phones (brand, search, account; then storefront filters) and one row from `sm` up.
+ * Two rows on phones (menu, brand, search, account; then storefront filters) and one row from `sm` up.
  * The filter row scrolls sideways on the narrowest screens instead of wrapping a third time.
  */
 export function Topbar({
+  active,
   filters,
   buildHref,
   userEmail,
 }: {
+  active: NavKey;
   filters: OverviewFilters;
   buildHref: (change: Partial<OverviewFilters>) => string;
   userEmail: string | null;
 }) {
   return (
     <header className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-canvas px-4 py-2 sm:flex-nowrap sm:px-7">
-      <p className="order-1 shrink-0 text-[13px] font-semibold lg:hidden">Game Analytic</p>
+      <div className="order-1 flex shrink-0 items-center gap-1.5 lg:hidden">
+        <MobileNavDrawer active={active} />
+        <p className="text-[13px] font-semibold">Game Analytic</p>
+      </div>
       <div className="order-2 min-w-0 flex-1 sm:max-w-56">
         <CommandPalette />
       </div>

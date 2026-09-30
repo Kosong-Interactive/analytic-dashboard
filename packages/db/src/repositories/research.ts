@@ -1,6 +1,11 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
-import { marketOpportunities, researchRuns, type StoreId } from "../schema/index";
+import {
+  marketOpportunities,
+  opportunityDecisions,
+  researchRuns,
+  type StoreId,
+} from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 
 export interface ResearchRunInput {
@@ -125,6 +130,52 @@ export interface StoredOpportunity {
   caveats: unknown;
 }
 
+export interface StoredOpportunityPreview extends Omit<StoredOpportunity, "score"> {
+  score: null;
+  reason: string | null;
+}
+
+export type OpportunityDecisionStatus = (typeof opportunityDecisions.$inferSelect)["status"];
+
+export interface OpportunityDecisionRow {
+  id: string;
+  opportunityId: string;
+  status: OpportunityDecisionStatus;
+  note: string | null;
+  owner: string | null;
+  actor: string;
+  createdAt: Date;
+}
+
+export interface OpportunityDetailRow {
+  id: string;
+  runId: string;
+  store: StoreId;
+  country: string;
+  asOf: Date;
+  formulaVersion: string;
+  taxonomyVersion: string;
+  windowDays: number;
+  trackedGames: number;
+  historyDays: number | null;
+  freshness: string;
+  opportunityKey: string;
+  dimensions: unknown;
+  memberCount: number;
+  score: number | null;
+  reason: string | null;
+  weightCoverage: number;
+  confidence: number;
+  confidenceBand: string;
+  insightType: string | null;
+  components: unknown;
+  facts: unknown;
+  comparables: unknown;
+  positives: unknown;
+  counterSignals: unknown;
+  caveats: unknown;
+}
+
 const toNumber = (value: string | null) => (value === null ? null : Number(value));
 
 /**
@@ -134,8 +185,8 @@ const toNumber = (value: string | null) => (value === null ? null : Number(value
 export async function loadLatestOpportunities(
   db: DatabaseExecutor,
   query: { stores: readonly StoreId[]; country: string; formulaVersion: string; limit: number },
-): Promise<{ runs: ResearchRunSummary[]; opportunities: StoredOpportunity[] }> {
-  if (query.stores.length === 0) return { runs: [], opportunities: [] };
+): Promise<{ runs: ResearchRunSummary[]; opportunities: StoredOpportunity[]; preview: StoredOpportunityPreview | null }> {
+  if (query.stores.length === 0) return { runs: [], opportunities: [], preview: null };
 
   const rows = await db
     .selectDistinctOn([researchRuns.store, researchRuns.status], {
@@ -172,7 +223,7 @@ export async function loadLatestOpportunities(
     const ok = ofStore.find((row) => row.status === "succeeded");
     if (ok) successful.push(ok);
   }
-  if (successful.length === 0) return { runs, opportunities: [] };
+  if (successful.length === 0) return { runs, opportunities: [], preview: null };
 
   const runById = new Map(successful.map((run) => [run.id, run]));
   const opportunityRows = await db
@@ -182,9 +233,7 @@ export async function loadLatestOpportunities(
     .orderBy(desc(marketOpportunities.score), desc(marketOpportunities.confidence), marketOpportunities.opportunityKey)
     .limit(query.limit);
 
-  return {
-    runs,
-    opportunities: opportunityRows.flatMap((row) => {
+  const opportunities = opportunityRows.flatMap((row) => {
       const run = runById.get(row.runId);
       if (!run) return [];
       return {
@@ -208,6 +257,130 @@ export async function loadLatestOpportunities(
         counterSignals: row.counterSignals,
         caveats: row.caveats,
       };
-    }),
+    });
+
+  if (opportunities.length > 0) return { runs, opportunities, preview: null };
+
+  // Surface one real evaluated cohort while demand history is still too short to score it.
+  // It remains separate from scored opportunities so consumers cannot mistake it for a recommendation.
+  const [previewRow] = await db
+    .select()
+    .from(marketOpportunities)
+    .where(and(inArray(marketOpportunities.runId, [...runById.keys()]), isNull(marketOpportunities.score)))
+    .orderBy(desc(marketOpportunities.memberCount), desc(marketOpportunities.confidence), marketOpportunities.opportunityKey)
+    .limit(1);
+  const previewRun = previewRow ? runById.get(previewRow.runId) : undefined;
+  const preview = previewRow && previewRun
+    ? {
+        id: previewRow.id,
+        runId: previewRow.runId,
+        store: previewRun.store,
+        country: previewRun.country,
+        asOf: previewRun.asOf,
+        opportunityKey: previewRow.opportunityKey,
+        dimensions: previewRow.dimensions,
+        memberCount: previewRow.memberCount,
+        score: null,
+        reason: previewRow.reason,
+        weightCoverage: Number(previewRow.weightCoverage),
+        confidence: Number(previewRow.confidence),
+        confidenceBand: previewRow.confidenceBand,
+        insightType: previewRow.insightType,
+        components: previewRow.components,
+        facts: previewRow.facts,
+        comparables: previewRow.comparables,
+        positives: previewRow.positives,
+        counterSignals: previewRow.counterSignals,
+        caveats: previewRow.caveats,
+      }
+    : null;
+
+  return {
+    runs,
+    opportunities,
+    preview,
   };
+}
+
+/** Full stored calculation and run context for one evidence page. */
+export async function loadOpportunityDetail(
+  db: DatabaseExecutor,
+  opportunityId: string,
+): Promise<OpportunityDetailRow | null> {
+  const [row] = await db
+    .select({
+      id: marketOpportunities.id,
+      runId: marketOpportunities.runId,
+      store: researchRuns.store,
+      country: researchRuns.country,
+      asOf: researchRuns.asOf,
+      formulaVersion: researchRuns.formulaVersion,
+      taxonomyVersion: researchRuns.taxonomyVersion,
+      windowDays: researchRuns.windowDays,
+      trackedGames: researchRuns.trackedGames,
+      historyDays: researchRuns.historyDays,
+      freshness: researchRuns.freshness,
+      opportunityKey: marketOpportunities.opportunityKey,
+      dimensions: marketOpportunities.dimensions,
+      memberCount: marketOpportunities.memberCount,
+      score: marketOpportunities.score,
+      reason: marketOpportunities.reason,
+      weightCoverage: marketOpportunities.weightCoverage,
+      confidence: marketOpportunities.confidence,
+      confidenceBand: marketOpportunities.confidenceBand,
+      insightType: marketOpportunities.insightType,
+      components: marketOpportunities.components,
+      facts: marketOpportunities.facts,
+      comparables: marketOpportunities.comparables,
+      positives: marketOpportunities.positives,
+      counterSignals: marketOpportunities.counterSignals,
+      caveats: marketOpportunities.caveats,
+    })
+    .from(marketOpportunities)
+    .innerJoin(researchRuns, eq(researchRuns.id, marketOpportunities.runId))
+    .where(eq(marketOpportunities.id, opportunityId))
+    .limit(1);
+  if (!row) return null;
+  return {
+    ...row,
+    historyDays: toNumber(row.historyDays),
+    score: toNumber(row.score),
+    weightCoverage: Number(row.weightCoverage),
+    confidence: Number(row.confidence),
+  };
+}
+
+/** Append-only decision history, newest first. */
+export async function loadOpportunityDecisions(
+  db: DatabaseExecutor,
+  opportunityId: string,
+): Promise<OpportunityDecisionRow[]> {
+  return db
+    .select()
+    .from(opportunityDecisions)
+    .where(eq(opportunityDecisions.opportunityId, opportunityId))
+    .orderBy(desc(opportunityDecisions.createdAt));
+}
+
+/** Records a team decision only when the referenced opportunity still exists. */
+export async function recordOpportunityDecision(
+  db: DatabaseExecutor,
+  input: {
+    opportunityId: string;
+    status: OpportunityDecisionStatus;
+    note: string | null;
+    owner: string | null;
+    actor: string;
+  },
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const [opportunity] = await tx
+      .select({ id: marketOpportunities.id })
+      .from(marketOpportunities)
+      .where(eq(marketOpportunities.id, input.opportunityId))
+      .limit(1);
+    if (!opportunity) return false;
+    await tx.insert(opportunityDecisions).values(input);
+    return true;
+  });
 }
