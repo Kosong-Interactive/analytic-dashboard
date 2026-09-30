@@ -51,7 +51,7 @@ Local values live in the repository root `.env.local` (the web app loads it on d
 
 | Variable | Used by | Notes |
 |---|---|---|
-| `DATABASE_URL` | web, collector | Supabase transaction pooler, port 6543 |
+| `DATABASE_URL` | web, collector | Supabase session pooler, port 5432 (not the 6543 transaction pooler; see Known pitfalls) |
 | `DIRECT_URL` | migrations | Currently unreachable (ENOTFOUND); `db:migrate` falls back to `DATABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | web auth | Publishable key only |
 | `GEMINI_API_KEY` | collector | AI classification and research briefs |
@@ -140,11 +140,12 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Known pitfalls
 
-- **Never re-enable postgres.js pipelining.** Through the Supabase transaction pooler, queries
-  pipelined on a busy connection stall until the 2-minute statement timeout (error `57014`); this
-  made the Overview hang whenever its concurrent reads outnumbered the connections.
-  `createDatabaseConnection` sets `max_pipeline: 0` (extra queries wait for a free connection) and
-  defaults to 3 connections; with pipelining off even 1 connection completes, just slower.
+- **Use the Supabase session pooler (port 5432) for `DATABASE_URL`.** Through the transaction
+  pooler (port 6543), postgres.js queries pipelined on a busy connection stall until the 2-minute
+  statement timeout (error `57014`) whenever concurrent reads outnumber the connections; the
+  Overview hung this way. Verified 2026-09-30: 15 concurrent reads over 3 connections hung on 6543
+  and finished in about 1 s on 5432, where transactions also work. `max_pipeline: 0` avoids the
+  stall but breaks `sql.begin` (drizzle transactions, migrations), so do not use it.
 - A long-running `next dev` keeps its database connection. After applying a migration or after a
   burst of failed queries, restart the dev server before judging a page.
 - Raw `sql` fragments must pass dates as ISO strings with `::timestamptz`.
