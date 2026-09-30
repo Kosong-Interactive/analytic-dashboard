@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { HistoryPanels } from "@/components/game-detail/history-panels";
 import { GameHeader } from "@/components/game-detail/game-header";
 import { MetricCards } from "@/components/game-detail/metric-cards";
+import { PricePanel } from "@/components/game-detail/price-panel";
 import { ObservationsTable } from "@/components/game-detail/observations-table";
 import { ScorePanel } from "@/components/game-detail/score-panel";
 import { LabelsPanel } from "@/components/game-detail/labels-panel";
@@ -42,6 +43,7 @@ export default async function GamePage({ params }: GamePageProps) {
     <AppShell filters={filters} active="games" buildHref={(change) => overviewHref(filters, change)}>
       <GameHeader view={view} actions={<WatchButton storeAppId={view.listing.storeAppId} status={watchStatus} />} />
       <MetricCards view={view} />
+      <PricePanel view={view} />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="xl:col-span-12">
           <HistoryPanels view={view} />

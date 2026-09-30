@@ -1,5 +1,6 @@
 import type { TrendingScore } from "@analytic-dashboard/analytics";
 
+import { matchesPriceFilter } from "../format/price";
 import type { MembershipRow } from "../labels/aggregate";
 import { toTrendingRow, type OverviewCandidate, type TrendingRow } from "../overview/view-model";
 import { EXPLORER_PAGE_SIZE, type ExplorerQuery, type ExplorerSort } from "./query";
@@ -162,6 +163,7 @@ export function buildExplorerList(input: {
     .filter((row) => query.minRating === 0 || (row.rating !== null && row.rating >= query.minRating))
     .filter((row) => matchesMomentum(row, query))
     .filter((row) => matchesLabels(row, query))
+    .filter((row) => matchesPriceFilter(row.price, query.price))
     .sort(
       (a, b) =>
         sorters[query.sort](a, b) ||

@@ -135,6 +135,10 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   `/search`), Research detail, Settings › Studio Fit, Login (Supabase email/password; sign-up off).
 - Overview Data coverage shows mobile sources plus a separate **Desktop · Steam (Global)** row.
   There are no Steam filters or pages yet.
+- Upfront price (mobile only, no in-app purchases): Game Detail "Upfront price" panel with
+  store, country, snapshot time and price changes; a Price column in Games/Trending/New Releases
+  and a Semua/Gratis/Berbayar `price` URL filter on Games and Trending. `0` shows "Gratis", `null`
+  shows "—" and matches neither filter. Formatter: `apps/web/lib/format/price.ts`.
 - Design reference: `https://claude.ai/artifact/FmXb2bJ9ViYy9S9p5NyGNy` (read with the Artifact
   tool in Claude; it has been intermittently unavailable).
 

@@ -16,6 +16,7 @@ import {
   releasedValues,
   type ExplorerQuery,
 } from "@/lib/explorer/query";
+import { priceFilterLabels, priceFilterValues } from "@/lib/format/price";
 
 import { MobileDisclosure } from "../shell/mobile-disclosure";
 import { SegmentedLinks } from "../shell/segmented-links";
@@ -105,6 +106,7 @@ export function ExplorerControls({
   if (query.released !== "any") chips.push({ label: `Released: ${releasedLabels[query.released]}`, remove: { released: "any" } });
   if (query.minRating > 0) chips.push({ label: `Rating ≥ ${query.minRating}`, remove: { minRating: 0 } });
   if (query.momentum !== "any") chips.push({ label: `Momentum: ${momentumLabels[query.momentum]}`, remove: { momentum: "any" } });
+  if (query.price !== "all") chips.push({ label: `Harga: ${priceFilterLabels[query.price]}`, remove: { price: "all" } });
   if (query.labels !== "any") chips.push({ label: `Labels: ${labelStatusLabels[query.labels]}`, remove: { labels: "any" } });
 
   return (
@@ -144,6 +146,7 @@ export function ExplorerControls({
             </select>
           </label>
           <EnumSelect label="Momentum" name="momentum" value={query.momentum} values={momentumValues} labels={momentumLabels} />
+          <EnumSelect label="Harga" name="price" value={query.price} values={priceFilterValues} labels={priceFilterLabels} />
           <EnumSelect label="Classification" name="labels" value={query.labels} values={labelStatusValues} labels={labelStatusLabels} />
           <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
             <button type="submit" className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90">

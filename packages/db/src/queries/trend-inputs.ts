@@ -28,6 +28,9 @@ export interface TrendSnapshotReading {
   reviewCount: number | null;
   minInstalls: number | null;
   maxInstalls: number | null;
+  /** Upfront store price; null when the store gave none (not the same as free). */
+  price: number | null;
+  currency: string | null;
 }
 
 export interface TrendRankReading {
@@ -88,6 +91,8 @@ export async function loadTrendCandidates(
     reviewCount: appSnapshots.reviewCount,
     minInstalls: appSnapshots.minInstalls,
     maxInstalls: appSnapshots.maxInstalls,
+    price: appSnapshots.price,
+    currency: appSnapshots.currency,
   };
 
   const [listings, inWindow, baseline, ranks, breadth] = await Promise.all([
@@ -202,6 +207,8 @@ export async function loadTrendCandidates(
         reviewCount: row.reviewCount,
         minInstalls: row.minInstalls,
         maxInstalls: row.maxInstalls,
+        price: row.price === null ? null : Number(row.price),
+        currency: row.currency,
       }))
       .sort((a, b) => a.capturedAt.getTime() - b.capturedAt.getTime()),
     ranks: (ranksById.get(listing.id) ?? []).map((row) => ({

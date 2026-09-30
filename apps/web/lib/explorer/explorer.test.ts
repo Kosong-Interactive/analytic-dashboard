@@ -107,6 +107,40 @@ describe("parseExplorerQuery", () => {
   });
 });
 
+describe("price filter", () => {
+  const priced = [
+    candidate("free", { snapshots: [{ capturedAt: daysAgo(0.1), rating: 4, ratingCount: 10, price: 0, currency: "IDR" }] }),
+    candidate("paid", { snapshots: [{ capturedAt: daysAgo(0.1), rating: 4, ratingCount: 20, price: 15000, currency: "IDR" }] }),
+    candidate("unknown", { snapshots: [{ capturedAt: daysAgo(0.1), rating: 4, ratingCount: 30, price: null, currency: null }] }),
+  ];
+  const ids = (params: Record<string, string>) =>
+    buildExplorerList({ candidates: priced, scores: [], membership: [], query: parseExplorerQuery(params), asOf })
+      .rows.map((row) => row.id)
+      .sort();
+
+  it("parses the filter, falls back on unknown values, and round-trips in the link", () => {
+    assert.equal(parseExplorerQuery({}).price, "all");
+    assert.equal(parseExplorerQuery({ price: "paid" }).price, "paid");
+    assert.equal(parseExplorerQuery({ price: "bogus" }).price, "all");
+    assert.equal(explorerHref(parseExplorerQuery({}), { price: "free" }), "/games?price=free");
+    assert.equal(explorerHref(parseExplorerQuery({ price: "free" }), clearedExplorerFilters), "/games");
+  });
+
+  it("keeps a game with an unknown price out of both Gratis and Berbayar", () => {
+    assert.deepEqual(ids({}), ["free", "paid", "unknown"]);
+    assert.deepEqual(ids({ price: "free" }), ["free"]);
+    assert.deepEqual(ids({ price: "paid" }), ["paid"]);
+  });
+
+  it("exposes the latest price on each row without turning null into zero", () => {
+    const list = buildExplorerList({ candidates: priced, scores: [], membership: [], query: parseExplorerQuery({}), asOf });
+    const byId = new Map(list.rows.map((row) => [row.id, row]));
+    assert.equal(byId.get("free")?.price, 0);
+    assert.equal(byId.get("paid")?.currency, "IDR");
+    assert.equal(byId.get("unknown")?.price, null);
+  });
+});
+
 describe("label filter", () => {
   it("parses type:slug for every label type and rejects anything else", () => {
     assert.deepEqual(parseExplorerQuery({ label: "theme:fantasy" }).label, { type: "theme", slug: "fantasy" });

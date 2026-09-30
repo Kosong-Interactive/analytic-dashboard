@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { formatCount, formatRelative } from "@/lib/format/format";
+import { formatUpfrontPrice } from "@/lib/format/price";
 import type { ExplorerLabel, ExplorerRow } from "@/lib/explorer/list";
 import { platformLabels } from "@/lib/overview/filters";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,7 @@ import { Rating } from "../games/game-table";
 import { ScoreBreakdown } from "../overview/score-breakdown";
 import { RowActions, type RowActionContext } from "./row-actions";
 
-const HEADERS = ["#", "Game", "Platform", "Category", "Genre · mechanic", "Released", "Rating", "Ratings", "Trend score", "First seen", "Action"];
+const HEADERS = ["#", "Game", "Platform", "Category", "Genre · mechanic", "Released", "Price", "Rating", "Ratings", "Trend score", "First seen", "Action"];
 const LABEL_HEADER = "Label";
 
 const sourceNames = { rule: "Rule", ai: "AI", manual: "Confirmed" } as const;
@@ -27,7 +28,7 @@ function MatchedLabel({ matched }: { matched: ExplorerRow["matchedLabel"] }) {
 }
 /** Hidden until there is room, so the Action column always stays visible. */
 const WIDE_ONLY = new Set(["First seen"]);
-const RIGHT_ALIGNED = new Set(["Rating", "Ratings"]);
+const RIGHT_ALIGNED = new Set(["Price", "Rating", "Ratings"]);
 
 function releaseText(row: ExplorerRow): string {
   return row.releaseDate ? row.releaseDate.toISOString().slice(0, 10) : "—";
@@ -113,6 +114,7 @@ export function ExplorerTable({
                 <td className="max-w-[12rem]"><Labels labels={[...row.genres, ...row.mechanics]} /></td>
                 {showMatchedLabel ? <td><MatchedLabel matched={row.matchedLabel} /></td> : null}
                 <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
+                <td className="whitespace-nowrap text-right font-mono text-xs text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</td>
                 <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
                 <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
                 <td><ScoreBreakdown row={row} /></td>
@@ -143,7 +145,11 @@ export function ExplorerTable({
             <div className="flex flex-wrap gap-1 pl-[32px]">
               <Labels labels={[...row.genres, ...row.mechanics]} />
             </div>
-            <dl className="grid grid-cols-3 gap-2 pl-[32px] text-xs">
+            <dl className="grid grid-cols-4 gap-2 pl-[32px] text-xs">
+              <div>
+                <dt className="text-[11px] text-dim">Price</dt>
+                <dd className="font-mono text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</dd>
+              </div>
               <div>
                 <dt className="text-[11px] text-dim">Rating</dt>
                 <dd className="font-mono"><Rating value={row.rating} /></dd>
@@ -157,7 +163,7 @@ export function ExplorerTable({
                 <dd className="text-ink-soft">{formatRelative(row.firstSeenAt, asOf)}</dd>
               </div>
               {showMatchedLabel ? (
-                <div className="col-span-3">
+                <div className="col-span-4">
                   <dt className="text-[11px] text-dim">Label</dt>
                   <dd>
                     <MatchedLabel matched={row.matchedLabel} />
