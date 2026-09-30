@@ -147,9 +147,10 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   Store]` on Mobile or `[Steam]` on Desktop. The sidebar and mobile drawer show only the active
   mode's menu (title Mobile or Desktop); the mode comes from the page (`platformModeOf` in
   `apps/web/lib/shell/navigation.ts`), never from client state. `platformSwitchHref` maps each
-  menu to its counterpart and carries only `country`; pages with no counterpart (game detail,
-  Watchlist, Compare, Research, Studio Fit, Search, Steam Charts) pass `noCounterpart` to
-  `AppShell` and switch to the other mode's Overview.
+  menu to its counterpart and carries only `country`. Game detail, Watchlist, and Compare use the
+  Games key, so they lead to the other mode's Games list; pages with no counterpart at all
+  (Research, Studio Fit, Search, Steam Charts) pass `noCounterpart` to `AppShell` and lead to the
+  other mode's Overview.
 - Desktop pages mirror Mobile: `/steam` (Overview), `/steam/trending`, `/steam/new-releases`,
   `/steam/genres`, `/steam/mechanics`, `/steam/games`, `/steam/games/[id]`, plus Desktop-only
   `/steam/charts`. On Desktop the country only picks the regional price (IDR or USD); charts,

@@ -51,6 +51,11 @@ describe("platformSwitchHref", () => {
     assert.equal(go("steam-overview", "mobile"), "/");
   });
 
+  it("sends detail, Watchlist, and Compare (Games key) to the other mode's Games list", () => {
+    assert.equal(go("games", "desktop", "us"), "/steam/games?country=us");
+    assert.equal(go("steam-games", "mobile"), "/games");
+  });
+
   it("falls back to the target Overview when there is no equivalent", () => {
     assert.equal(go("steam-charts", "mobile"), "/");
     assert.equal(go("games", "desktop", "id", true), "/steam");

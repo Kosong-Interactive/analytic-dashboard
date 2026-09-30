@@ -26,7 +26,7 @@ export function SteamLabelTable({
   const maxShare = Math.max(0, ...labels.map((label) => label.share));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px]">
+      <table className="w-full min-w-[900px] border-collapse text-[13px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">

@@ -40,7 +40,7 @@ function ChartCell({ row }: { row: SteamGameRow }) {
   const { most_played: played, top_sellers: sellers } = row.charts;
   if (!played && !sellers) return <span className="text-dim">—</span>;
   return (
-    <span className="flex flex-col font-mono text-xs text-ink-soft">
+    <span className="flex flex-col whitespace-nowrap font-mono text-xs text-ink-soft">
       {played ? <span>Played #{played.rank}</span> : null}
       {sellers ? <span>Sellers #{sellers.rank}</span> : null}
     </span>
@@ -74,7 +74,7 @@ export function SteamGamesTable({
   return (
     <>
       <div className="hidden lg:block lg:overflow-x-auto">
-        <table className="w-full border-collapse text-[13px]">
+        <table className="w-full min-w-[1180px] border-collapse text-[13px]">
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">

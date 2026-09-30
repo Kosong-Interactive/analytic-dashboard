@@ -32,7 +32,7 @@ const HEADERS = ["#", "Game", "Players now", "Positive reviews", "Reviews", "Pri
 export function SteamChartTable({ rows, query, caption }: { rows: SteamChartRow[]; query: SteamQuery; caption: string }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px]">
+      <table className="w-full min-w-[820px] border-collapse text-[13px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">

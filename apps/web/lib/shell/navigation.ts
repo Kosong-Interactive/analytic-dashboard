@@ -59,9 +59,11 @@ export function overviewHrefFor(mode: PlatformMode): string {
 }
 
 /**
- * Where the Mobile|Desktop switch leads. The equivalent menu when there is one; otherwise (detail
- * pages, Watchlist, Compare, Research, Steam Charts) the target mode's Overview. Only `country`
- * travels; store, sort, and page filters do not apply on the other side.
+ * Where the Mobile|Desktop switch leads. The equivalent menu when there is one. Game detail,
+ * Watchlist, and Compare belong to the Games menu, so they lead to the other mode's Games list.
+ * Pages with no equivalent at all (Research, Studio Fit, Search, Steam Charts) lead to the target
+ * mode's Overview. Only `country` travels; store, sort, and page filters do not apply on the
+ * other side.
  */
 export function platformSwitchHref(input: {
   active: NavKey;

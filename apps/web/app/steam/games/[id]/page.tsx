@@ -61,7 +61,6 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-games"
-      noCounterpart
       buildHref={(change) => steamHref(query, { country: change.country }, `/steam/games/${id}`)}
     >
       <div className="flex flex-col gap-4">
