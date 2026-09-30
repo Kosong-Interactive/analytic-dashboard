@@ -48,7 +48,7 @@ function findErrorCode(error: unknown): string | undefined {
 }
 
 for (const [index, connection] of connectionCandidates.entries()) {
-  const { client, db } = createDatabaseConnection(connection.value);
+  const { client, db } = createDatabaseConnection(connection.value, { maxConnections: 1 });
 
   try {
     await migrate(db, {
