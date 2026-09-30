@@ -274,7 +274,7 @@ idempotent.
 4. AI-authored research brief constrained to stored evidence.
 5. 30/90-day durability, acceleration, history, and material-change alerts.
 
-Stages 1 through 4 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation
+Stages 1 through 5 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation
 view, comparable-game evidence, risks and caveats, and append-only Shortlist/Reject/Prototype
 decisions with actor, optional owner, note, and timestamp. Migration `0004` adds
 `opportunity_decisions` with RLS enabled and no browser policy; writes go through an authenticated
@@ -296,6 +296,17 @@ token usage. Research Detail exposes citations and the complete supplied registr
 the deterministic score or the team's decision. The GitHub Actions step requires the opt-in
 repository variable `ENABLE_RESEARCH_BRIEFS=true` because it sends bounded opportunity evidence to
 Gemini.
+
+Stage 5 adds deterministic `opportunity_history_v1` analysis over the existing append-only
+`market_opportunities` rows. The history query compares only the same storefront, market,
+opportunity key, formula version, and taxonomy version. Research Detail shows 30/90-day durability,
+two-window 7-day acceleration, a validated snapshot timeline, and latest material changes. Overview
+cards surface the highest-priority latest change. Durability remains `collecting` until at least 80%
+of its time window is observed, acceleration requires 14 days, and missing scores stay missing.
+No migration or extra scheduled job is needed: the existing daily research run already creates the
+immutable inputs. Multiple manual runs on the same UTC day count as one daily point, using the
+latest selected result. In v1, durability means the share of measurable snapshots at or above a 60
+Opportunity Score; score changes under 10 points do not create an alert.
 
 ## Cross-platform and Steam readiness
 

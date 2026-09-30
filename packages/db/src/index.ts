@@ -97,6 +97,7 @@ export {
 } from "./queries/catalog-search";
 export {
   loadLatestOpportunities,
+  loadOpportunityHistories,
   loadOpportunityDecisions,
   loadOpportunityDetail,
   recordFailedResearchRun,
@@ -105,6 +106,8 @@ export {
   type OpportunityDecisionRow,
   type OpportunityDecisionStatus,
   type OpportunityDetailRow,
+  type OpportunityHistoryIdentity,
+  type OpportunityHistoryRow,
   type OpportunityRowInput,
   type ResearchRunInput,
   type ResearchRunSummary,

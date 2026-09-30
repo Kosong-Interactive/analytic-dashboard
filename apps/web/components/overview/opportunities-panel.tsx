@@ -62,6 +62,18 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
       <EvidenceList title="Why now" lines={card.whyNow} />
       <EvidenceList title="Risks" lines={card.risks} tone="text-down" />
 
+      {card.changeAlert ? (
+        <div className={cn(
+          "rounded-md border px-3 py-2 text-xs leading-5",
+          card.changeAlert.severity === "high"
+            ? "border-down/40 bg-down/10 text-down"
+            : "border-star/40 bg-star/10 text-ink-soft",
+        )}>
+          <p className="font-medium">Material change · {card.changeAlert.title}</p>
+          <p className="mt-0.5 text-[11px] opacity-80">{card.changeAlert.detail}</p>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-1 text-xs">
         <p className="text-dim">
           Observed competition: {card.memberCount} tracked games, {Math.round(card.catalogueShare * 100)}% of the sampled
@@ -221,7 +233,8 @@ export function OpportunitiesPanel({ view, asOf }: { view: OpportunitiesView; as
       <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
         Opportunity Score combines demand momentum, new-entrant performance, observed competition, cross-store
         confirmation, and ratings within each storefront; Research Confidence is reported separately. Competition is
-        measured in the sampled catalogue only, and studio fit is not configured yet.
+        measured in the sampled catalogue only. Material-change alerts compare like-for-like formula and taxonomy
+        versions; missing history remains pending rather than becoming zero.
       </p>
     </Panel>
   );

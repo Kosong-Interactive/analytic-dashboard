@@ -40,6 +40,11 @@ The scheduled brief step is disabled by default. After explicit approval to send
 evidence to Gemini, add the GitHub Actions repository variable `ENABLE_RESEARCH_BRIEFS=true`.
 The existing `GEMINI_API_KEY` secret is reused.
 
+Opportunity durability, acceleration, timeline, and material-change alerts are derived on read from
+the append-only daily research results. They do not have a separate command or table. A 30/90-day
+window stays visibly in `collecting` state until enough real history exists; do not backfill it with
+fabricated scores.
+
 ## Database
 
 ```bash
