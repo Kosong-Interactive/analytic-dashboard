@@ -137,7 +137,13 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   Game Detail (`/games/[id]`, with manual label overrides), Genres, Mechanics, Search (⌘K and
   `/search`), Research detail, Settings › Studio Fit, Login (Supabase email/password; sign-up off).
 - Overview Data coverage shows mobile sources plus a separate **Desktop · Steam (Global)** row.
-  There are no Steam filters or pages yet.
+- Header: `[Mobile | Desktop]`, then country (`Indonesia | Global`), then `[All | Google Play | App
+  Store]` on Mobile or `[Steam]` on Desktop. On Desktop the country only picks the regional price
+  (IDR or USD); Steam charts are global. Sidebar has Mobile and Desktop groups.
+- Desktop pages: `/steam` (Most Played / Top Sellers), `/steam/[id]` (players, review ratio, ID/US
+  prices, tags, chart and observation history), `/steam/genres`, `/steam/mechanics`. Not yet seen
+  in a browser (needs login) and Genres/Mechanics stay empty until `0008` is applied and
+  `classify-steam` has run.
 - Upfront price (mobile only, no in-app purchases): Game Detail "Upfront price" panel with
   store, country, snapshot time and price changes; a Price column in Games/Trending/New Releases
   and a Semua/Gratis/Berbayar `price` URL filter on Games and Trending. `0` shows "Gratis", `null`
@@ -179,17 +185,14 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Next work (recommended order)
 
-1. **Steam stage 5 — Desktop UI.** Introduce the shared `mobile | desktop` platform type, add the
-   Mobile/Desktop grouping to navigation and filters, and a Steam section: charts (most played, top
-   sellers), game detail (review positive/negative and ratio, current players, regional prices,
-   history), freshness. Get the user to approve the navigation design before building it.
-2. **Steam classification** with the same taxonomy (tags + description; rules then AI), so Genres
-   and Mechanics can offer a Desktop view.
-3. **Apple chart path**, so App Store games get rank gain (30% of Trend Score).
-4. **World market** from several countries for Mobile (team must choose countries; mind Google
+1. **Finish Steam stages 5–6 prerequisites:** apply migration `0008` (ask first), run
+   `classify-steam`, check `/steam*` in a browser, and optionally add a full Steam games list with
+   filters. Then Steam AI classification (rules exist; needs approval for Gemini quota).
+2. **Apple chart path**, so App Store games get rank gain (30% of Trend Score).
+3. **World market** from several countries for Mobile (team must choose countries; mind Google
    Play's worldwide metrics when aggregating).
-5. **Steam stage 6** — cross-platform normalized scoring and Steam↔mobile opportunities.
-6. Smaller: faster classification input loading (it transfers every description, ~75 s from a
+4. **Steam stage 6** — cross-platform normalized scoring and Steam↔mobile opportunities.
+5. Smaller: faster classification input loading (it transfers every description, ~75 s from a
    laptop), a dedicated new-release discovery path.
 
 ## Commands

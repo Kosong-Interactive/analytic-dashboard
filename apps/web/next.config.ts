@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.mzstatic.com" },
       { protocol: "https", hostname: "play-lh.googleusercontent.com" },
+      { protocol: "https", hostname: "**.steamstatic.com" },
     ],
   },
 };

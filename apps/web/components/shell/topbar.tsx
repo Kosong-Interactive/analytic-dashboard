@@ -10,13 +10,19 @@ import {
 import { CommandPalette } from "../search/command-palette";
 import { MobileNavDrawer } from "./mobile-nav-drawer";
 import { SegmentedLinks } from "./segmented-links";
-import type { NavKey } from "./sidebar";
+import { platformModeOf, type NavKey } from "./sidebar";
 import { UserMenu } from "./user-menu";
 
 /** Phones get a shorter storefront name; it still says "US store" so it is never read as worldwide. */
 const shortCountryLabels: Record<(typeof supportedCountryCodes)[number], string> = {
   id: "Indonesia",
   us: "US store",
+};
+
+/** Steam has one global chart; the country only picks which regional price is shown. */
+const desktopCountryLabels: Record<(typeof supportedCountryCodes)[number], string> = {
+  id: "Indonesia",
+  us: "Global",
 };
 
 /**
@@ -34,6 +40,8 @@ export function Topbar({
   buildHref: (change: Partial<OverviewFilters>) => string;
   userEmail: string | null;
 }) {
+  const mode = platformModeOf(active);
+  const countryQuery = filters.country === "id" ? "" : `?country=${filters.country}`;
   return (
     <header className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-canvas px-4 py-2 sm:flex-nowrap sm:px-7">
       <div className="order-1 flex shrink-0 items-center gap-1.5 lg:hidden">
@@ -45,6 +53,15 @@ export function Topbar({
       </div>
       <div className="no-scrollbar order-4 flex w-full items-center gap-2 overflow-x-auto sm:order-3 sm:ml-auto sm:w-auto sm:gap-3">
         <SegmentedLinks
+          label="Device"
+          compact
+          className="shrink-0 flex-nowrap"
+          items={[
+            { key: "mobile", label: "Mobile", href: `/${countryQuery}`, active: mode === "mobile" },
+            { key: "desktop", label: "Desktop", href: `/steam${countryQuery}`, active: mode === "desktop" },
+          ]}
+        />
+        <SegmentedLinks
           label="Country"
           compact
           className="shrink-0 flex-nowrap"
@@ -52,25 +69,40 @@ export function Topbar({
             key: code,
             label: (
               <>
-                <span className="sm:hidden">{shortCountryLabels[code]}</span>
-                <span className="hidden sm:inline">{countryLabels[code]}</span>
+                {mode === "desktop" ? (
+                  desktopCountryLabels[code]
+                ) : (
+                  <>
+                    <span className="sm:hidden">{shortCountryLabels[code]}</span>
+                    <span className="hidden sm:inline">{countryLabels[code]}</span>
+                  </>
+                )}
               </>
             ),
             href: buildHref({ country: code }),
             active: filters.country === code,
           }))}
         />
-        <SegmentedLinks
-          label="Platform"
-          compact
-          className="shrink-0 flex-nowrap"
-          items={platformValues.map((value) => ({
-            key: value,
-            label: platformLabels[value],
-            href: buildHref({ platform: value }),
-            active: filters.platform === value,
-          }))}
-        />
+        {mode === "mobile" ? (
+          <SegmentedLinks
+            label="Store"
+            compact
+            className="shrink-0 flex-nowrap"
+            items={platformValues.map((value) => ({
+              key: value,
+              label: platformLabels[value],
+              href: buildHref({ platform: value }),
+              active: filters.platform === value,
+            }))}
+          />
+        ) : (
+          <SegmentedLinks
+            label="Source"
+            compact
+            className="shrink-0 flex-nowrap"
+            items={[{ key: "steam", label: "Steam", href: `/steam${countryQuery}`, active: true }]}
+          />
+        )}
       </div>
       {userEmail ? (
         <div className="order-3 shrink-0 sm:order-4">
