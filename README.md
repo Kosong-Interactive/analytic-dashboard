@@ -48,7 +48,7 @@ Semua job aman dijalankan ulang. Dashboard hanya **membaca** database: membuka h
 tidak pernah memicu pengambilan data maupun job AI.
 
 Batasan saat ini:
-- Apple belum punya data chart, jadi komponen rank gain kosong untuk game Apple.
+- Chart Apple (Top Free, Top Paid, Top Grossing untuk kategori Games) baru dikumpulkan dan butuh sekitar 3,5 hari riwayat sebelum komponen rank gain game Apple terisi; sebelum itu komponen ini kosong dan skornya dihitung dari komponen lain.
 - Discovery cenderung menangkap game yang sudah populer, sehingga New Releases masih sepi.
 
 ## Trend Score

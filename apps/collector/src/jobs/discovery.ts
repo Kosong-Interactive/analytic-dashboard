@@ -50,13 +50,14 @@ export interface DiscoveryFilter {
 }
 
 export interface DiscoveryCollectors {
-  apple: Pick<AppleSearchCollector, "searchGames">;
+  apple: Pick<AppleSearchCollector, "searchGames" | "discoverTopGameEntries">;
   googlePlay: Pick<GooglePlayCollector, "discoverTopGameEntries">;
 }
 
 export const APPLE_SEARCH_JOB = "discovery.search";
 export const GOOGLE_CHART_JOB = "discovery.chart";
-const GOOGLE_CHART_CATEGORY = "GAME";
+export const APPLE_CHART_JOB = "discovery.chart";
+const CHART_CATEGORY = "GAME";
 const ERROR_SAMPLE_MAX_LENGTH = 300;
 
 export function buildDiscoveryJobs(
@@ -93,6 +94,31 @@ export function buildDiscoveryJobs(
       });
     }
 
+    if ((!filter.source || filter.source === "app_store") && seeds.appleCharts.length > 0) {
+      jobs.push({
+        source: "app_store",
+        jobType: APPLE_CHART_JOB,
+        country,
+        locale,
+        seedVersion: seeds.version,
+        steps: seeds.appleCharts.map((collection) => ({
+          label: `chart:${collection}`,
+          collect: async () => {
+            const entries = await collectors.apple.discoverTopGameEntries({
+              country,
+              locale,
+              collection,
+              limit: seeds.appleChartLimit,
+            });
+            return {
+              apps: entries.map((entry) => entry.app),
+              chart: { chartType: collection, category: CHART_CATEGORY, entries },
+            };
+          },
+        })),
+      });
+    }
+
     if (!filter.source || filter.source === "google_play") {
       jobs.push({
         source: "google_play",
@@ -113,7 +139,7 @@ export function buildDiscoveryJobs(
               apps: entries.map((entry) => entry.app),
               chart: {
                 chartType: collection,
-                category: GOOGLE_CHART_CATEGORY,
+                category: CHART_CATEGORY,
                 entries,
               },
             };

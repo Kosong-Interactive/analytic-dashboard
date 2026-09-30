@@ -82,11 +82,16 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ### Collection and schedule
 
-- Mobile adapters in `packages/collectors`: Apple (iTunes Search/Lookup; no chart path yet, so
-  Apple has no rank gain) and Google Play (`@mradex77/google-play-scraper`, collector-only).
+- Mobile adapters in `packages/collectors`: Apple (iTunes Search/Lookup plus the classic RSS Games
+  chart feeds `itunes.apple.com/{cc}/rss/top{free,paid,grossing}applications/limit=N/genre=6014/json`,
+  which list ids and order only; details come from one lookup request; the newer
+  `rss.marketingtools.apple.com` host was unreachable when checked, and the classic feed is
+  Apple-deprecated, so watch for it disappearing) and Google Play (`@mradex77/google-play-scraper`, collector-only).
   Markets `id` and `us`; the UI calls `us` "Global (US store)", which is a proxy, not global data.
-- Discovery seeds are versioned; active `config/discovery-seeds/mvp-v2.json` (22 Apple terms × 50,
-  Google TOP_FREE/TOP_PAID/GROSSING × 25). Taxonomy `config/taxonomy/v1.json`.
+- Discovery seeds are versioned; active `config/discovery-seeds/mvp-v3.json` (22 Apple terms × 50, Apple
+  TOP_FREE/TOP_PAID/GROSSING × 100, Google TOP_FREE/TOP_PAID/GROSSING × 25). Apple chart job:
+  `discovery.chart` for `app_store`; Trend Score uses `TOP_FREE` only. Rank gain for Apple needs
+  about 3.5 days of chart history after the first collection. Taxonomy `config/taxonomy/v1.json`.
 - `.github/workflows/collect.yml` runs every 6 hours at minute 17 on `main`: discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
@@ -199,7 +204,8 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 1. **Steam:** check `/steam*` in a browser (restart `next dev` after the migration), then decide on
    Steam AI classification (rules exist; needs approval for Gemini quota) and Steam stage 6.
-2. **Apple chart path**, so App Store games get rank gain (30% of Trend Score).
+2. **Verify Apple charts** after the first scheduled run: `chart_entries` for `app_store` and rank
+   gain appearing in Trend Score components after about 3.5 days.
 3. **World market** from several countries for Mobile (team must choose countries; mind Google
    Play's worldwide metrics when aggregating).
 4. **Steam stage 6** — cross-platform normalized scoring and Steam↔mobile opportunities.

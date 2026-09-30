@@ -15,7 +15,7 @@ describe("platform registry", () => {
     assert.equal(supports("google_play", "installs"), true);
     assert.equal(supports("app_store", "installs"), false);
     assert.equal(supports("app_store", "reviewCount"), false);
-    assert.equal(supports("app_store", "chartRank"), false);
+    assert.equal(supports("app_store", "chartRank"), true);
     assert.equal(supports("app_store", "rating"), true);
     assert.deepEqual(platformsSupporting(["app_store", "google_play"], "installs"), ["google_play"]);
   });

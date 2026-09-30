@@ -15,9 +15,11 @@ describe("discovery configuration", () => {
   it("loads a versioned seed file within the adapter limits", () => {
     const seeds = loadDiscoverySeeds();
 
-    assert.equal(seeds.version, "mvp-v2");
+    assert.equal(seeds.version, "mvp-v3");
     assert.ok(seeds.appleLimit <= 200);
+    assert.ok(seeds.appleChartLimit <= 200);
     assert.ok(seeds.googleLimit <= 25);
+    assert.deepEqual(seeds.appleCharts, ["TOP_FREE", "TOP_PAID", "GROSSING"]);
     assert.equal(new Set(seeds.appleSearchTerms).size, seeds.appleSearchTerms.length);
   });
 });

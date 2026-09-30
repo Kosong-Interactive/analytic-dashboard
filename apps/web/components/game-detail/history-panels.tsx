@@ -71,7 +71,7 @@ export function HistoryPanels({ view }: { view: GameDetailView }) {
         description="Top Free games chart · lower is better"
         points={series.rank}
         summary={summarize(series.rank, (v) => `#${v}`, true)}
-        emptyText="This listing has not appeared in a tracked chart. App Store charts are not collected yet."
+        emptyText="This listing has not appeared in a tracked chart."
         invert
         label="Rank"
       />

@@ -14,6 +14,10 @@ export const discoverySeedsSchema = z.object({
   version: z.string().min(1),
   /** Results per Apple search term; one request each, so a larger page is cheap. */
   appleLimit: z.number().int().min(1).max(200),
+  /** Games per Apple chart; one feed request and one lookup request each, so it can be large. */
+  appleChartLimit: z.number().int().min(1).max(200).default(100),
+  /** Apple charts to collect; empty for seed files from before Apple charts existed. */
+  appleCharts: z.array(z.enum(["TOP_FREE", "TOP_PAID", "GROSSING"])).default([]),
   /** Games per Google chart; each needs a throttled detail request, so it stays small. */
   googleLimit: z.number().int().min(1).max(25),
   appleSearchTerms: z.array(z.string().trim().min(1)).min(1),
@@ -43,7 +47,7 @@ export function loadEnabledCountries(): EnabledCountries {
 }
 
 /** Seed files are versioned; older ones stay in the repository so past runs remain explainable. */
-export const ACTIVE_DISCOVERY_SEEDS = "config/discovery-seeds/mvp-v2.json";
+export const ACTIVE_DISCOVERY_SEEDS = "config/discovery-seeds/mvp-v3.json";
 
 export function loadDiscoverySeeds(): DiscoverySeeds {
   return discoverySeedsSchema.parse(readJson(ACTIVE_DISCOVERY_SEEDS));

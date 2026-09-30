@@ -9,11 +9,13 @@ import { z } from "zod";
 
 import {
   normalizedStoreAppSchema,
+  type ChartObservation,
   type CollectorEvents,
   type NormalizedStoreApp,
   type StoreCollectorAdapter,
 } from "../contracts.js";
 import {
+  appleChartFeedSchema,
   appleSearchResponseSchema,
   type AppleSoftwareResult,
 } from "./schemas.js";
@@ -31,6 +33,23 @@ const appleLookupInputSchema = z.object({
   locale: localeSchema,
 });
 
+/** Chart names shared with Google Play, mapped to Apple's classic RSS feed names. */
+export const APPLE_CHART_FEEDS = {
+  TOP_FREE: "topfreeapplications",
+  TOP_PAID: "toppaidapplications",
+  GROSSING: "topgrossingapplications",
+} as const;
+
+const GAMES_GENRE_ID = "6014";
+
+const appleChartInputSchema = z.object({
+  collection: z.enum(["TOP_FREE", "TOP_PAID", "GROSSING"]).default("TOP_FREE"),
+  country: countryCodeSchema,
+  locale: localeSchema,
+  limit: z.number().int().min(1).max(200).default(100),
+});
+
+export type AppleChartInput = z.input<typeof appleChartInputSchema>;
 export type AppleSearchInput = z.input<typeof appleSearchInputSchema>;
 export type AppleLookupInput = z.input<typeof appleLookupInputSchema>;
 
@@ -102,35 +121,47 @@ export class AppleSearchCollector
     return this.requestAndNormalize(url, parsedInput.country, parsedInput.locale);
   }
 
+  /**
+   * The Games chart of one storefront with each game's position. The RSS feed only lists ids and
+   * order; details come from one lookup request. A game the lookup does not return is left out and
+   * keeps no rank, so ranks may have gaps but are never reassigned.
+   */
+  async discoverTopGameEntries(input: AppleChartInput): Promise<ChartObservation[]> {
+    const parsed = appleChartInputSchema.parse(input);
+    const url = new URL(
+      `/${parsed.country}/rss/${APPLE_CHART_FEEDS[parsed.collection]}/limit=${parsed.limit}/genre=${GAMES_GENRE_ID}/json`,
+      this.baseUrl,
+    );
+
+    const payload = await this.requestJson(url, "Apple chart feed");
+    const feed = appleChartFeedSchema.safeParse(payload);
+    if (!feed.success) {
+      throw new AppleSearchApiError(
+        `Apple chart feed response validation failed: ${z.prettifyError(feed.error)}`,
+      );
+    }
+
+    const orderedIds = [...new Set(feed.data.feed.entry.map((entry) => entry.id.attributes["im:id"]))];
+    if (orderedIds.length === 0) return [];
+
+    const apps = await this.lookupGames({
+      externalIds: orderedIds,
+      country: parsed.country,
+      locale: parsed.locale,
+    });
+    const byId = new Map(apps.map((app) => [app.externalId, app]));
+    return orderedIds.flatMap((externalId, index) => {
+      const app = byId.get(externalId);
+      return app ? [{ rank: index + 1, app }] : [];
+    });
+  }
+
   private async requestAndNormalize(
     url: URL,
     country: CountryCode,
     locale: string,
   ): Promise<NormalizedStoreApp[]> {
-    let response: Response;
-    await this.waitForTurn();
-
-    try {
-      response = await this.fetchImplementation(url, {
-        headers: { accept: "application/json" },
-        signal: AbortSignal.timeout(this.timeoutMs),
-      });
-    } catch (error) {
-      throw new AppleSearchApiError(
-        `Apple Search API request failed: ${
-          error instanceof Error ? error.message : "unknown network error"
-        }`,
-      );
-    }
-
-    if (!response.ok) {
-      throw new AppleSearchApiError(
-        `Apple Search API returned HTTP ${response.status}`,
-        response.status,
-      );
-    }
-
-    const payload: unknown = await response.json();
+    const payload = await this.requestJson(url, "Apple Search API");
     const parsedResponse = appleSearchResponseSchema.safeParse(payload);
 
     if (!parsedResponse.success) {
@@ -152,6 +183,27 @@ export class AppleSearchCollector
       }
     }
     return games;
+  }
+
+  private async requestJson(url: URL, label: string): Promise<unknown> {
+    let response: Response;
+    await this.waitForTurn();
+
+    try {
+      response = await this.fetchImplementation(url, {
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (error) {
+      throw new AppleSearchApiError(
+        `${label} request failed: ${error instanceof Error ? error.message : "unknown network error"}`,
+      );
+    }
+
+    if (!response.ok) {
+      throw new AppleSearchApiError(`${label} returned HTTP ${response.status}`, response.status);
+    }
+    return response.json();
   }
 
   private async waitForTurn(): Promise<void> {
