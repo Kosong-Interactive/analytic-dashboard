@@ -105,7 +105,11 @@ readiness** below; this request makes it the next large feature after the curren
 
 - Stage 1 of that plan is done: platform-neutral product language and the platform capability
   registry (`packages/shared/src/platforms.ts`).
-- Next: define Steam listing and observation contracts, then build a replaceable adapter in
+- Stage 2 is done: strict Steam listing and grouped observation contracts live in
+  `packages/shared/src/steam.ts`. Review sentiment, concurrent players, chart positions, and
+  regional prices retain separate source and capture-time context. Missing groups remain missing,
+  review totals must reconcile, and Steam data cannot be coerced into mobile star/install fields.
+- Next: build a replaceable adapter in
   `packages/collectors/src/steam/` with fixtures, throttling, caching, and a low-volume live
   contract test. Evaluate sources before choosing one: the official Steam storefront and Web
   API endpoints, and their rate limits and terms of use. Treat any third-party owner or player
@@ -374,7 +378,7 @@ labels retain their taxonomy and prompt versions so old analysis remains interpr
 ### Steam delivery stages
 
 1. Neutralize product copy and introduce a central platform capability registry. (Done)
-2. Define Steam listing and observation contracts without weakening current mobile semantics.
+2. Define Steam listing and observation contracts without weakening current mobile semantics. (Done)
 3. Implement a replaceable Steam adapter, fixtures, throttling, caching, and a low-volume live
    contract test.
 4. Persist Steam Global history and expose freshness/coverage.

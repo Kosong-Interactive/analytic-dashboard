@@ -9,8 +9,9 @@ changing code. Do not assume the working tree is clean.
 ## Immediate instruction from the user
 
 The existing dashboard menus and Automated Game Research stages 1 through 5 are implemented on
-`development`. Stage 5 adds 30/90-day durability, acceleration, history, and material-change alerts.
-Deployment to Vercel is handled separately by the user.
+`development`. Steam expansion Stage 2 is the current local work: listing and observation contracts
+exist without activating Steam in storage or UI. Deployment to Vercel is handled separately by the
+user.
 
 The approved product direction is documented in `docs/NEXT_DEVELOPMENT_PLAN.md`. The product is
 conceptually **Game Market Intelligence**, not mobile-only, but Steam must not appear as an active
@@ -252,7 +253,11 @@ priority over implementing them.
    (see `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions). Mind the Google Play
    worldwide-metric double-counting note there.
 8. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
-   Steam as a data source, and the Steam delivery stages). Stage 1 is done.
+   Steam as a data source, and the Steam delivery stages). Stages 1 and 2 are done. Stage 2 keeps
+   listing metadata and Steam review/player/chart/regional-price observations in strict separate
+   contracts with source and capture-time context. Next: Stage 3 replaceable adapter, deterministic
+   fixtures, throttling, caching, and a low-volume live contract test. The user reports
+   `STEAM_WEB_API_KEY` is configured locally and in GitHub Actions; do not expose or print it.
 9. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:
