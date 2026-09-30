@@ -235,13 +235,21 @@ export class SteamCollector {
    */
   async getCurrentPlayers(externalId: string): Promise<SteamPlayerObservation | null> {
     const appid = steamAppIdSchema.parse(externalId);
-    const body = await this.request(
-      "current players",
-      "/ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
-      { appid },
-      steamPlayersResponseSchema,
-      { withKey: false },
-    );
+    let body: z.infer<typeof steamPlayersResponseSchema>;
+    try {
+      body = await this.request(
+        "current players",
+        "/ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
+        { appid },
+        steamPlayersResponseSchema,
+        { withKey: false },
+      );
+    } catch (error) {
+      // Steam returns 404 for valid store apps that do not expose player statistics. This is a
+      // missing optional observation, not a failed collection run.
+      if (error instanceof SteamApiError && error.status === 404) return null;
+      throw error;
+    }
     if (body.response.result !== 1 || body.response.player_count === undefined) return null;
     return steamPlayerObservationSchema.parse({
       source: "steam_user_stats",

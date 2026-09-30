@@ -160,6 +160,14 @@ describe("SteamCollector reviews and players", () => {
 
     const missing = fakeFetch({ GetNumberOfCurrentPlayers: fixture("players-unavailable") });
     assert.equal(await collector(missing.implementation).getCurrentPlayers("730"), null);
+
+    const unavailable = fakeFetch({ GetNumberOfCurrentPlayers: 404 });
+    assert.equal(await collector(unavailable.implementation).getCurrentPlayers("730"), null);
+  });
+
+  it("still reports non-404 current-player failures", async () => {
+    const unavailable = fakeFetch({ GetNumberOfCurrentPlayers: 503 });
+    await assert.rejects(() => collector(unavailable.implementation).getCurrentPlayers("730"), /HTTP 503/);
   });
 
   it("assembles into the shared observation contract", async () => {

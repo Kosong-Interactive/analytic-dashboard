@@ -2,12 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { loginPath } from "../auth/redirect";
+import { loadSigningKeys } from "./signing-keys";
 
 /**
  * Refreshes the Supabase session cookie and sends signed-out visitors to /login.
  * Pages still verify the user themselves (`requireUser`); this is the first line, not the only one.
  */
 export async function updateSession(request: NextRequest) {
+  // Loaded before the client exists, so nothing runs between createServerClient and getClaims.
+  const jwks = await loadSigningKeys();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -30,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Nothing may run between createServerClient and getClaims, or sessions can drop at random.
-  const { data } = await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims(undefined, jwks ? { jwks } : undefined);
   const signedIn = Boolean(data?.claims);
   const { pathname, search } = request.nextUrl;
   const onLogin = pathname === "/login";
