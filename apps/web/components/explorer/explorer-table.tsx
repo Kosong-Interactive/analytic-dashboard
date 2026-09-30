@@ -11,6 +11,20 @@ import { ScoreBreakdown } from "../overview/score-breakdown";
 import { RowActions, type RowActionContext } from "./row-actions";
 
 const HEADERS = ["#", "Game", "Platform", "Category", "Genre · mechanic", "Released", "Rating", "Ratings", "Trend score", "First seen", "Action"];
+const LABEL_HEADER = "Label";
+
+const sourceNames = { rule: "Rule", ai: "AI", manual: "Confirmed" } as const;
+
+/** How a game carries the label filter; an inference is never shown as a store fact. */
+function MatchedLabel({ matched }: { matched: ExplorerRow["matchedLabel"] }) {
+  if (!matched) return <span className="text-dim">—</span>;
+  if (matched.source === "manual") return <span className="text-[11.5px] text-up">Confirmed manually</span>;
+  return (
+    <span className="whitespace-nowrap text-[11.5px] text-ink-soft">
+      {sourceNames[matched.source]} · {Math.round(matched.confidence * 100)}%
+    </span>
+  );
+}
 /** Hidden until there is room, so the Action column always stays visible. */
 const WIDE_ONLY = new Set(["First seen"]);
 const RIGHT_ALIGNED = new Set(["Rating", "Ratings"]);
@@ -55,12 +69,16 @@ export function ExplorerTable({
   caption,
   asOf,
   actions,
+  showMatchedLabel = false,
 }: {
   rows: ExplorerRow[];
   caption: string;
   asOf: Date;
   actions: RowActionContext;
+  /** Adds a column saying how each game carries the label filter. */
+  showMatchedLabel?: boolean;
 }) {
+  const headers = showMatchedLabel ? [...HEADERS.slice(0, 5), LABEL_HEADER, ...HEADERS.slice(5)] : HEADERS;
   return (
     <>
       <div className="hidden lg:block lg:overflow-x-auto">
@@ -68,14 +86,14 @@ export function ExplorerTable({
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
-              {HEADERS.map((header, index) => (
+              {headers.map((header, index) => (
                 <th
                   key={header}
                   scope="col"
                   className={cn(
                     "whitespace-nowrap px-2 font-medium",
                     index === 0 && "pl-4",
-                    index === HEADERS.length - 1 && "pr-4",
+                    index === headers.length - 1 && "pr-4",
                     RIGHT_ALIGNED.has(header) ? "text-right" : "text-left",
                     WIDE_ONLY.has(header) && "hidden 2xl:table-cell",
                   )}
@@ -93,6 +111,7 @@ export function ExplorerTable({
                 <td className="whitespace-nowrap text-[11.5px] text-ink-soft">{platformLabels[row.store]}</td>
                 <td className="max-w-[8rem] truncate text-[11.5px] text-ink-soft">{row.category ?? "—"}</td>
                 <td className="max-w-[12rem]"><Labels labels={[...row.genres, ...row.mechanics]} /></td>
+                {showMatchedLabel ? <td><MatchedLabel matched={row.matchedLabel} /></td> : null}
                 <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
                 <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
                 <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
@@ -137,6 +156,14 @@ export function ExplorerTable({
                 <dt className="text-[11px] text-dim">First seen</dt>
                 <dd className="text-ink-soft">{formatRelative(row.firstSeenAt, asOf)}</dd>
               </div>
+              {showMatchedLabel ? (
+                <div className="col-span-3">
+                  <dt className="text-[11px] text-dim">Label</dt>
+                  <dd>
+                    <MatchedLabel matched={row.matchedLabel} />
+                  </dd>
+                </div>
+              ) : null}
             </dl>
             <div className="pl-[32px]">
               <ScoreBreakdown row={row} />

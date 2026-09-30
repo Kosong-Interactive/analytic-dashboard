@@ -107,6 +107,34 @@ describe("parseExplorerQuery", () => {
   });
 });
 
+describe("label filter", () => {
+  it("parses type:slug for every label type and rejects anything else", () => {
+    assert.deepEqual(parseExplorerQuery({ label: "theme:fantasy" }).label, { type: "theme", slug: "fantasy" });
+    assert.deepEqual(parseExplorerQuery({ label: "multiplayer_mode:pvp" }).label, { type: "multiplayer_mode", slug: "pvp" });
+    assert.equal(parseExplorerQuery({ label: "monetization_clue:ads" }).label, undefined);
+    assert.equal(parseExplorerQuery({ label: "theme" }).label, undefined);
+    assert.equal(parseExplorerQuery({ label: "theme:Fantasy!" }).label, undefined);
+  });
+
+  it("keeps the label in links and clears it with the other filters", () => {
+    const query = parseExplorerQuery({ label: "theme:fantasy" });
+    assert.equal(explorerHref(query, { sort: "name" }), "/games?label=theme%3Afantasy&sort=name");
+    assert.equal(explorerHref(query, clearedExplorerFilters), "/games");
+  });
+
+  it("lists only games carrying the label and says how each one got it", () => {
+    const withTheme = [
+      ...membership,
+      label("a", "theme", "fantasy", "ai"),
+      label("c", "theme", "fantasy", "manual"),
+    ];
+    const list = buildExplorerList({ candidates, scores, membership: withTheme, query: parseExplorerQuery({ label: "theme:fantasy" }), asOf });
+    assert.deepEqual(list.rows.map((r) => `${r.id}:${r.matchedLabel?.source}`), ["a:ai", "c:manual"]);
+    // Theme labels do not leak into the genre and mechanic columns.
+    assert.deepEqual(list.rows.find((r) => r.id === "c")?.genres.map((g) => g.slug), ["simulation"]);
+  });
+});
+
 describe("buildExplorerList", () => {
   it("sorts missing values last and keeps them missing", () => {
     const list = build({});

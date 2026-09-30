@@ -55,7 +55,7 @@ Remaining dashboard work, in order:
 
 ## Requested dashboard additions
 
-### Genre and mechanic detail (requested 2026-09-30)
+### Genre and mechanic detail (requested 2026-09-30, done)
 
 On **Genres** and **Mechanics**, clicking a label row opens the full list of tracked games that
 carry that label in the selected storefront.
@@ -69,9 +69,9 @@ carry that label in the selected storefront.
   membership is never presented as a store fact. Membership uses the same resolution as the
   roll-ups (manual first, AI replacing rules, automated labels below 60% confidence excluded).
 - Rows keep the watchlist star and Compare toggle.
-- Preferred implementation: extend the Games explorer with a generic `label=type:slug` filter and
-  a label summary header, and link each Genres/Mechanics row to it, instead of a second game-list
-  implementation. Today the explorer can only filter by genre and core mechanic.
+- Implemented by extending the Games explorer with a generic `label=type:slug` filter, a label
+  summary header computed by the same roll-up as the Genres/Mechanics row, and a Label column
+  showing rule/AI/manual and confidence. Each Genres/Mechanics label name links there.
 
 ## Automated Game Research
 
