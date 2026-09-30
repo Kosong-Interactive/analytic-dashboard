@@ -1,6 +1,11 @@
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
-import { marketOpportunities, researchRuns, type StoreId } from "../schema/index";
+import {
+  marketOpportunities,
+  opportunityDecisions,
+  researchRuns,
+  type StoreId,
+} from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 
 export interface ResearchRunInput {
@@ -130,6 +135,47 @@ export interface StoredOpportunityPreview extends Omit<StoredOpportunity, "score
   reason: string | null;
 }
 
+export type OpportunityDecisionStatus = (typeof opportunityDecisions.$inferSelect)["status"];
+
+export interface OpportunityDecisionRow {
+  id: string;
+  opportunityId: string;
+  status: OpportunityDecisionStatus;
+  note: string | null;
+  owner: string | null;
+  actor: string;
+  createdAt: Date;
+}
+
+export interface OpportunityDetailRow {
+  id: string;
+  runId: string;
+  store: StoreId;
+  country: string;
+  asOf: Date;
+  formulaVersion: string;
+  taxonomyVersion: string;
+  windowDays: number;
+  trackedGames: number;
+  historyDays: number | null;
+  freshness: string;
+  opportunityKey: string;
+  dimensions: unknown;
+  memberCount: number;
+  score: number | null;
+  reason: string | null;
+  weightCoverage: number;
+  confidence: number;
+  confidenceBand: string;
+  insightType: string | null;
+  components: unknown;
+  facts: unknown;
+  comparables: unknown;
+  positives: unknown;
+  counterSignals: unknown;
+  caveats: unknown;
+}
+
 const toNumber = (value: string | null) => (value === null ? null : Number(value));
 
 /**
@@ -254,4 +300,87 @@ export async function loadLatestOpportunities(
     opportunities,
     preview,
   };
+}
+
+/** Full stored calculation and run context for one evidence page. */
+export async function loadOpportunityDetail(
+  db: DatabaseExecutor,
+  opportunityId: string,
+): Promise<OpportunityDetailRow | null> {
+  const [row] = await db
+    .select({
+      id: marketOpportunities.id,
+      runId: marketOpportunities.runId,
+      store: researchRuns.store,
+      country: researchRuns.country,
+      asOf: researchRuns.asOf,
+      formulaVersion: researchRuns.formulaVersion,
+      taxonomyVersion: researchRuns.taxonomyVersion,
+      windowDays: researchRuns.windowDays,
+      trackedGames: researchRuns.trackedGames,
+      historyDays: researchRuns.historyDays,
+      freshness: researchRuns.freshness,
+      opportunityKey: marketOpportunities.opportunityKey,
+      dimensions: marketOpportunities.dimensions,
+      memberCount: marketOpportunities.memberCount,
+      score: marketOpportunities.score,
+      reason: marketOpportunities.reason,
+      weightCoverage: marketOpportunities.weightCoverage,
+      confidence: marketOpportunities.confidence,
+      confidenceBand: marketOpportunities.confidenceBand,
+      insightType: marketOpportunities.insightType,
+      components: marketOpportunities.components,
+      facts: marketOpportunities.facts,
+      comparables: marketOpportunities.comparables,
+      positives: marketOpportunities.positives,
+      counterSignals: marketOpportunities.counterSignals,
+      caveats: marketOpportunities.caveats,
+    })
+    .from(marketOpportunities)
+    .innerJoin(researchRuns, eq(researchRuns.id, marketOpportunities.runId))
+    .where(eq(marketOpportunities.id, opportunityId))
+    .limit(1);
+  if (!row) return null;
+  return {
+    ...row,
+    historyDays: toNumber(row.historyDays),
+    score: toNumber(row.score),
+    weightCoverage: Number(row.weightCoverage),
+    confidence: Number(row.confidence),
+  };
+}
+
+/** Append-only decision history, newest first. */
+export async function loadOpportunityDecisions(
+  db: DatabaseExecutor,
+  opportunityId: string,
+): Promise<OpportunityDecisionRow[]> {
+  return db
+    .select()
+    .from(opportunityDecisions)
+    .where(eq(opportunityDecisions.opportunityId, opportunityId))
+    .orderBy(desc(opportunityDecisions.createdAt));
+}
+
+/** Records a team decision only when the referenced opportunity still exists. */
+export async function recordOpportunityDecision(
+  db: DatabaseExecutor,
+  input: {
+    opportunityId: string;
+    status: OpportunityDecisionStatus;
+    note: string | null;
+    owner: string | null;
+    actor: string;
+  },
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const [opportunity] = await tx
+      .select({ id: marketOpportunities.id })
+      .from(marketOpportunities)
+      .where(eq(marketOpportunities.id, input.opportunityId))
+      .limit(1);
+    if (!opportunity) return false;
+    await tx.insert(opportunityDecisions).values(input);
+    return true;
+  });
 }

@@ -84,11 +84,16 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
         <span>Calculated {formatRelative(card.asOf, asOf)}</span>
-        {card.browseHref ? (
-          <Link href={card.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
-            Browse these games
+        <span className="flex items-center gap-3">
+          {card.browseHref ? (
+            <Link href={card.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
+              Browse games
+            </Link>
+          ) : null}
+          <Link href={`/research/${card.id}`} className="text-accent underline-offset-2 hover:underline">
+            View evidence
           </Link>
-        ) : null}
+        </span>
       </div>
     </li>
   );
@@ -141,11 +146,16 @@ function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Dat
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
         <span>Evaluated {formatRelative(preview.asOf, asOf)}</span>
-        {preview.browseHref ? (
-          <Link href={preview.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
-            Browse this cohort
+        <span className="flex items-center gap-3">
+          {preview.browseHref ? (
+            <Link href={preview.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
+              Browse cohort
+            </Link>
+          ) : null}
+          <Link href={`/research/${preview.id}`} className="text-accent underline-offset-2 hover:underline">
+            View evidence
           </Link>
-        ) : null}
+        </span>
       </div>
     </li>
   );

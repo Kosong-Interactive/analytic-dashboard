@@ -3,7 +3,15 @@ import { after, describe, it } from "node:test";
 
 import { createDatabaseConnection } from "../client";
 import type { DatabaseExecutor } from "./executor";
-import { loadLatestOpportunities, recordFailedResearchRun, recordResearchRun, type OpportunityRowInput } from "./research";
+import {
+  loadLatestOpportunities,
+  loadOpportunityDecisions,
+  loadOpportunityDetail,
+  recordFailedResearchRun,
+  recordOpportunityDecision,
+  recordResearchRun,
+  type OpportunityRowInput,
+} from "./research";
 
 // Needs a migrated PostgreSQL. Every test rolls back, so nothing is left behind.
 const connectionString = process.env.TEST_DATABASE_URL;
@@ -112,6 +120,35 @@ describe("research repository", { skip: connection === null }, () => {
       const latest = await loadLatestOpportunities(tx, { stores: ["google_play"], country: "id", formulaVersion: "opportunity-test", limit: 5 });
       assert.equal(latest.runs[0]?.status, "failed");
       assert.deepEqual(latest.opportunities.map((o) => o.opportunityKey), ["puzzle"]);
+    });
+  });
+
+  it("loads full evidence and appends decision history", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-01T02:00:00Z"), inputHash: "detail" },
+        opportunities: [opportunity("puzzle", 70)],
+      });
+      const latest = await loadLatestOpportunities(tx, { stores: ["google_play"], country: "id", formulaVersion: "opportunity-test", limit: 5 });
+      const opportunityId = latest.opportunities[0]?.id;
+      assert.ok(opportunityId);
+
+      const detail = await loadOpportunityDetail(tx, opportunityId);
+      assert.equal(detail?.formulaVersion, "opportunity-test");
+      assert.equal(detail?.score, 70);
+
+      const saved = await recordOpportunityDecision(tx, {
+        opportunityId,
+        status: "shortlisted",
+        note: "Validate demand",
+        owner: "Core team",
+        actor: "tester@example.com",
+      });
+      assert.equal(saved, true);
+      const decisions = await loadOpportunityDecisions(tx, opportunityId);
+      assert.equal(decisions.length, 1);
+      assert.equal(decisions[0]?.status, "shortlisted");
+      assert.equal(decisions[0]?.actor, "tester@example.com");
     });
   });
 });

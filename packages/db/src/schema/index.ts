@@ -371,6 +371,11 @@ export const watchlistEntries = pgTable(
 ).enableRLS();
 
 export const researchRunStatusEnum = pgEnum("research_run_status", ["succeeded", "failed"]);
+export const opportunityDecisionStatusEnum = pgEnum("opportunity_decision_status", [
+  "shortlisted",
+  "rejected",
+  "prototype",
+]);
 
 /**
  * One research calculation for one storefront. Runs are append-only so earlier recommendations
@@ -441,6 +446,38 @@ export const marketOpportunities = pgTable(
     check(
       "market_opportunities_score_range_chk",
       sql`${table.score} is null or (${table.score} >= 0 and ${table.score} <= 100)`,
+    ),
+  ],
+).enableRLS();
+
+/**
+ * Append-only team decisions for an opportunity. Keeping every event makes changes auditable and
+ * preserves the reasoning attached to an earlier decision.
+ */
+export const opportunityDecisions = pgTable(
+  "opportunity_decisions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => marketOpportunities.id, { onDelete: "cascade" }),
+    status: opportunityDecisionStatusEnum("status").notNull(),
+    note: text("note"),
+    owner: text("owner"),
+    actor: text("actor").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("opportunity_decisions_opportunity_created_idx").on(table.opportunityId, table.createdAt),
+    check(
+      "opportunity_decisions_note_length_chk",
+      sql`${table.note} is null or char_length(${table.note}) <= 2000`,
+    ),
+    check(
+      "opportunity_decisions_owner_length_chk",
+      sql`${table.owner} is null or char_length(${table.owner}) <= 200`,
     ),
   ],
 ).enableRLS();

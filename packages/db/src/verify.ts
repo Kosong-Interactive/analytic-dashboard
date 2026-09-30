@@ -22,11 +22,16 @@ const expectedTables = [
   "app_snapshots",
   "apps",
   "chart_entries",
+  "classification_runs",
   "collector_runs",
   "jobs",
+  "market_opportunities",
+  "opportunity_decisions",
+  "research_runs",
   "reviews",
   "store_apps",
   "taxonomy_labels",
+  "watchlist_entries",
 ] as const;
 
 const { client } = createDatabaseConnection(connectionString);

@@ -270,6 +270,11 @@ idempotent.
 4. AI-authored research brief constrained to stored evidence.
 5. 30/90-day durability, acceleration, history, and material-change alerts.
 
+Stages 1 and 2 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation view,
+comparable-game evidence, risks and caveats, and append-only Shortlist/Reject/Prototype decisions
+with actor, optional owner, note, and timestamp. Migration `0004` adds `opportunity_decisions` with
+RLS enabled and no browser policy; writes go through an authenticated Server Action.
+
 ## Cross-platform and Steam readiness
 
 ### Product language
