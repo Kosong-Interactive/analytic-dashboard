@@ -16,7 +16,7 @@ waktu ke waktu.
 | **Overview** | Ringkasan game yang dipantau, **Game Opportunities** (arah riset berbasis bukti), game trending, dan kesegaran data |
 | **Trending Games** | Game diurutkan berdasarkan Trend Score, dengan filter dan rincian komponen skor |
 | **New Releases** | Game dengan tanggal rilis dari store dalam 7, 30, atau 90 hari terakhir |
-| **Genres / Mechanics** | Sebaran game per genre, subgenre, mechanic, tema, dan mode multiplayer |
+| **Genres / Mechanics** | Sebaran game per genre, subgenre, mechanic, tema, dan mode multiplayer; klik label untuk melihat daftar lengkap game-nya |
 | **Games** | Semua game yang dipantau, dengan filter (kategori, genre, mechanic, rilis, rating, momentum, status label) |
 | ↳ **Watchlist** | Daftar pantauan bersama tim: status, catatan, dan pergerakan sejak game ditambahkan |
 | ↳ **Compare** | Bandingkan hingga 4 game berdampingan, tetap dengan konteks store dan negaranya |

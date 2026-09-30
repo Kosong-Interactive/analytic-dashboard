@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ExplorerControls } from "@/components/explorer/explorer-controls";
 import { CompareTray } from "@/components/explorer/compare-tray";
 import { ExplorerTable } from "@/components/explorer/explorer-table";
+import { LabelSummary, labelPageHref } from "@/components/explorer/label-summary";
 import { GamesTabs } from "@/components/games/games-tabs";
 import { EmptyState, Panel } from "@/components/overview/panel";
 import { Pager } from "@/components/releases/pagination";
@@ -24,7 +25,7 @@ interface GamesPageProps {
 export default async function GamesPage({ searchParams }: GamesPageProps) {
   await requireUser("/games");
   const query = parseExplorerQuery(await searchParams);
-  const { asOf, list, freshness, watched, activeWatchlistCount, compareSelection } = await getExplorer(query);
+  const { asOf, list, freshness, watched, activeWatchlistCount, compareSelection, label } = await getExplorer(query);
   const toggleCompareHref = (id: string) => explorerHref(query, { compare: toggleCompareId(query.compare, id) });
 
   return (
@@ -38,9 +39,20 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
 
       <GamesTabs active="all" filters={query} compareIds={query.compare} watchlistCount={activeWatchlistCount} />
       <FreshnessLine freshness={freshness} asOf={asOf} />
-      <ExplorerControls query={query} options={list.options} />
+      {label ? (
+        <LabelSummary
+          filter={label.filter}
+          displayName={label.displayName}
+          stats={label.stats}
+          backHref={labelPageHref(label.filter, query.country, query.platform)}
+        />
+      ) : null}
+      <ExplorerControls query={query} options={list.options} labelName={label?.displayName} />
 
-      <Panel title="Tracked games" description={`${list.total} of ${list.tracked} tracked games match`}>
+      <Panel
+        title={label ? `Games labelled ${label.displayName}` : "Tracked games"}
+        description={`${list.total} of ${list.tracked} tracked games match`}
+      >
         {list.rows.length === 0 ? (
           <EmptyState title={list.tracked === 0 ? "No games collected for this storefront yet" : "No games match these filters"}>
             {list.tracked === 0 ? (
@@ -59,6 +71,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
           <ExplorerTable
             rows={list.rows}
             asOf={asOf}
+            showMatchedLabel={label !== null}
             actions={{ watched, compareIds: query.compare, compareFull: query.compare.length >= MAX_COMPARED, toggleCompareHref }}
             caption={`Tracked games sorted by ${explorerSortLabels[query.sort]}, page ${list.page} of ${list.pageCount}`}
           />

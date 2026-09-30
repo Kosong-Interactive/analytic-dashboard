@@ -209,8 +209,8 @@ priority over implementing them.
 
 ## Next work
 
-1. **Requested:** Genres/Mechanics label detail with the full game list (see
-   `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions).
+1. Done: Genres/Mechanics label names open `/games?label=type:slug` with the label's roll-up and
+   each game's label source and confidence.
 2. Research stage 1 follow-up: once Trend Scores exist (about 3.5 days of history, around
    2026-10-02/03), check that scored opportunities are sensible and review the card layout with
    real data.

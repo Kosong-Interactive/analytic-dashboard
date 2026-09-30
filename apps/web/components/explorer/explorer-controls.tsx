@@ -84,8 +84,18 @@ function optionLabel(options: FilterOption[], value: string): string {
 }
 
 /** A plain GET form: filters live in the URL, so a view can be shared and needs no client JavaScript. */
-export function ExplorerControls({ query, options }: { query: ExplorerQuery; options: ExplorerList["options"] }) {
+export function ExplorerControls({
+  query,
+  options,
+  labelName,
+}: {
+  query: ExplorerQuery;
+  options: ExplorerList["options"];
+  /** Display name of the label filter, when one is active. */
+  labelName?: string;
+}) {
   const chips: Array<{ label: string; remove: Partial<ExplorerQuery> }> = [];
+  if (query.label && labelName) chips.push({ label: `Label: ${labelName}`, remove: { label: undefined } });
   if (query.q) chips.push({ label: `“${query.q}”`, remove: { q: "" } });
   if (query.category) chips.push({ label: `Category: ${query.category}`, remove: { category: "" } });
   if (query.genre) chips.push({ label: `Genre: ${optionLabel(options.genres, query.genre)}`, remove: { genre: undefined } });
@@ -111,6 +121,9 @@ export function ExplorerControls({ query, options }: { query: ExplorerQuery; opt
           {query.platform !== "all" ? <input type="hidden" name="platform" value={query.platform} /> : null}
           {query.sort !== "most_rated" ? <input type="hidden" name="sort" value={query.sort} /> : null}
           {query.compare.length > 0 ? <input type="hidden" name="compare" value={query.compare.join(",")} /> : null}
+          {query.label && labelName ? (
+            <input type="hidden" name="label" value={`${query.label.type}:${query.label.slug}`} />
+          ) : null}
 
           <label className="col-span-2 flex min-w-0 flex-col gap-1 text-[11px] text-dim xl:col-span-1">
             Title or developer

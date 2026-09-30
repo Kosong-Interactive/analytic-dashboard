@@ -17,6 +17,14 @@ import { SegmentedLinks } from "../shell/segmented-links";
 import type { NavKey } from "../shell/sidebar";
 import { LabelTable } from "./label-table";
 
+/** Games list filtered to one label, in the same storefront. */
+function gamesForLabelHref(label: { type: string; slug: string }, filters: { country: string; platform: string }): string {
+  const params = new URLSearchParams({ label: `${label.type}:${label.slug}` });
+  if (filters.country !== "id") params.set("country", filters.country);
+  if (filters.platform !== "all") params.set("platform", filters.platform);
+  return `/games?${params.toString()}`;
+}
+
 interface LabelPageProps<T extends LabelType> {
   config: LabelPageConfig<T>;
   query: LabelQuery<T>;
@@ -72,7 +80,11 @@ export async function LabelPage<T extends LabelType>({ config, query, active, ti
             “Classify games with rules” step in the scheduled workflow.
           </EmptyState>
         ) : (
-          <LabelTable labels={view.labels} caption={`${typeLabel} sorted by ${labelSortLabels[query.sort]}`} />
+          <LabelTable
+            labels={view.labels}
+            caption={`${typeLabel} sorted by ${labelSortLabels[query.sort]}`}
+            hrefFor={(label) => gamesForLabelHref(label, query)}
+          />
         )}
       </Panel>
 

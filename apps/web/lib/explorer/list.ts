@@ -15,6 +15,8 @@ export interface ExplorerLabel {
 export interface ExplorerRow extends TrendingRow {
   genres: ExplorerLabel[];
   mechanics: ExplorerLabel[];
+  /** How the game carries the label filter, when one is set: rule, AI, or manual, with confidence. */
+  matchedLabel: { source: MembershipRow["source"]; confidence: number } | null;
 }
 
 export interface FilterOption {
@@ -127,7 +129,11 @@ export function buildExplorerList(input: {
   const { candidates, scores, membership, query, asOf } = input;
   const scoreById = new Map(scores.map((score) => [score.id, score]));
   const labelsById = new Map<string, { genres: ExplorerLabel[]; mechanics: ExplorerLabel[] }>();
+  const matchedById = new Map<string, ExplorerRow["matchedLabel"]>();
   for (const row of membership) {
+    if (query.label && row.type === query.label.type && row.slug === query.label.slug) {
+      matchedById.set(row.storeAppId, { source: row.source, confidence: row.confidence });
+    }
     const entry = labelsById.get(row.storeAppId) ?? { genres: [], mechanics: [] };
     const label = { slug: row.slug, displayName: row.displayName, source: row.source };
     if (row.type === "genre") entry.genres.push(label);
@@ -142,6 +148,7 @@ export function buildExplorerList(input: {
       ...toTrendingRow(candidate, scoreById.get(candidate.storeAppId), 0),
       genres: [...(labels?.genres ?? [])].sort(byName),
       mechanics: [...(labels?.mechanics ?? [])].sort(byName),
+      matchedLabel: matchedById.get(candidate.storeAppId) ?? null,
     };
   });
 
@@ -150,6 +157,7 @@ export function buildExplorerList(input: {
     .filter((row) => !query.category || row.category === query.category)
     .filter((row) => !query.genre || row.genres.some((label) => label.slug === query.genre))
     .filter((row) => !query.mechanic || row.mechanics.some((label) => label.slug === query.mechanic))
+    .filter((row) => !query.label || row.matchedLabel !== null)
     .filter((row) => matchesReleased(row, query, asOf))
     .filter((row) => query.minRating === 0 || (row.rating !== null && row.rating >= query.minRating))
     .filter((row) => matchesMomentum(row, query))

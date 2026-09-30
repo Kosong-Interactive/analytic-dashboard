@@ -51,7 +51,16 @@ function TopGames({ label }: { label: LabelStats }) {
 }
 
 /** Table from `md` up, cards below; every value is text, so the bar is never the only encoding. */
-export function LabelTable({ labels, caption }: { labels: LabelStats[]; caption: string }) {
+export function LabelTable({
+  labels,
+  caption,
+  hrefFor,
+}: {
+  labels: LabelStats[];
+  caption: string;
+  /** Games list for one label; the name links there. */
+  hrefFor: (label: LabelStats) => string;
+}) {
   const max = Math.max(0, ...labels.map((l) => l.share));
   return (
     <>
@@ -72,7 +81,11 @@ export function LabelTable({ labels, caption }: { labels: LabelStats[]; caption:
           <tbody>
             {labels.map((label) => (
               <tr key={label.slug} className="h-11 border-b border-line-soft hover:bg-[#13161a]">
-                <th scope="row" className="pl-4 text-left font-medium">{label.displayName}</th>
+                <th scope="row" className="pl-4 text-left font-medium">
+                  <Link href={hrefFor(label)} className="underline-offset-2 hover:underline">
+                    {label.displayName}
+                  </Link>
+                </th>
                 <td className="px-2 text-right font-mono text-xs">{label.games}</td>
                 <td className="px-2"><ShareBar label={label} max={max} /></td>
                 <td className="px-2 text-right font-mono text-xs text-ink-soft">{label.newlyDiscovered7d}</td>
@@ -89,7 +102,9 @@ export function LabelTable({ labels, caption }: { labels: LabelStats[]; caption:
         {labels.map((label) => (
           <li key={label.slug} className="flex flex-col gap-2 border-t border-line-soft px-4 py-3">
             <div className="flex items-center justify-between gap-3">
-              <span className="font-medium">{label.displayName}</span>
+              <Link href={hrefFor(label)} className="font-medium underline-offset-2 hover:underline">
+                {label.displayName}
+              </Link>
               <TopGames label={label} />
             </div>
             <ShareBar label={label} max={max} />

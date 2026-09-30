@@ -50,6 +50,26 @@ export const labelStatusLabels: Record<LabelStatusFilter, string> = {
 export const explorerRatingOptions = [0, 3, 3.5, 4, 4.5] as const;
 export const EXPLORER_PAGE_SIZE = 25;
 
+/** Label types a Genres or Mechanics row can open in Games. */
+export const labelFilterTypes = ["genre", "subgenre", "core_mechanic", "meta_mechanic", "theme", "multiplayer_mode"] as const;
+export type LabelFilterType = (typeof labelFilterTypes)[number];
+
+export interface LabelFilter {
+  type: LabelFilterType;
+  slug: string;
+}
+
+const labelFilterSchema = z
+  .string()
+  .regex(/^[a-z_]{1,32}:[a-z0-9_]{1,64}$/)
+  .transform((value) => {
+    const [type = "", slug = ""] = value.split(":");
+    return { type, slug };
+  })
+  .pipe(z.object({ type: z.enum(labelFilterTypes), slug: z.string() }))
+  .optional()
+  .catch(undefined);
+
 const slug = z
   .string()
   .regex(/^[a-z0-9_]{1,64}$/)
@@ -87,6 +107,8 @@ export type ExplorerQuery = OverviewFilters & {
   category: string;
   genre: string | undefined;
   mechanic: string | undefined;
+  /** Any taxonomy label, e.g. a theme opened from the Mechanics page. */
+  label: LabelFilter | undefined;
   released: ReleasedFilter;
   minRating: number;
   momentum: MomentumFilter;
@@ -119,6 +141,7 @@ export function parseExplorerQuery(params: RawSearchParams): ExplorerQuery {
     ...parsed,
     genre: parsed.genre,
     mechanic: parsed.mechanic,
+    label: labelFilterSchema.parse(first(params.label) || undefined),
     compare: parseCompareIds(params.compare),
   };
 }
@@ -141,6 +164,7 @@ export function explorerHref(current: ExplorerQuery, change: Partial<ExplorerQue
   if (next.category) query.set("category", next.category);
   if (next.genre) query.set("genre", next.genre);
   if (next.mechanic) query.set("mechanic", next.mechanic);
+  if (next.label) query.set("label", `${next.label.type}:${next.label.slug}`);
   if (next.released !== "any") query.set("released", next.released);
   if (next.minRating !== 0) query.set("minRating", String(next.minRating));
   if (next.momentum !== "any") query.set("momentum", next.momentum);
@@ -158,6 +182,7 @@ export const clearedExplorerFilters: Partial<ExplorerQuery> = {
   category: "",
   genre: undefined,
   mechanic: undefined,
+  label: undefined,
   released: "any",
   minRating: 0,
   momentum: "any",
