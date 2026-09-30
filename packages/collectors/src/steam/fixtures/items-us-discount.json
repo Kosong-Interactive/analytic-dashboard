@@ -1,0 +1,5 @@
+{"response":{"store_items":[
+{"item_type":0,"id":1888930,"success":1,"visible":true,"name":"The Last of Us Part I","appid":1888930,"type":0,"tagids":[19],"basic_info":{"short_description":"Experience the emotional storytelling.","publishers":[{"name":"PlayStation Publishing LLC"}],"developers":[{"name":"Naughty Dog LLC"}]},"release":{"steam_release_date":1680019200},"platforms":{"windows":true},"best_purchase_option":{"final_price_in_cents":"2999","original_price_in_cents":"5999","formatted_final_price":"$29.99","discount_pct":50}},
+{"item_type":0,"id":1867240,"success":1,"visible":true,"name":"WARDOGS","appid":1867240,"type":0,"is_early_access":true,"tagids":[19],"release":{"steam_release_date":1790290781},"platforms":{"windows":true},"best_purchase_option":{"final_price_in_cents":"1999","formatted_final_price":"€19,99"}},
+{"item_type":0,"id":4000001,"success":1,"visible":true,"name":"Upcoming Game","appid":4000001,"type":0,"is_coming_soon":true,"platforms":{"windows":true}}
+]}}

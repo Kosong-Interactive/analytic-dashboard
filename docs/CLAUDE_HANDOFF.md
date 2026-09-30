@@ -253,11 +253,22 @@ priority over implementing them.
    (see `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions). Mind the Google Play
    worldwide-metric double-counting note there.
 8. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
-   Steam as a data source, and the Steam delivery stages). Stages 1 and 2 are done. Stage 2 keeps
-   listing metadata and Steam review/player/chart/regional-price observations in strict separate
-   contracts with source and capture-time context. Next: Stage 3 replaceable adapter, deterministic
-   fixtures, throttling, caching, and a low-volume live contract test. The user reports
-   `STEAM_WEB_API_KEY` is configured locally and in GitHub Actions; do not expose or print it.
+   Steam as a data source, and the Steam delivery stages). Stages 1–3 are done. Stage 3 is
+   `SteamCollector` in `packages/collectors/src/steam/`, over the official Web API: global
+   most-played (`ISteamChartsService/GetMostPlayedGames`) and top sellers
+   (`IStoreTopSellersService/GetWeeklyTopSellers`, `country_code: ""`; `ID` returns nothing),
+   listings and regional prices via `IStoreBrowseService/GetItems` (50 per request; tag and
+   category ids resolved with `GetTagList` / `GetStoreCategories`), lifetime review totals via
+   `IUserReviewsService/GetAppReviews` (only `query_summary` is read; review text is never kept),
+   and `ISteamUserStats/GetNumberOfCurrentPlayers`. One throttle for every endpoint (1 s), 6 h
+   cache, retries only for 429/5xx/network, errors never contain the key. Decisions: `genres`
+   stay empty because these responses carry no official genres and user tags were too noisy
+   (live: Dota 2 tagged "Simulation"); prices only for `us`/`id`, with the currency checked
+   against the formatted price; `recent` review window stays `null`. Fixtures and 16 tests are
+   deterministic; `npm run smoke:steam` passed live on 2026-09-30. Web API terms: 100,000 calls a
+   day and no implied Valve endorsement. Next: Stage 4 (database enum + persistence of Steam Global
+   history, freshness/coverage). The user reports `STEAM_WEB_API_KEY` is configured locally and in
+   GitHub Actions; do not expose or print it.
 9. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:

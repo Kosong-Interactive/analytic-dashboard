@@ -64,6 +64,13 @@ npm run smoke:apple --workspace @analytic-dashboard/collectors
 npm run smoke:google-play --workspace @analytic-dashboard/collectors
 ```
 
+The Steam check needs `STEAM_WEB_API_KEY` in the environment (about 9 requests; it prints counts
+and sample values, never the key):
+
+```bash
+(set -a; . ./.env.local; set +a; npm run smoke:steam --workspace @analytic-dashboard/collectors)
+```
+
 ## Before committing
 
 ```bash
