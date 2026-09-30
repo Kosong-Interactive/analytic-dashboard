@@ -13,7 +13,16 @@ function percent(value: number): string {
 }
 
 /** Every value is text, so the share bar is never the only encoding. */
-export function SteamLabelTable({ labels, caption }: { labels: SteamLabelStats[]; caption: string }) {
+export function SteamLabelTable({
+  labels,
+  caption,
+  hrefFor,
+}: {
+  labels: SteamLabelStats[];
+  caption: string;
+  /** Games list filtered to one label. */
+  hrefFor: (label: SteamLabelStats) => string;
+}) {
   const maxShare = Math.max(0, ...labels.map((label) => label.share));
   return (
     <div className="overflow-x-auto">
@@ -40,7 +49,12 @@ export function SteamLabelTable({ labels, caption }: { labels: SteamLabelStats[]
         <tbody className="[&_td]:px-2">
           {labels.map((label) => (
             <tr key={`${label.type}:${label.slug}`} className="h-[46px] border-b border-line-soft hover:bg-[#13161a]">
-              <td className="pl-4 font-medium">{label.displayName}</td>
+              <td className="pl-4 font-medium">
+                <Link href={hrefFor(label)} className="hover:underline">
+                  {label.displayName}
+                  <span className="sr-only"> — view games</span>
+                </Link>
+              </td>
               <td>
                 <span className="flex items-center gap-2">
                   <span aria-hidden className="h-2 w-24 shrink-0 rounded-sm bg-[#1a1d22] sm:w-32">
@@ -59,7 +73,7 @@ export function SteamLabelTable({ labels, caption }: { labels: SteamLabelStats[]
               <td className="pr-4">
                 <span className="flex max-w-[22rem] flex-wrap gap-x-3 gap-y-0.5 text-xs">
                   {label.topGames.map((game) => (
-                    <Link key={game.externalId} href={`/steam/${game.externalId}`} className="truncate text-ink-soft hover:underline">
+                    <Link key={game.externalId} href={`/steam/games/${game.externalId}`} className="truncate text-ink-soft hover:underline">
                       {game.title}
                     </Link>
                   ))}

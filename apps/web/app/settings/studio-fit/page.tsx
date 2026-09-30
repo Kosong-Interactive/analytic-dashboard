@@ -15,7 +15,7 @@ export default async function StudioFitSettingsPage() {
     ["genre", "subgenre", "core_mechanic", "meta_mechanic", "theme"].includes(label.type),
   );
   return (
-    <AppShell filters={{ country: "id", platform: "all" }} active="overview">
+    <AppShell noCounterpart filters={{ country: "id", platform: "all" }} active="overview">
       <div className="flex flex-col gap-1">
         <Link href="/" className="text-xs text-dim underline-offset-2 hover:underline">← Back to Overview</Link>
         <h1 className="text-[22px] font-semibold tracking-tight">Studio Fit Profile</h1>

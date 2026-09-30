@@ -76,7 +76,15 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
             stays empty, check that step in the scheduled workflow.
           </EmptyState>
         ) : (
-          <SteamLabelTable labels={view.labels} caption={`${typeLabel} sorted by ${steamLabelSortLabels[query.sort]}`} />
+          <SteamLabelTable
+            labels={view.labels}
+            caption={`${typeLabel} sorted by ${steamLabelSortLabels[query.sort]}`}
+            hrefFor={(label) => {
+              const params = new URLSearchParams({ label: `${label.type}:${label.slug}` });
+              if (query.country !== "id") params.set("country", query.country);
+              return `/steam/games?${params.toString()}`;
+            }}
+          />
         )}
       </Panel>
 

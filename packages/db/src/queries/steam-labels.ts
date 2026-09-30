@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, max, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, max, or, sql } from "drizzle-orm";
 
 import {
   steamApps,
@@ -129,4 +129,52 @@ export async function loadSteamLabelGames(db: DatabaseExecutor): Promise<SteamLa
     snapshot: snapshots.get(app.steamAppId) ?? null,
     mostPlayedRank: ranks.get(app.steamAppId) ?? null,
   }));
+}
+
+export interface SteamListingLabelRow {
+  labelId: string;
+  type: LabelType;
+  slug: string;
+  displayName: string;
+  source: "rule" | "ai" | "manual";
+  confidence: number;
+  evidence: unknown;
+  /** Rules or prompt version that produced the label; "none" for manual ones. */
+  version: string;
+  model: string | null;
+}
+
+/** Every label of one Steam game with full provenance. Rule labels an AI result replaced are left out. */
+export async function loadSteamGameLabels(
+  db: DatabaseExecutor,
+  query: { steamAppId: string; taxonomyVersion: string },
+): Promise<SteamListingLabelRow[]> {
+  const rows = await db
+    .select({
+      labelId: taxonomyLabels.id,
+      type: taxonomyLabels.type,
+      slug: taxonomyLabels.slug,
+      displayName: taxonomyLabels.displayName,
+      source: steamAppLabels.source,
+      confidence: steamAppLabels.confidence,
+      evidence: steamAppLabels.evidence,
+      version: steamAppLabels.promptVersion,
+      model: steamAppLabels.model,
+    })
+    .from(steamAppLabels)
+    .innerJoin(taxonomyLabels, eq(taxonomyLabels.id, steamAppLabels.labelId))
+    .where(
+      and(
+        eq(steamAppLabels.steamAppId, query.steamAppId),
+        eq(steamAppLabels.taxonomyVersion, query.taxonomyVersion),
+        sql`not (${steamAppLabels.source} = 'rule' and exists (
+          select 1 from ${steamClassificationRuns}
+          where ${steamClassificationRuns.steamAppId} = ${steamAppLabels.steamAppId}
+            and ${steamClassificationRuns.source} = 'ai'
+            and ${steamClassificationRuns.taxonomyVersion} = ${steamAppLabels.taxonomyVersion}
+        ))`,
+      ),
+    )
+    .orderBy(asc(taxonomyLabels.type), desc(steamAppLabels.confidence), asc(taxonomyLabels.slug));
+  return rows.map((row) => ({ ...row, confidence: Number(row.confidence) }));
 }

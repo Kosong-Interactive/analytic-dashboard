@@ -24,7 +24,7 @@ function Change({ rank, lastWeekRank }: { rank: number; lastWeekRank: number | n
 }
 
 function gameHref(row: SteamChartRow, query: SteamQuery): string {
-  return query.country === "id" ? `/steam/${row.externalId}` : `/steam/${row.externalId}?country=${query.country}`;
+  return query.country === "id" ? `/steam/games/${row.externalId}` : `/steam/games/${row.externalId}?country=${query.country}`;
 }
 
 const HEADERS = ["#", "Game", "Players now", "Positive reviews", "Reviews", "Price", "Vs last week"];

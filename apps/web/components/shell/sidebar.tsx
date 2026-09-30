@@ -2,8 +2,8 @@ import {
   Gamepad2,
   Layers,
   LayoutDashboard,
-  SlidersHorizontal,
   Monitor,
+  SlidersHorizontal,
   TrendingUp,
   Zap,
   type LucideIcon,
@@ -11,43 +11,27 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { MODE_TITLES, navItemsFor, platformModeOf, type NavKey } from "@/lib/shell/navigation";
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games" | "steam" | "steam-genres" | "steam-mechanics";
+export type { NavKey, PlatformMode } from "@/lib/shell/navigation";
+export { platformModeOf } from "@/lib/shell/navigation";
 
-/** Which side of the market a page belongs to; Mobile and Desktop metrics are never mixed. */
-export type PlatformMode = "mobile" | "desktop";
-
-export function platformModeOf(key: NavKey): PlatformMode {
-  return key.startsWith("steam") ? "desktop" : "mobile";
-}
-
-interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  key: NavKey;
-  href: string;
-}
-
-const MOBILE_NAV: NavItem[] = [
-  { label: "Overview", icon: LayoutDashboard, key: "overview", href: "/" },
-  { label: "Trending Games", icon: TrendingUp, key: "trending", href: "/trending" },
-  { label: "New Releases", icon: Zap, key: "releases", href: "/new-releases" },
-  { label: "Genres", icon: Layers, key: "genres", href: "/genres" },
-  { label: "Mechanics", icon: SlidersHorizontal, key: "mechanics", href: "/mechanics" },
-  { label: "Games", icon: Gamepad2, key: "games", href: "/games" },
-];
-
-const DESKTOP_NAV: NavItem[] = [
-  { label: "Steam Charts", icon: Monitor, key: "steam", href: "/steam" },
-  { label: "Genres", icon: Layers, key: "steam-genres", href: "/steam/genres" },
-  { label: "Mechanics", icon: SlidersHorizontal, key: "steam-mechanics", href: "/steam/mechanics" },
-];
-
-const GROUPS: Array<{ title: string; items: NavItem[] }> = [
-  { title: "Mobile", items: MOBILE_NAV },
-  { title: "Desktop", items: DESKTOP_NAV },
-];
+const ICONS: Record<NavKey, LucideIcon> = {
+  overview: LayoutDashboard,
+  trending: TrendingUp,
+  releases: Zap,
+  genres: Layers,
+  mechanics: SlidersHorizontal,
+  games: Gamepad2,
+  "steam-overview": LayoutDashboard,
+  "steam-trending": TrendingUp,
+  "steam-releases": Zap,
+  "steam-genres": Layers,
+  "steam-mechanics": SlidersHorizontal,
+  "steam-games": Gamepad2,
+  "steam-charts": Monitor,
+};
 
 export function Brand() {
   return (
@@ -68,14 +52,20 @@ export function Brand() {
   );
 }
 
-/** The primary links, shared by the desktop sidebar and the mobile drawer. */
+/**
+ * The primary links of the active mode only, shared by the desktop sidebar and the mobile drawer.
+ * The group title marks the mode; the Mobile|Desktop switch in the top bar is the only way to change it.
+ */
 export function NavList({ active, onNavigate }: { active: NavKey; onNavigate?: () => void }) {
+  const mode = platformModeOf(active);
+  const title = MODE_TITLES[mode];
   return (
     <nav aria-label="Primary" className="flex flex-col gap-4 px-2.5 py-3.5">
-      {GROUPS.map(({ title, items }) => (
-        <div key={title} role="group" aria-label={title} className="flex flex-col gap-0.5">
-          <p className="px-2.5 pb-1 text-[10.5px] font-medium uppercase tracking-wider text-dim">{title}</p>
-          {items.map(({ label, icon: Icon, key, href }) => (
+      <div role="group" aria-label={title} className="flex flex-col gap-0.5">
+        <p className="px-2.5 pb-1 text-[10.5px] font-medium uppercase tracking-wider text-dim">{title}</p>
+        {navItemsFor(mode).map(({ label, key, href }) => {
+          const Icon = ICONS[key];
+          return (
             <Link
               key={key}
               href={href}
@@ -89,9 +79,9 @@ export function NavList({ active, onNavigate }: { active: NavKey; onNavigate?: (
               <Icon aria-hidden className={cn("size-4", key === active ? "text-accent" : "text-dim")} strokeWidth={1.7} />
               {label}
             </Link>
-          ))}
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </nav>
   );
 }

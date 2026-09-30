@@ -2,7 +2,7 @@ import { AppShell } from "@/components/shell/app-shell";
 
 export default function Loading() {
   return (
-    <AppShell filters={{ country: "id", platform: "all" }} active="games">
+    <AppShell noCounterpart filters={{ country: "id", platform: "all" }} active="games">
       <div role="status" aria-live="polite" className="flex flex-col gap-4">
         <span className="sr-only">Loading game</span>
         <div className="h-20 w-96 max-w-full animate-pulse rounded-lg bg-surface" />

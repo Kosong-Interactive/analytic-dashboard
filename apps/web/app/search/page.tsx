@@ -23,7 +23,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const groups = text.success ? buildSearchGroups(text.data, await searchStoredCatalog(text.data, PAGE_LIMITS)) : [];
 
   return (
-    <AppShell filters={filters} active="games">
+    <AppShell noCounterpart filters={filters} active="games">
       <div className="flex flex-col gap-1">
         <h1 className="text-[22px] font-semibold tracking-tight">Search</h1>
         <p className="text-[13px] text-dim">

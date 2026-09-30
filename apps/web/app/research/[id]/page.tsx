@@ -22,7 +22,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
   if (result.kind === "invalid_evidence") {
     const filters: OverviewFilters = { country: "id", platform: "all" };
     return (
-      <AppShell filters={filters} active="overview">
+      <AppShell noCounterpart filters={filters} active="overview">
         <Panel title="Research evidence unavailable">
           <EmptyState title="The stored calculation could not be validated">
             This result is hidden rather than showing incomplete or misleading evidence. Run research again or inspect the stored research row.
@@ -37,7 +37,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
     platform: result.view.store,
   };
   return (
-    <AppShell filters={filters} active="overview" buildHref={(change) => overviewHref(filters, change)}>
+    <AppShell noCounterpart filters={filters} active="overview" buildHref={(change) => overviewHref(filters, change)}>
       <OpportunityDetail
         view={result.view}
         profile={result.profile}

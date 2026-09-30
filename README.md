@@ -21,7 +21,7 @@ waktu ke waktu.
 | ↳ **Watchlist** | Daftar pantauan bersama tim: status, catatan, dan pergerakan sejak game ditambahkan |
 | ↳ **Compare** | Bandingkan hingga 4 game berdampingan, tetap dengan konteks store dan negaranya |
 | **Game Detail** | Metrik, harga beli awal beserta perubahannya, grafik riwayat, rincian Trend Score, label beserta bukti, dan Confirm/Reject manual |
-| **Desktop · Steam** | Steam Charts (Most Played, Top Sellers), detail game Steam, serta Genres dan Mechanics Steam; dipisah dari Mobile karena metriknya berbeda |
+| **Desktop · Steam** | Mode Desktop dengan menu yang sama seperti Mobile (Overview, Trending, New Releases, Genres, Mechanics, Games, Game Detail) ditambah Steam Charts; Trending Steam baru menampilkan perubahan rank, belum ada skor |
 
 Tekan **⌘K / Ctrl+K** di halaman mana pun untuk mencari game, developer, atau label.
 

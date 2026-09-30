@@ -168,3 +168,10 @@ export {
   type SteamLabelMembershipQuery,
   type SteamLabelMembershipRow,
 } from "./queries/steam-labels";
+export {
+  loadSteamGameList,
+  type SteamChartPosition,
+  type SteamGameList,
+  type SteamGameListRow,
+} from "./queries/steam-games";
+export { loadSteamGameLabels, type SteamListingLabelRow } from "./queries/steam-labels";

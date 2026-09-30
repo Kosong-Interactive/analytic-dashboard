@@ -34,7 +34,7 @@ function releaseText(row: ExplorerRow): string {
   return row.releaseDate ? row.releaseDate.toISOString().slice(0, 10) : "—";
 }
 
-function Labels({ labels }: { labels: ExplorerLabel[] }) {
+export function Labels({ labels }: { labels: ExplorerLabel[] }) {
   if (labels.length === 0) return <span className="text-dim">—</span>;
   return (
     <span className="flex flex-wrap gap-1">

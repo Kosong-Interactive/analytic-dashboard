@@ -1,8 +1,16 @@
 import "server-only";
 
-import { loadSteamChart, loadSteamGameDetail, loadSteamSourceHealth } from "@analytic-dashboard/db";
+import {
+  loadSteamChart,
+  loadSteamGameDetail,
+  loadSteamGameLabels,
+  loadSteamGameList,
+  loadSteamLabelMembership,
+  loadSteamSourceHealth,
+} from "@analytic-dashboard/db";
 
 import { getDatabase } from "../database";
+import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "../labels/constants";
 import { toSteamSourceStatus } from "../overview/view-model";
 import type { SteamQuery } from "./query";
 
@@ -21,5 +29,22 @@ export async function getSteamGame(externalId: string, asOf: Date = new Date()) 
     loadSteamGameDetail(db, externalId, since),
     loadSteamSourceHealth(db),
   ]);
-  return game ? { game, source: toSteamSourceStatus(health, asOf), asOf } : null;
+  if (!game) return null;
+  const labels = await loadSteamGameLabels(db, { steamAppId: game.steamAppId, taxonomyVersion: TAXONOMY_VERSION });
+  return { game, labels, source: toSteamSourceStatus(health, asOf), asOf };
+}
+
+/** All tracked Steam games with labels, for Games, New Releases, Overview, and Trending. */
+export async function getSteamGameCatalog(country: SteamQuery["country"], asOf: Date = new Date()) {
+  const db = getDatabase();
+  const [list, membership, health] = await Promise.all([
+    loadSteamGameList(db),
+    loadSteamLabelMembership(db, {
+      taxonomyVersion: TAXONOMY_VERSION,
+      types: ["genre", "subgenre", "core_mechanic", "meta_mechanic", "theme", "multiplayer_mode"],
+      minConfidence: MIN_LABEL_CONFIDENCE,
+    }),
+    loadSteamSourceHealth(db),
+  ]);
+  return { ...list, membership, country, source: toSteamSourceStatus(health, asOf), asOf };
 }

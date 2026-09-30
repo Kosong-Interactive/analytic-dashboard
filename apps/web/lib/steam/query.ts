@@ -24,7 +24,7 @@ export function parseSteamQuery(params: RawSearchParams): SteamQuery {
   return steamQuerySchema.parse({ country: first(params.country), chart: first(params.chart) });
 }
 
-export function steamHref(current: SteamQuery, change: Partial<SteamQuery> = {}, path = "/steam"): string {
+export function steamHref(current: SteamQuery, change: Partial<SteamQuery> = {}, path = "/steam/charts"): string {
   const next = { ...current, ...change };
   const query = new URLSearchParams();
   if (next.country !== "id") query.set("country", next.country);

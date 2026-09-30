@@ -61,6 +61,18 @@ export function MetricCards({ view }: { view: GameDetailView }) {
     },
   ];
 
+  return <MetricCardGrid items={items} />;
+}
+
+export interface MetricCardItem {
+  label: string;
+  value: string;
+  note: string;
+  tone?: string;
+}
+
+/** The metric card row shared by Mobile and Desktop game details. */
+export function MetricCardGrid({ items }: { items: MetricCardItem[] }) {
   return (
     <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {items.map((item) => (

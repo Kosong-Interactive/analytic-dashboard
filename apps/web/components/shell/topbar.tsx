@@ -10,7 +10,9 @@ import {
 import { CommandPalette } from "../search/command-palette";
 import { MobileNavDrawer } from "./mobile-nav-drawer";
 import { SegmentedLinks } from "./segmented-links";
-import { platformModeOf, type NavKey } from "./sidebar";
+import { platformModeOf, platformSwitchHref } from "@/lib/shell/navigation";
+
+import type { NavKey } from "./sidebar";
 import { UserMenu } from "./user-menu";
 
 /** Phones get a shorter storefront name; it still says "US store" so it is never read as worldwide. */
@@ -34,14 +36,18 @@ export function Topbar({
   filters,
   buildHref,
   userEmail,
+  noCounterpart = false,
 }: {
   active: NavKey;
   filters: OverviewFilters;
   buildHref: (change: Partial<OverviewFilters>) => string;
   userEmail: string | null;
+  /** The page has no equivalent in the other mode, so the switch leads to that mode's Overview. */
+  noCounterpart?: boolean;
 }) {
   const mode = platformModeOf(active);
-  const countryQuery = filters.country === "id" ? "" : `?country=${filters.country}`;
+  const switchHref = (target: "mobile" | "desktop") =>
+    platformSwitchHref({ active, target, country: filters.country, noCounterpart });
   return (
     <header className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-canvas px-4 py-2 sm:flex-nowrap sm:px-7">
       <div className="order-1 flex shrink-0 items-center gap-1.5 lg:hidden">
@@ -57,8 +63,8 @@ export function Topbar({
           compact
           className="shrink-0 flex-nowrap"
           items={[
-            { key: "mobile", label: "Mobile", href: `/${countryQuery}`, active: mode === "mobile" },
-            { key: "desktop", label: "Desktop", href: `/steam${countryQuery}`, active: mode === "desktop" },
+            { key: "mobile", label: "Mobile", href: switchHref("mobile"), active: mode === "mobile" },
+            { key: "desktop", label: "Desktop", href: switchHref("desktop"), active: mode === "desktop" },
           ]}
         />
         <SegmentedLinks
@@ -100,7 +106,7 @@ export function Topbar({
             label="Source"
             compact
             className="shrink-0 flex-nowrap"
-            items={[{ key: "steam", label: "Steam", href: `/steam${countryQuery}`, active: true }]}
+            items={[{ key: "steam", label: "Steam", href: "/steam", active: true }]}
           />
         )}
       </div>

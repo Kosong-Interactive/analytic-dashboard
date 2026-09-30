@@ -101,8 +101,8 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ### Database
 
-- Migrations `0000`–`0007` are all applied to Supabase; `npm run db:verify` last reported 21 tables,
-  RLS on every table, 8 migrations, no public policies.
+- Migrations `0000`–`0008` are all applied to Supabase; `npm run db:verify` last reported 21 tables,
+  RLS on every table, 9 migrations, no public policies.
 - Mobile: `apps`, `store_apps`, `app_snapshots` (change-only + 24 h heartbeat), `chart_entries`,
   `collector_runs`. Classification: `taxonomy_labels`, `app_labels`, `classification_runs`
   (input-hash cache). Team: `watchlist_entries`, `studio_profiles`. Research: `research_runs`,
@@ -129,7 +129,8 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - Steam games: rules only (`steam-rules-v1`: Steam user tags at 0.75 confidence, keyword rules on
   title/description, price). Stored in `steam_app_labels` / `steam_classification_runs`; run
   `npm run classify-steam --workspace @analytic-dashboard/collector` (also a step in `collect.yml`).
-  No AI classification for Steam yet. Migration `0008` is generated but **not applied** to Supabase.
+  No AI classification for Steam yet. Migration `0008` is applied to Supabase; the first
+  `classify-steam` run labelled 150 games (1,196 rule labels, no errors).
 
 ### Dashboard
 
@@ -138,12 +139,23 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   `/search`), Research detail, Settings › Studio Fit, Login (Supabase email/password; sign-up off).
 - Overview Data coverage shows mobile sources plus a separate **Desktop · Steam (Global)** row.
 - Header: `[Mobile | Desktop]`, then country (`Indonesia | Global`), then `[All | Google Play | App
-  Store]` on Mobile or `[Steam]` on Desktop. On Desktop the country only picks the regional price
-  (IDR or USD); Steam charts are global. Sidebar has Mobile and Desktop groups.
-- Desktop pages: `/steam` (Most Played / Top Sellers), `/steam/[id]` (players, review ratio, ID/US
-  prices, tags, chart and observation history), `/steam/genres`, `/steam/mechanics`. Not yet seen
-  in a browser (needs login) and Genres/Mechanics stay empty until `0008` is applied and
-  `classify-steam` has run.
+  Store]` on Mobile or `[Steam]` on Desktop. The sidebar and mobile drawer show only the active
+  mode's menu (title Mobile or Desktop); the mode comes from the page (`platformModeOf` in
+  `apps/web/lib/shell/navigation.ts`), never from client state. `platformSwitchHref` maps each
+  menu to its counterpart and carries only `country`; pages with no counterpart (game detail,
+  Watchlist, Compare, Research, Studio Fit, Search, Steam Charts) pass `noCounterpart` to
+  `AppShell` and switch to the other mode's Overview.
+- Desktop pages mirror Mobile: `/steam` (Overview), `/steam/trending`, `/steam/new-releases`,
+  `/steam/genres`, `/steam/mechanics`, `/steam/games`, `/steam/games/[id]`, plus Desktop-only
+  `/steam/charts`. On Desktop the country only picks the regional price (IDR or USD); charts,
+  players and reviews are global and labelled "Global". Steam review ratio is never shown as
+  stars. Trending has no Steam score yet: it shows an empty state plus rank movers from
+  `last_week_rank`, labelled as rank change. No Watchlist, Compare, Research, or manual label
+  editing on Steam. Games/detail are built from `loadSteamGameList` and `loadSteamGameDetail`
+  (`packages/db`); tables are `SteamGamesTable`/`SteamChartTable` (Plan A: shared primitives
+  `Panel`, `Pager`, `SegmentedLinks`, `KpiGrid`, `MetricCardGrid`, `ChartPanel`, `LabelsPanel`
+  with `readOnly`, filter fields in `components/filters/fields.tsx`; row bodies are not shared
+  with Mobile tables). Not yet checked in a browser by the agent (needs login).
 - Upfront price (mobile only, no in-app purchases): Game Detail "Upfront price" panel with
   store, country, snapshot time and price changes; a Price column in Games/Trending/New Releases
   and a Semua/Gratis/Berbayar `price` URL filter on Games and Trending. `0` shows "Gratis", `null`
@@ -185,9 +197,8 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Next work (recommended order)
 
-1. **Finish Steam stages 5–6 prerequisites:** apply migration `0008` (ask first), run
-   `classify-steam`, check `/steam*` in a browser, and optionally add a full Steam games list with
-   filters. Then Steam AI classification (rules exist; needs approval for Gemini quota).
+1. **Steam:** check `/steam*` in a browser (restart `next dev` after the migration), then decide on
+   Steam AI classification (rules exist; needs approval for Gemini quota) and Steam stage 6.
 2. **Apple chart path**, so App Store games get rank gain (30% of Trend Score).
 3. **World market** from several countries for Mobile (team must choose countries; mind Google
    Play's worldwide metrics when aggregating).

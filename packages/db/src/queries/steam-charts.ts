@@ -72,9 +72,10 @@ export async function loadLatestSteamSnapshots(db: DatabaseExecutor, appIds: str
   return new Map(rows.map(({ steamAppId, ...snapshot }) => [steamAppId, snapshot]));
 }
 
-async function loadLatestPrices(db: DatabaseExecutor, appIds: string[]) {
+/** Latest ID and US price per game; `null` means every tracked game. */
+export async function loadLatestSteamPrices(db: DatabaseExecutor, appIds: string[] | null) {
   const byApp = new Map<string, Record<string, SteamRegionalPrice>>();
-  if (appIds.length === 0) return byApp;
+  if (appIds !== null && appIds.length === 0) return byApp;
   const rows = await db
     .selectDistinctOn([steamPrices.steamAppId, steamPrices.country], {
       steamAppId: steamPrices.steamAppId,
@@ -86,7 +87,12 @@ async function loadLatestPrices(db: DatabaseExecutor, appIds: string[]) {
       capturedAt: steamPrices.capturedAt,
     })
     .from(steamPrices)
-    .where(and(inArray(steamPrices.steamAppId, appIds), inArray(steamPrices.country, PRICE_COUNTRIES)))
+    .where(
+      and(
+        appIds === null ? undefined : inArray(steamPrices.steamAppId, appIds),
+        inArray(steamPrices.country, PRICE_COUNTRIES),
+      ),
+    )
     .orderBy(steamPrices.steamAppId, steamPrices.country, desc(steamPrices.capturedAt));
   for (const row of rows) {
     const prices = byApp.get(row.steamAppId) ?? {};
@@ -130,7 +136,7 @@ export async function loadSteamChart(db: DatabaseExecutor, chart: SteamChartName
     .orderBy(asc(steamChartEntries.rank));
 
   const appIds = entries.map((entry) => entry.steamAppId);
-  const [snapshots, prices] = await Promise.all([loadLatestSteamSnapshots(db, appIds), loadLatestPrices(db, appIds)]);
+  const [snapshots, prices] = await Promise.all([loadLatestSteamSnapshots(db, appIds), loadLatestSteamPrices(db, appIds)]);
 
   return {
     chart,
@@ -159,7 +165,7 @@ export interface SteamGameDetail extends SteamGameSummary {
   /** Oldest first. Snapshots are stored on change, so a gap means "unchanged". */
   snapshots: Array<SteamLatestSnapshot>;
   /** Oldest first. */
-  ranks: Array<{ chart: string; rank: number; capturedAt: Date }>;
+  ranks: Array<{ chart: string; rank: number; lastWeekRank: number | null; capturedAt: Date }>;
 }
 
 /** Everything the Steam game page shows, in a constant number of queries. */
@@ -173,7 +179,7 @@ export async function loadSteamGameDetail(
 
   const [latestSnapshots, prices, history, ranks] = await Promise.all([
     loadLatestSteamSnapshots(db, [app.id]),
-    loadLatestPrices(db, [app.id]),
+    loadLatestSteamPrices(db, [app.id]),
     db
       .select({
         capturedAt: steamSnapshots.capturedAt,
@@ -188,7 +194,12 @@ export async function loadSteamGameDetail(
       .where(eq(steamSnapshots.steamAppId, app.id))
       .orderBy(asc(steamSnapshots.capturedAt)),
     db
-      .select({ chart: steamChartEntries.chart, rank: steamChartEntries.rank, capturedAt: steamChartEntries.capturedAt })
+      .select({
+        chart: steamChartEntries.chart,
+        rank: steamChartEntries.rank,
+        lastWeekRank: steamChartEntries.lastWeekRank,
+        capturedAt: steamChartEntries.capturedAt,
+      })
       .from(steamChartEntries)
       .where(eq(steamChartEntries.steamAppId, app.id))
       .orderBy(asc(steamChartEntries.capturedAt)),

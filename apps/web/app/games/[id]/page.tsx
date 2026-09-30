@@ -40,7 +40,7 @@ export default async function GamePage({ params }: GamePageProps) {
   const filters: OverviewFilters = { country, platform: view.listing.store };
 
   return (
-    <AppShell filters={filters} active="games" buildHref={(change) => overviewHref(filters, change)}>
+    <AppShell noCounterpart filters={filters} active="games" buildHref={(change) => overviewHref(filters, change)}>
       <GameHeader view={view} actions={<WatchButton storeAppId={view.listing.storeAppId} status={watchStatus} />} />
       <MetricCards view={view} />
       <PricePanel view={view} />

@@ -3,7 +3,7 @@ import type { OverviewData } from "@/lib/overview/view-model";
 
 import { InfoHint } from "../common/info-hint";
 
-interface Kpi {
+export interface Kpi {
   label: string;
   tip: string;
   value: string;
@@ -42,6 +42,11 @@ export function KpiCards({ data }: { data: OverviewData }) {
     },
   ];
 
+  return <KpiGrid items={items} />;
+}
+
+/** The KPI row shared by the Mobile and Desktop overviews. */
+export function KpiGrid({ items }: { items: Kpi[] }) {
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => (

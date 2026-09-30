@@ -35,7 +35,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   const full = query.ids.length >= MAX_COMPARED;
 
   return (
-    <AppShell filters={query} active="games" buildHref={(change) => compareHref(query, change)}>
+    <AppShell noCounterpart filters={query} active="games" buildHref={(change) => compareHref(query, change)}>
       <div className="flex flex-col gap-1">
         <h1 className="text-[22px] font-semibold tracking-tight">Compare</h1>
         <p className="text-[13px] text-dim">

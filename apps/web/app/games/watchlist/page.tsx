@@ -29,7 +29,7 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
   const view = await getWatchlist(query);
 
   return (
-    <AppShell filters={query} active="games" buildHref={(change) => watchlistHref(query, change)}>
+    <AppShell noCounterpart filters={query} active="games" buildHref={(change) => watchlistHref(query, change)}>
       <div className="flex flex-col gap-1">
         <h1 className="text-[22px] font-semibold tracking-tight">Watchlist</h1>
         <p className="text-[13px] text-dim">

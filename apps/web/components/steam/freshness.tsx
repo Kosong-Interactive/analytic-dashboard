@@ -19,6 +19,12 @@ export function SteamFreshness({ source, capturedAt, asOf }: { source: SteamSour
           <span aria-hidden className={cn("size-1.5 rounded-full", state.dot)} />
           Steam Global: collected {formatRelative(source.lastCollectedAt, asOf)} · {state.label}
         </span>
+        {source.trackedGames > 0 ? <span>{source.trackedGames.toLocaleString("en-US")} games tracked</span> : null}
+        {source.latestErrorCount > 0 ? (
+          <span>
+            latest run had {source.latestErrorCount} error{source.latestErrorCount === 1 ? "" : "s"}
+          </span>
+        ) : null}
         {capturedAt ? <span>Chart captured {capturedAt.toISOString().slice(0, 16).replace("T", " ")} UTC</span> : null}
       </p>
       {source.state !== "fresh" ? (
