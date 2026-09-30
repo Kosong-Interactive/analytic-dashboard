@@ -53,8 +53,10 @@ export {
   clearManualLabel,
   loadInputHashes,
   loadRuleInputHashes,
+  loadSteamInputHashes,
   loadTaxonomyLabels,
   replaceAutomatedLabels,
+  replaceSteamAutomatedLabels,
   replaceRuleLabels,
   setManualLabel,
   syncTaxonomyLabels,
@@ -67,6 +69,8 @@ export {
 } from "./repositories/classification";
 export {
   loadClassificationInputs,
+  loadSteamClassificationInputs,
+  type SteamClassificationInputRow,
   type ClassificationInputRow,
   type ClassificationListingRow,
 } from "./queries/classification-inputs";
@@ -145,3 +149,22 @@ export {
   type SteamSnapshotInput,
 } from "./repositories/steam-persistence";
 export { loadSteamSourceHealth, type SteamSourceHealthRow } from "./queries/steam-source-health";
+export {
+  loadLatestSteamSnapshots,
+  loadSteamChart,
+  loadSteamGameDetail,
+  type SteamChartName,
+  type SteamChartRow,
+  type SteamChartView,
+  type SteamGameDetail,
+  type SteamGameSummary,
+  type SteamLatestSnapshot,
+  type SteamRegionalPrice,
+} from "./queries/steam-charts";
+export {
+  loadSteamLabelGames,
+  loadSteamLabelMembership,
+  type SteamLabelGame,
+  type SteamLabelMembershipQuery,
+  type SteamLabelMembershipRow,
+} from "./queries/steam-labels";

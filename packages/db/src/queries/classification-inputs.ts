@@ -1,6 +1,6 @@
-import { asc, desc, sql } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 
-import { appSnapshots, storeApps, type StoreId } from "../schema/index";
+import { appSnapshots, steamApps, steamPrices, storeApps, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
 export interface ClassificationListingRow {
@@ -73,3 +73,49 @@ export async function loadClassificationInputs(
   return [...byApp].map(([appId, rows]) => ({ appId, listings: rows }));
 }
 
+
+export interface SteamClassificationInputRow {
+  steamAppId: string;
+  title: string;
+  description: string | null;
+  genres: string[];
+  tags: string[];
+  isFree: boolean;
+  /** Latest US final price; null when Steam reported none. */
+  usPrice: number | null;
+}
+
+/** Every Steam game with the fields classification reads. */
+export async function loadSteamClassificationInputs(db: DatabaseExecutor): Promise<SteamClassificationInputRow[]> {
+  const [apps, prices] = await Promise.all([
+    db
+      .select({
+        id: steamApps.id,
+        title: steamApps.title,
+        description: steamApps.description,
+        genres: steamApps.genres,
+        tags: steamApps.tags,
+        isFree: steamApps.isFree,
+      })
+      .from(steamApps)
+      .orderBy(asc(steamApps.id)),
+    db
+      .selectDistinctOn([steamPrices.steamAppId], {
+        steamAppId: steamPrices.steamAppId,
+        finalPrice: steamPrices.finalPrice,
+      })
+      .from(steamPrices)
+      .where(eq(steamPrices.country, "us"))
+      .orderBy(steamPrices.steamAppId, desc(steamPrices.capturedAt)),
+  ]);
+  const priceById = new Map(prices.map((row) => [row.steamAppId, Number(row.finalPrice)]));
+  return apps.map((app) => ({
+    steamAppId: app.id,
+    title: app.title,
+    description: app.description,
+    genres: app.genres,
+    tags: app.tags,
+    isFree: app.isFree,
+    usPrice: priceById.get(app.id) ?? null,
+  }));
+}

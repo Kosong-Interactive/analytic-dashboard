@@ -126,7 +126,10 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - Rules (`rules-v1`) and Gemini (`ai-v2`, model rotation via `models.list`, SDK retries disabled,
   `maxOutputTokens` capped, evidence must quote the input). Resolution manual > AI > rule; once an
   app has an AI run its rule labels are ignored. Roll-ups hide automated labels below 0.6.
-- Steam games are not classified yet.
+- Steam games: rules only (`steam-rules-v1`: Steam user tags at 0.75 confidence, keyword rules on
+  title/description, price). Stored in `steam_app_labels` / `steam_classification_runs`; run
+  `npm run classify-steam --workspace @analytic-dashboard/collector` (also a step in `collect.yml`).
+  No AI classification for Steam yet. Migration `0008` is generated but **not applied** to Supabase.
 
 ### Dashboard
 

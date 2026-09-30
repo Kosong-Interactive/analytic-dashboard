@@ -5,9 +5,14 @@ import type { ClassificationInput, ClassificationListing } from "./input.js";
 /** Bump when any rule, pattern, or confidence below changes; it feeds the input hash. */
 export const RULES_VERSION = "rules-v1";
 
+/** Version of the Steam-only tag rules. Mobile hashes use `RULES_VERSION` and are unaffected. */
+export const STEAM_RULES_VERSION = "steam-rules-v1";
+
 const STORE_GENRE_CONFIDENCE = 0.95;
 const PRICE_CONFIDENCE = 0.95;
 const TITLE_CONFIDENCE = 0.8;
+/** Steam user tags are community-voted and noisy (a live check showed Dota 2 tagged "Simulation"). */
+const STEAM_TAG_CONFIDENCE = 0.75;
 const DESCRIPTION_CONFIDENCE = 0.55;
 const DESCRIPTION_REPEATED_CONFIDENCE = 0.7;
 const MAX_EVIDENCE_PER_LABEL = 3;
@@ -53,6 +58,8 @@ const STORE_GENRES: Record<string, string> = {
   GAME_STRATEGY: "strategy",
   GAME_TRIVIA: "trivia",
   GAME_WORD: "word",
+  // Steam official genres, when Steam supplies them.
+  RPG: "rpg",
   // Apple `genres` entries.
   Action: "action",
   Adventure: "adventure",
@@ -71,6 +78,104 @@ const STORE_GENRES: Record<string, string> = {
   Strategy: "strategy",
   Trivia: "trivia",
   Word: "word",
+};
+
+/**
+ * Steam user tags (lowercase) to taxonomy labels. Only tags that map cleanly onto the existing
+ * vocabulary are listed; anything else is left to description keywords or AI.
+ */
+const STEAM_TAGS: Record<string, readonly LabelRef[]> = {
+  action: [["genre", "action"]],
+  adventure: [["genre", "adventure"]],
+  arcade: [["genre", "arcade"]],
+  "board game": [["genre", "board"]],
+  "card game": [["genre", "card"]],
+  "trading card game": [["genre", "card"]],
+  casino: [["genre", "casino"]],
+  gambling: [["genre", "casino"]],
+  casual: [["genre", "casual"]],
+  rhythm: [["genre", "music"]],
+  music: [["genre", "music"]],
+  puzzle: [["genre", "puzzle"]],
+  racing: [["genre", "racing"], ["core_mechanic", "driving"]],
+  driving: [["core_mechanic", "driving"]],
+  rpg: [["genre", "rpg"]],
+  "action rpg": [["genre", "rpg"], ["genre", "action"]],
+  jrpg: [["genre", "rpg"]],
+  "turn-based": [["core_mechanic", "turn_based_combat"]],
+  "turn-based combat": [["core_mechanic", "turn_based_combat"]],
+  "turn-based strategy": [["genre", "strategy"], ["core_mechanic", "turn_based_combat"]],
+  "real time tactics": [["genre", "strategy"], ["core_mechanic", "real_time_combat"]],
+  rts: [["genre", "strategy"], ["core_mechanic", "real_time_combat"]],
+  simulation: [["genre", "simulation"]],
+  sports: [["genre", "sports"]],
+  strategy: [["genre", "strategy"]],
+  trivia: [["genre", "trivia"]],
+  "word game": [["genre", "word"], ["core_mechanic", "word_building"]],
+  "match 3": [["subgenre", "match_3"], ["core_mechanic", "matching"]],
+  "hidden object": [["subgenre", "hidden_object"]],
+  solitaire: [["subgenre", "solitaire"]],
+  "tower defense": [["subgenre", "tower_defense"], ["core_mechanic", "tower_placement"]],
+  "4x": [["subgenre", "four_x"]],
+  moba: [["subgenre", "moba"], ["multiplayer_mode", "pvp"]],
+  "battle royale": [["subgenre", "battle_royale"], ["multiplayer_mode", "pvp"]],
+  roguelike: [["subgenre", "roguelike"]],
+  roguelite: [["subgenre", "roguelike"]],
+  "rogue-like": [["subgenre", "roguelike"]],
+  "rogue-lite": [["subgenre", "roguelike"]],
+  "tycoon": [["subgenre", "tycoon"]],
+  "farming sim": [["subgenre", "farming"]],
+  "city builder": [["subgenre", "city_builder"]],
+  "colony sim": [["subgenre", "city_builder"]],
+  platformer: [["subgenre", "platformer"]],
+  "2d platformer": [["subgenre", "platformer"]],
+  "3d platformer": [["subgenre", "platformer"]],
+  "endless runner": [["subgenre", "endless_runner"], ["core_mechanic", "running"]],
+  idler: [["core_mechanic", "idle_progression"]],
+  incremental: [["core_mechanic", "idle_progression"]],
+  clicker: [["core_mechanic", "idle_progression"]],
+  deckbuilder: [["core_mechanic", "deckbuilding"]],
+  "auto battler": [["core_mechanic", "auto_battle"]],
+  "base building": [["core_mechanic", "base_building"]],
+  crafting: [["core_mechanic", "crafting"]],
+  physics: [["core_mechanic", "physics"]],
+  shooter: [["core_mechanic", "shooting"]],
+  fps: [["core_mechanic", "shooting"]],
+  "third-person shooter": [["core_mechanic", "shooting"]],
+  "top-down shooter": [["core_mechanic", "shooting"]],
+  "hack and slash": [["core_mechanic", "real_time_combat"]],
+  "character action game": [["core_mechanic", "real_time_combat"]],
+  "story rich": [["meta_mechanic", "story_progression"]],
+  "gacha": [["meta_mechanic", "gacha"]],
+  collectathon: [["meta_mechanic", "collection"]],
+  fantasy: [["theme", "fantasy"]],
+  "dark fantasy": [["theme", "fantasy"]],
+  "sci-fi": [["theme", "sci_fi"]],
+  cyberpunk: [["theme", "sci_fi"]],
+  futuristic: [["theme", "sci_fi"]],
+  mechs: [["theme", "sci_fi"]],
+  anime: [["theme", "anime"]],
+  military: [["theme", "military"]],
+  "world war ii": [["theme", "military"]],
+  medieval: [["theme", "medieval"]],
+  horror: [["theme", "horror"]],
+  "survival horror": [["theme", "horror"]],
+  zombies: [["theme", "zombie"]],
+  cooking: [["theme", "food"]],
+  "food": [["theme", "food"]],
+  animals: [["theme", "animals"]],
+  space: [["theme", "space"]],
+  "space sim": [["theme", "space"]],
+  pirates: [["theme", "pirates"]],
+  mythology: [["theme", "mythology"]],
+  "singleplayer": [["multiplayer_mode", "single_player"]],
+  "pvp": [["multiplayer_mode", "pvp"]],
+  "co-op": [["multiplayer_mode", "co_op"]],
+  "online co-op": [["multiplayer_mode", "co_op"]],
+  "local co-op": [["multiplayer_mode", "co_op"]],
+  mmorpg: [["genre", "rpg"], ["multiplayer_mode", "mmo"]],
+  "massively multiplayer": [["multiplayer_mode", "mmo"]],
+  "free to play": [["monetization_clue", "free_to_play"]],
 };
 
 const w = (source: string) => new RegExp(`\\b(?:${source})\\b`, "gi");
@@ -155,6 +260,7 @@ export function applyRules(input: ClassificationInput): RuleLabel[] {
     ...storeGenreHits(listing),
     ...priceHits(listing),
     ...keywordHits(listing),
+    ...steamTagHits(listing),
   ]);
   return mergeHits(hits);
 }
@@ -173,6 +279,18 @@ function storeGenreHits(listing: ClassificationListing): Hit[] {
       },
     ];
   });
+}
+
+function steamTagHits(listing: ClassificationListing): Hit[] {
+  return (listing.storeTags ?? []).flatMap((tag) =>
+    (STEAM_TAGS[tag.trim().toLowerCase()] ?? []).map(([type, slug]) => ({
+      type,
+      slug,
+      confidence: STEAM_TAG_CONFIDENCE,
+      evidence: { field: "store_category" as const, excerpt: `Steam tag: ${tag}` },
+      ruleId: "steam.tag",
+    })),
+  );
 }
 
 function priceHits(listing: ClassificationListing): Hit[] {
@@ -238,7 +356,7 @@ function excerptAround(text: string, index: number): string {
 }
 
 function storeName(listing: ClassificationListing): string {
-  return platformLabel(listing.store);
+  return listing.store === "steam" ? "Steam" : platformLabel(listing.store);
 }
 
 /** One label per (type, slug): the strongest confidence wins; evidence is kept, deduplicated. */
@@ -276,5 +394,6 @@ export function ruleLabelRefs(): LabelRef[] {
   refs.set("monetization_clue:premium", ["monetization_clue", "premium"]);
   refs.set("monetization_clue:free_to_play", ["monetization_clue", "free_to_play"]);
   for (const rule of KEYWORD_RULES) for (const ref of rule.labels) refs.set(`${ref[0]}:${ref[1]}`, ref);
+  for (const tagRefs of Object.values(STEAM_TAGS)) for (const ref of tagRefs) refs.set(`${ref[0]}:${ref[1]}`, ref);
   return [...refs.values()];
 }

@@ -59,4 +59,15 @@ describe("applyRules", () => {
     assert.equal(sort?.confidence, 0.8);
     assert.equal(sort?.evidence.length, 2);
   });
+  it("maps Steam tags with reduced confidence and leaves unknown tags out", () => {
+    const labels = labelsOf([
+      listing({ store: "steam", storeTags: ["Roguelike", "Deckbuilder", "Co-op", "Very Positive Vibes"], price: 0 }),
+    ]);
+    const bySlug = new Map(labels.map((l) => [l.slug, l]));
+    assert.equal(bySlug.get("roguelike")?.confidence, 0.75);
+    assert.equal(bySlug.get("deckbuilding")?.confidence, 0.75);
+    assert.equal(bySlug.get("co_op")?.confidence, 0.75);
+    assert.equal(bySlug.get("roguelike")?.evidence[0]?.excerpt, "Steam tag: Roguelike");
+    assert.equal(bySlug.get("free_to_play")?.evidence[0]?.excerpt, "Steam US price: 0");
+  });
 });

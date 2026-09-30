@@ -86,3 +86,10 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           STEAM_WEB_API_KEY: ${{ secrets.STEAM_WEB_API_KEY }}
+
+      - name: Classify Steam games with rules
+        if: ${{ !cancelled() && !inputs.source }}
+        timeout-minutes: 10
+        run: npm run classify-steam --workspace @analytic-dashboard/collector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
