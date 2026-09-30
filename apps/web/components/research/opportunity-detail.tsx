@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { platformLabel } from "@analytic-dashboard/shared";
+import type { StudioFitResult } from "@analytic-dashboard/analytics";
 
 import { formatCount, formatRelative } from "@/lib/format/format";
 import { countryLabels } from "@/lib/overview/filters";
@@ -10,6 +11,8 @@ import {
   type OpportunityDetailView,
 } from "@/lib/research/detail-view-model";
 import { cn } from "@/lib/utils";
+import { capabilityLabels, monetizationLabels, type StudioProfileView } from "@/lib/research/studio-profile";
+import type { ResearchBriefView } from "@/lib/research/research-brief-view";
 
 import { EmptyState, Panel } from "../overview/panel";
 import { DecisionForm } from "./decision-form";
@@ -42,14 +45,13 @@ function rawValue(key: OpportunityDetailView["components"][number]["key"], value
 
 function SummaryCards({ view }: { view: OpportunityDetailView }) {
   const cards = [
-    { label: "Opportunity Score", value: view.score === null ? "Pending" : Math.round(view.score).toString() },
     { label: "Research Confidence", value: `${Math.round(view.confidence * 100)}%`, detail: view.confidenceBand },
     { label: "Observed cohort", value: `${view.memberCount}`, detail: "tracked games" },
     { label: "History", value: view.historyDays === null ? "—" : `${view.historyDays.toFixed(1)}d`, detail: `${view.windowDays}-day window` },
     { label: "Score coverage", value: percent(view.weightCoverage), detail: "measurable weight" },
   ];
   return (
-    <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {cards.map((card) => (
         <div key={card.label} className="rounded-[10px] border border-line bg-surface p-4">
           <dt className="text-[11px] uppercase tracking-wider text-dim">{card.label}</dt>
@@ -58,6 +60,70 @@ function SummaryCards({ view }: { view: OpportunityDetailView }) {
         </div>
       ))}
     </dl>
+  );
+}
+
+function RecommendationPanel({
+  view,
+  profile,
+  studioFit,
+}: {
+  view: OpportunityDetailView;
+  profile: StudioProfileView | null;
+  studioFit: StudioFitResult | null;
+}) {
+  const value = (score: number | null | undefined) => score == null ? "Pending" : Math.round(score).toString();
+  return (
+    <Panel
+      title="Recommendation Priority"
+      description="Market attractiveness and studio feasibility stay separate · recommendation_priority_v1"
+      action={<Link href="/settings/studio-fit" className="text-xs text-accent underline-offset-2 hover:underline">Configure Studio Fit</Link>}
+    >
+      <div className="grid grid-cols-1 border-t border-line-soft md:grid-cols-3">
+        <div className="border-b border-line-soft p-4 md:border-b-0 md:border-r">
+          <p className="text-[11px] uppercase tracking-wider text-dim">Market Opportunity</p>
+          <p className="mt-2 text-3xl font-semibold">{value(view.score)}</p>
+          <p className="mt-1 text-xs text-dim">{view.formulaVersion} · storefront evidence</p>
+        </div>
+        <div className="border-b border-line-soft p-4 md:border-b-0 md:border-r">
+          <p className="text-[11px] uppercase tracking-wider text-dim">Studio Fit</p>
+          <p className="mt-2 text-3xl font-semibold">{value(studioFit?.score)}</p>
+          <p className="mt-1 text-xs text-dim">
+            {profile ? `profile v${profile.version} · ${Math.round((studioFit?.coverage ?? 0) * 100)}% measurable` : "profile not configured"}
+          </p>
+        </div>
+        <div className="p-4">
+          <p className="text-[11px] uppercase tracking-wider text-dim">Recommendation Priority</p>
+          <p className="mt-2 text-3xl font-semibold text-accent">{value(studioFit?.recommendationPriority)}</p>
+          <p className="mt-1 text-xs text-dim">65% market · 35% fit · requires both scores</p>
+        </div>
+      </div>
+      {!profile ? (
+        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-xs text-ink-soft">Configure the studio profile before feasibility can be measured.</p>
+      ) : studioFit?.reason ? (
+        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-xs text-ink-soft">Studio Fit pending: {studioFit.reason}.</p>
+      ) : null}
+      {profile && studioFit ? (
+        <div className="grid grid-cols-1 border-t border-line-soft xl:grid-cols-2">
+          <div className="p-4 xl:border-r xl:border-line-soft">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Measured fit</p>
+            <ul className="mt-2 flex flex-col gap-2 text-xs leading-5 text-ink-soft">
+              {studioFit.components.map((component) => (
+                <li key={component.key} className="flex justify-between gap-4"><span>{component.evidence}</span><span>{component.value === null ? "—" : percent(component.value)}</span></li>
+              ))}
+            </ul>
+            {studioFit.gaps.length > 0 ? <div className="mt-3"><Lines lines={studioFit.gaps} empty="" tone="text-down" /></div> : null}
+          </div>
+          <div className="p-4">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Profile context</p>
+            <p className="mt-2 text-xs leading-5 text-ink-soft">{profile.teamSize} people · {profile.targetDurationMonths} month target · 2D {capabilityLabels[profile.capability2d]} · 3D {capabilityLabels[profile.capability3d]}</p>
+            <p className="mt-1 text-xs leading-5 text-ink-soft">Backend {capabilityLabels[profile.onlineBackendCapability]} · Content {capabilityLabels[profile.contentProductionCapability]} · Live-ops {capabilityLabels[profile.liveOpsCapability]}</p>
+            <p className="mt-1 text-xs leading-5 text-dim">Monetization: {profile.monetizationCapabilities.length === 0 ? "not configured" : profile.monetizationCapabilities.map((item) => monetizationLabels[item]).join(", ")}</p>
+            <p className="mt-3 text-[11px] leading-5 text-dim">{studioFit.caveats[0]}</p>
+          </div>
+        </div>
+      ) : null}
+    </Panel>
   );
 }
 
@@ -208,7 +274,95 @@ function DecisionPanel({ view }: { view: OpportunityDetailView }) {
   );
 }
 
-export function OpportunityDetail({ view, now }: { view: OpportunityDetailView; now: Date }) {
+function CitationLinks({ ids }: { ids: string[] }) {
+  return (
+    <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
+      {ids.map((id) => (
+        <a key={id} href={`#evidence-${id}`} className="rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
+          {id}
+        </a>
+      ))}
+    </span>
+  );
+}
+
+function ResearchBriefPanel({ brief, score }: { brief: ResearchBriefView | null; score: number | null }) {
+  if (!brief) {
+    return (
+      <Panel title="AI Research Brief" description="Generated asynchronously from stored evidence only">
+        <EmptyState title={score === null ? "Brief waits for a measurable market signal" : "Brief has not been generated yet"}>
+          {score === null
+            ? "The AI job will not turn a pending opportunity into a recommendation."
+            : "The scheduled research job will draft a cited brief without blocking this page."}
+        </EmptyState>
+      </Panel>
+    );
+  }
+  return (
+    <Panel title="AI Research Brief" description={`${brief.promptVersion} · ${brief.model} · generated ${formatDate(brief.createdAt)} UTC`}>
+      <div className="border-t border-line-soft p-4">
+        <p className="text-sm leading-6 text-ink">{brief.summary.text}<CitationLinks ids={brief.summary.evidenceIds} /></p>
+        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-up">Opportunity signals</p>
+            <ul className="mt-2 flex flex-col gap-2 text-xs leading-5 text-ink-soft">
+              {brief.opportunitySignals.map((item) => (
+                <li key={`${item.text}:${item.evidenceIds.join()}`} className="border-l border-up/40 pl-3">{item.text}<CitationLinks ids={item.evidenceIds} /></li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-down">Counter-signals</p>
+            {brief.counterSignals.length === 0 ? <p className="mt-2 text-xs text-dim">No additional counter-signal was drafted.</p> : (
+              <ul className="mt-2 flex flex-col gap-2 text-xs leading-5 text-ink-soft">
+                {brief.counterSignals.map((item) => (
+                  <li key={`${item.text}:${item.evidenceIds.join()}`} className="border-l border-down/40 pl-3">{item.text}<CitationLinks ids={item.evidenceIds} /></li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-line-soft p-4">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Validation questions</p>
+        <ol className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {brief.validationQuestions.map((item, index) => (
+            <li key={`${item.question}:${item.evidenceIds.join()}`} className="rounded-md border border-line-soft bg-surface-alt p-3">
+              <p className="text-xs font-medium text-ink">{index + 1}. {item.question}</p>
+              <p className="mt-1 text-xs leading-5 text-dim">{item.why}<CitationLinks ids={item.evidenceIds} /></p>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <details className="border-t border-line-soft p-4">
+        <summary className="cursor-pointer text-xs font-medium text-accent">View supplied evidence registry</summary>
+        <dl className="mt-3 grid grid-cols-1 gap-2 xl:grid-cols-2">
+          {brief.evidence.map((item) => (
+            <div id={`evidence-${item.id}`} key={item.id} className="rounded-md border border-line-soft bg-surface-alt p-3 text-xs">
+              <dt className="font-medium text-ink">{item.label} <span className="font-normal text-accent">{item.id}</span></dt>
+              <dd className="mt-1 leading-5 text-dim">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+      <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-[11px] leading-5 text-ink-soft">AI summarizes supplied evidence; it does not alter the score or the team decision and is not a forecast of commercial success.</p>
+    </Panel>
+  );
+}
+
+export function OpportunityDetail({
+  view,
+  profile,
+  studioFit,
+  brief,
+  now,
+}: {
+  view: OpportunityDetailView;
+  profile: StudioProfileView | null;
+  studioFit: StudioFitResult | null;
+  brief: ResearchBriefView | null;
+  now: Date;
+}) {
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -225,7 +379,10 @@ export function OpportunityDetail({ view, now }: { view: OpportunityDetailView; 
         </div>
       </div>
 
+      <RecommendationPanel view={view} profile={profile} studioFit={studioFit} />
       <SummaryCards view={view} />
+
+      <ResearchBriefPanel brief={brief} score={view.score} />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="flex flex-col gap-4 xl:col-span-8">

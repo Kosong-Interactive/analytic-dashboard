@@ -26,6 +26,20 @@ npm run research --workspace @analytic-dashboard/collector -- --dry-run
 npm run research --workspace @analytic-dashboard/collector -- --country id
 ```
 
+AI research briefs are generated only for scored opportunities. `--plan` is read-only and does not
+call Gemini or print evidence. `--dry-run` does call Gemini and sends the bounded evidence registry,
+but writes no rows. A normal run stores the validated brief and exact evidence snapshot.
+
+```bash
+npm run research-brief --workspace @analytic-dashboard/collector -- --plan
+npm run research-brief --workspace @analytic-dashboard/collector -- --dry-run --limit 1
+npm run research-brief --workspace @analytic-dashboard/collector -- --limit 10
+```
+
+The scheduled brief step is disabled by default. After explicit approval to send opportunity
+evidence to Gemini, add the GitHub Actions repository variable `ENABLE_RESEARCH_BRIEFS=true`.
+The existing `GEMINI_API_KEY` secret is reused.
+
 ## Database
 
 ```bash

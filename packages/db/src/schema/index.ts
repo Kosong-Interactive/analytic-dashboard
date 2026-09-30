@@ -482,6 +482,79 @@ export const opportunityDecisions = pgTable(
   ],
 ).enableRLS();
 
+/** Append-only, versioned studio capability profile used by deterministic Studio Fit scoring. */
+export const studioProfiles = pgTable(
+  "studio_profiles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    profileKey: text("profile_key").default("default").notNull(),
+    version: integer("version").notNull(),
+    teamSize: integer("team_size").notNull(),
+    targetDurationMonths: integer("target_duration_months").notNull(),
+    supportedPlatforms: jsonb("supported_platforms").notNull(),
+    inputMethods: jsonb("input_methods").notNull(),
+    capability2d: text("capability_2d").notNull(),
+    capability3d: text("capability_3d").notNull(),
+    onlineBackendCapability: text("online_backend_capability").notNull(),
+    contentProductionCapability: text("content_production_capability").notNull(),
+    liveOpsCapability: text("live_ops_capability").notNull(),
+    monetizationCapabilities: jsonb("monetization_capabilities").notNull(),
+    preferredLabels: jsonb("preferred_labels").notNull(),
+    avoidedLabels: jsonb("avoided_labels").notNull(),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("studio_profiles_key_version_uidx").on(table.profileKey, table.version),
+    index("studio_profiles_latest_idx").on(table.profileKey, table.version),
+    check("studio_profiles_version_positive_chk", sql`${table.version} > 0`),
+    check("studio_profiles_team_size_positive_chk", sql`${table.teamSize} > 0 and ${table.teamSize} <= 500`),
+    check(
+      "studio_profiles_duration_range_chk",
+      sql`${table.targetDurationMonths} > 0 and ${table.targetDurationMonths} <= 120`,
+    ),
+    check(
+      "studio_profiles_capability_levels_chk",
+      sql`${table.capability2d} in ('none', 'basic', 'strong') and ${table.capability3d} in ('none', 'basic', 'strong') and ${table.onlineBackendCapability} in ('none', 'basic', 'strong') and ${table.contentProductionCapability} in ('none', 'basic', 'strong') and ${table.liveOpsCapability} in ('none', 'basic', 'strong')`,
+    ),
+  ],
+).enableRLS();
+
+/** Append-only AI brief over one immutable opportunity and a bounded evidence snapshot. */
+export const opportunityResearchBriefs = pgTable(
+  "opportunity_research_briefs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => marketOpportunities.id, { onDelete: "cascade" }),
+    inputHash: text("input_hash").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    model: text("model").notNull(),
+    brief: jsonb("brief").notNull(),
+    evidence: jsonb("evidence").notNull(),
+    inputTokens: integer("input_tokens").notNull(),
+    outputTokens: integer("output_tokens").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("opportunity_research_briefs_input_uidx").on(
+      table.opportunityId,
+      table.promptVersion,
+      table.inputHash,
+    ),
+    index("opportunity_research_briefs_latest_idx").on(table.opportunityId, table.createdAt),
+    check(
+      "opportunity_research_briefs_tokens_nonnegative_chk",
+      sql`${table.inputTokens} >= 0 and ${table.outputTokens} >= 0`,
+    ),
+  ],
+).enableRLS();
+
 export const collectorRuns = pgTable(
   "collector_runs",
   {

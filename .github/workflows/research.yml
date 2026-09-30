@@ -43,3 +43,12 @@ jobs:
         run: npm run research --workspace @analytic-dashboard/collector
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Generates only from scored, stored opportunity evidence. Missing API key is a clean skip.
+      - name: Generate cited AI research briefs
+        if: ${{ vars.ENABLE_RESEARCH_BRIEFS == 'true' }}
+        timeout-minutes: 10
+        run: npm run research-brief --workspace @analytic-dashboard/collector -- --limit 10
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -14,6 +14,7 @@ import { config as loadEnv } from "dotenv";
 
 import { runRuleClassification, type ClassificationStore } from "../jobs/classification.js";
 import { getRepositoryRoot } from "../runtime/config.js";
+import { traceStep } from "../runtime/trace-step.js";
 
 /** Taxonomy files are versioned; older ones stay so earlier labels remain explainable. */
 export const ACTIVE_TAXONOMY = "config/taxonomy/v1.json";
@@ -42,9 +43,9 @@ export async function runClassifyCommand(argv: string[]): Promise<number> {
     // A dry run still reads real inputs and hashes, but never writes.
     syncTaxonomy: dryRun
       ? async (_version, labels) => new Map(labels.map((l) => [`${l.type}:${l.slug}`, `${l.type}:${l.slug}`]))
-      : (taxonomyVersion, labels) => syncTaxonomyLabels(db, { taxonomyVersion, labels }),
-    loadInputs: () => loadClassificationInputs(db),
-    loadRuleInputHashes: (version) => loadRuleInputHashes(db, version),
+      : traceStep("classification.rules.step", "syncTaxonomy", (taxonomyVersion, labels) => syncTaxonomyLabels(db, { taxonomyVersion, labels })),
+    loadInputs: traceStep("classification.rules.step", "loadInputs", () => loadClassificationInputs(db)),
+    loadRuleInputHashes: traceStep("classification.rules.step", "loadInputHashes", (version: string) => loadRuleInputHashes(db, version)),
     replaceRuleLabels: dryRun
       ? async (input) => ({ written: input.labels.length, removed: 0 })
       : (input) => replaceRuleLabels(db, input),

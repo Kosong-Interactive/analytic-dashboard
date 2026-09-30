@@ -111,3 +111,17 @@ export {
   type StoredOpportunity,
   type StoredOpportunityPreview,
 } from "./repositories/research";
+export {
+  createStudioProfileVersion,
+  loadLatestStudioProfile,
+  type StudioCapabilityLevel,
+  type StudioProfileInput,
+  type StudioProfileRow,
+} from "./repositories/studio-profiles";
+export {
+  loadLatestResearchBrief,
+  loadResearchBriefCandidates,
+  loadResearchBriefInputHashes,
+  recordResearchBrief,
+  type ResearchBriefRow,
+} from "./repositories/research-briefs";

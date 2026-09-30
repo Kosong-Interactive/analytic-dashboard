@@ -1,6 +1,6 @@
 # Next Development Plan
 
-Updated: 2026-09-29
+Updated: 2026-09-30
 
 This document records the approved direction after the current dashboard is complete. It is
 intentionally separate from the active MVP work so that unfinished dashboard pages are not
@@ -257,6 +257,10 @@ Planned tables:
 - `research_runs` — formula/taxonomy versions, platform/market/window, freshness, and run status;
 - `market_opportunities` — combination, scores, confidence, evidence, risks, and versioned result;
 - `opportunity_decisions` — status, actor, owner, notes, and timestamps.
+- `studio_profiles` — append-only versions of explicit team constraints, capabilities, and
+  preferred/avoided taxonomy directions.
+- `opportunity_research_briefs` — append-only, input-hashed AI briefs with prompt/model provenance,
+  token counts, validated output, and the exact bounded evidence registry supplied to the model.
 
 Preserve historical recommendations instead of overwriting them. Run research once daily after
 collection and classification, at a non-round minute. Re-running the same input/version must be
@@ -270,10 +274,28 @@ idempotent.
 4. AI-authored research brief constrained to stored evidence.
 5. 30/90-day durability, acceleration, history, and material-change alerts.
 
-Stages 1 and 2 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation view,
-comparable-game evidence, risks and caveats, and append-only Shortlist/Reject/Prototype decisions
-with actor, optional owner, note, and timestamp. Migration `0004` adds `opportunity_decisions` with
-RLS enabled and no browser policy; writes go through an authenticated Server Action.
+Stages 1 through 4 are implemented. Stage 2 adds `/research/[id]`, a validated full-calculation
+view, comparable-game evidence, risks and caveats, and append-only Shortlist/Reject/Prototype
+decisions with actor, optional owner, note, and timestamp. Migration `0004` adds
+`opportunity_decisions` with RLS enabled and no browser policy; writes go through an authenticated
+Server Action.
+
+Stage 3 adds `/settings/studio-fit`, append-only profile versions in migration `0005`, and
+`studio_fit_v1`. The score uses only explicit platform support and preferred/avoided opportunity
+dimensions. Team size, schedule, art, backend, content, live-ops, input, and monetization remain
+visible profile context until opportunity evidence explicitly describes those requirements; the
+system does not infer them from a genre name. Market Opportunity and Studio Fit remain separate.
+`recommendation_priority_v1` is shown only when both are measurable and combines 65% Market
+Opportunity with 35% Studio Fit. These are planning signals, not forecasts of profitability.
+
+Stage 4 adds `research-brief-v1` and an asynchronous `research-brief` worker. Briefs are generated
+only for scored opportunities and every summary, signal, counter-signal, and validation question
+must cite an ID from the stored evidence registry. Unknown citations or malformed output are
+rejected. Migration `0006` stores briefs append-only with model/prompt/input-hash provenance and
+token usage. Research Detail exposes citations and the complete supplied registry; AI never changes
+the deterministic score or the team's decision. The GitHub Actions step requires the opt-in
+repository variable `ENABLE_RESEARCH_BRIEFS=true` because it sends bounded opportunity evidence to
+Gemini.
 
 ## Cross-platform and Steam readiness
 

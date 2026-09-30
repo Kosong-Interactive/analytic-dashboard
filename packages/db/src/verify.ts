@@ -30,6 +30,8 @@ const expectedTables = [
   "research_runs",
   "reviews",
   "store_apps",
+  "studio_profiles",
+  "opportunity_research_briefs",
   "taxonomy_labels",
   "watchlist_entries",
 ] as const;

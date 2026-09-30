@@ -2,6 +2,7 @@ import { runClassifyAiCommand } from "./commands/classify-ai.js";
 import { runClassifyCommand } from "./commands/classify.js";
 import { runDiscoverCommand } from "./commands/discover.js";
 import { runResearchCommand } from "./commands/research.js";
+import { runResearchBriefCommand } from "./commands/research-brief.js";
 import { createCollectorDescriptor } from "./descriptor.js";
 
 const [command = "info", ...args] = process.argv.slice(2);
@@ -57,6 +58,18 @@ if (command === "info") {
     console.error(
       JSON.stringify({
         event: "research.failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+    process.exitCode = 1;
+  }
+} else if (command === "research-brief") {
+  try {
+    process.exitCode = await runResearchBriefCommand(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "research.brief.failed",
         message: error instanceof Error ? error.message : "Unknown error",
       }),
     );

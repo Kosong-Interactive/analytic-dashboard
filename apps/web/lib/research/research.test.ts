@@ -13,6 +13,8 @@ import {
   type StoredOpportunityDecisionInput,
   type StoredOpportunityDetailInput,
 } from "./detail-view-model";
+import { storedStudioProfileSchema, studioProfileSchema } from "./studio-profile";
+import { buildResearchBriefView } from "./research-brief-view";
 
 const asOf = new Date("2026-10-10T02:00:00Z");
 
@@ -231,5 +233,79 @@ describe("opportunityDecisionSchema", () => {
 
   it("rejects invalid ids and decision states", () => {
     assert.equal(opportunityDecisionSchema.safeParse({ opportunityId: "bad", status: "maybe", note: "", owner: "" }).success, false);
+  });
+});
+
+const studioProfile = {
+  teamSize: "6",
+  targetDurationMonths: "9",
+  supportedPlatforms: ["google_play"],
+  inputMethods: ["touch"],
+  capability2d: "strong",
+  capability3d: "basic",
+  onlineBackendCapability: "none",
+  contentProductionCapability: "strong",
+  liveOpsCapability: "basic",
+  monetizationCapabilities: ["ads", "in_app_purchases"],
+  preferredLabels: ["genre:puzzle"],
+  avoidedLabels: ["theme:horror"],
+};
+
+describe("studioProfileSchema", () => {
+  it("coerces numeric form fields and keeps explicit team constraints", () => {
+    const parsed = studioProfileSchema.parse(studioProfile);
+    assert.equal(parsed.teamSize, 6);
+    assert.equal(parsed.targetDurationMonths, 9);
+    assert.deepEqual(parsed.preferredLabels, ["genre:puzzle"]);
+  });
+
+  it("rejects a direction selected as both preferred and avoided", () => {
+    const parsed = studioProfileSchema.safeParse({
+      ...studioProfile,
+      avoidedLabels: ["genre:puzzle"],
+    });
+    assert.equal(parsed.success, false);
+  });
+
+  it("validates stored version metadata without dropping overlap validation", () => {
+    const parsed = storedStudioProfileSchema.safeParse({
+      ...studioProfile,
+      id: "00000000-0000-4000-8000-000000000001",
+      version: 1,
+      createdBy: "team@example.com",
+      createdAt: new Date("2026-09-30T00:00:00Z"),
+    });
+    assert.equal(parsed.success, true);
+  });
+});
+
+describe("buildResearchBriefView", () => {
+  const storedBrief = {
+    id: "brief-1",
+    promptVersion: "research-brief-v1",
+    model: "fake-model",
+    createdAt: new Date("2026-09-30T00:00:00Z"),
+    evidence: [
+      { id: "market.score", label: "Market Opportunity", value: "78 of 100" },
+      { id: "research.confidence", label: "Research Confidence", value: "65%" },
+      { id: "risk.1", label: "Counter-signal", value: "Competition exists" },
+    ],
+    brief: {
+      summary: { text: "Validate this signal.", evidenceIds: ["market.score"] },
+      opportunitySignals: [{ text: "The score is promising.", evidenceIds: ["market.score"] }],
+      counterSignals: [{ text: "Competition exists.", evidenceIds: ["risk.1"] }],
+      validationQuestions: [
+        { question: "Is the signal durable?", why: "Confidence is not high.", evidenceIds: ["research.confidence"] },
+        { question: "Can the concept differentiate?", why: "Competition exists.", evidenceIds: ["risk.1"] },
+      ],
+    },
+  };
+
+  it("shows a stored brief only when every citation resolves", () => {
+    assert.equal(buildResearchBriefView(storedBrief)?.summary.text, "Validate this signal.");
+    assert.equal(
+      buildResearchBriefView({ ...storedBrief, brief: { ...storedBrief.brief, summary: { text: "Bad", evidenceIds: ["revenue.estimate"] } } }),
+      null,
+    );
   });
 });

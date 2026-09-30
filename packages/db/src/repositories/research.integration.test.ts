@@ -12,6 +12,8 @@ import {
   recordResearchRun,
   type OpportunityRowInput,
 } from "./research";
+import { createStudioProfileVersion, loadLatestStudioProfile } from "./studio-profiles";
+import { loadLatestResearchBrief, loadResearchBriefInputHashes, recordResearchBrief } from "./research-briefs";
 
 // Needs a migrated PostgreSQL. Every test rolls back, so nothing is left behind.
 const connectionString = process.env.TEST_DATABASE_URL;
@@ -149,6 +151,72 @@ describe("research repository", { skip: connection === null }, () => {
       assert.equal(decisions.length, 1);
       assert.equal(decisions[0]?.status, "shortlisted");
       assert.equal(decisions[0]?.actor, "tester@example.com");
+    });
+  });
+
+  it("appends studio profile versions and loads only the latest", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const baseProfile = {
+        teamSize: 5,
+        targetDurationMonths: 8,
+        supportedPlatforms: ["google_play"],
+        inputMethods: ["touch"],
+        capability2d: "strong" as const,
+        capability3d: "none" as const,
+        onlineBackendCapability: "basic" as const,
+        contentProductionCapability: "strong" as const,
+        liveOpsCapability: "basic" as const,
+        monetizationCapabilities: ["ads"],
+        preferredLabels: ["genre:puzzle"],
+        avoidedLabels: [],
+        createdBy: "tester@example.com",
+      };
+      const first = await createStudioProfileVersion(tx, baseProfile, "integration-test");
+      const second = await createStudioProfileVersion(
+        tx,
+        { ...baseProfile, teamSize: 7, createdBy: "lead@example.com" },
+        "integration-test",
+      );
+
+      assert.equal(first.version, 1);
+      assert.equal(second.version, 2);
+      const latest = await loadLatestStudioProfile(tx, "integration-test");
+      assert.equal(latest?.version, 2);
+      assert.equal(latest?.teamSize, 7);
+      assert.equal(latest?.createdBy, "lead@example.com");
+    });
+  });
+
+  it("stores a cited AI brief idempotently and loads the latest version", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-01T02:00:00Z"), inputHash: "brief-source" },
+        opportunities: [opportunity("brief-puzzle", 76)],
+      });
+      const latest = await loadLatestOpportunities(tx, {
+        stores: ["google_play"],
+        country: "id",
+        formulaVersion: "opportunity-test",
+        limit: 5,
+      });
+      const opportunityId = latest.opportunities[0]?.id;
+      assert.ok(opportunityId);
+      const input = {
+        opportunityId,
+        inputHash: "brief-input-hash",
+        promptVersion: "research-brief-test",
+        model: "fake-model",
+        brief: { summary: { text: "Validate this signal", evidenceIds: ["market.score"] } },
+        evidence: [{ id: "market.score", label: "Market Opportunity", value: "76 of 100" }],
+        inputTokens: 100,
+        outputTokens: 20,
+      };
+      assert.equal(await recordResearchBrief(tx, input), true);
+      assert.equal(await recordResearchBrief(tx, input), false);
+      const hashes = await loadResearchBriefInputHashes(tx, "research-brief-test", [opportunityId]);
+      assert.equal(hashes.has(`${opportunityId}:brief-input-hash`), true);
+      const brief = await loadLatestResearchBrief(tx, opportunityId);
+      assert.equal(brief?.model, "fake-model");
     });
   });
 });

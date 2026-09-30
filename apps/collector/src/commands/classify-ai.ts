@@ -15,6 +15,7 @@ import { z } from "zod";
 
 import { runAiClassification, type AiClassificationStore } from "../jobs/ai-classification.js";
 import { getRepositoryRoot } from "../runtime/config.js";
+import { traceStep } from "../runtime/trace-step.js";
 import { ACTIVE_TAXONOMY } from "./classify.js";
 
 const optionsSchema = z.object({
@@ -59,9 +60,9 @@ export async function runClassifyAiCommand(argv: string[]): Promise<number> {
   const store: AiClassificationStore = {
     syncTaxonomy: dryRun
       ? async (_version, labels) => new Map(labels.map((l) => [`${l.type}:${l.slug}`, `${l.type}:${l.slug}`]))
-      : (taxonomyVersion, labels) => syncTaxonomyLabels(db, { taxonomyVersion, labels }),
-    loadInputs: () => loadClassificationInputs(db),
-    loadAiInputHashes: (version) => loadInputHashes(db, "ai", version),
+      : traceStep("classification.ai.step", "syncTaxonomy", (taxonomyVersion, labels) => syncTaxonomyLabels(db, { taxonomyVersion, labels })),
+    loadInputs: traceStep("classification.ai.step", "loadInputs", () => loadClassificationInputs(db)),
+    loadAiInputHashes: traceStep("classification.ai.step", "loadInputHashes", (version: string) => loadInputHashes(db, "ai", version)),
     replaceAiLabels: dryRun
       ? async (input) => ({ written: input.labels.length, removed: 0 })
       : (input) =>

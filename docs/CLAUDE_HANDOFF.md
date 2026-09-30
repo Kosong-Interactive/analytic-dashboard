@@ -1,6 +1,6 @@
 # Claude Handoff
 
-Updated: 2026-09-29
+Updated: 2026-09-30
 
 This is the bootstrap document for a new Claude session with no previous chat context. Read this
 file, `AGENTS.md`, all relevant `.claude/rules/*.md`, and `docs/MVP_IMPLEMENTATION_PLAN.md` before
@@ -8,28 +8,19 @@ changing code. Do not assume the working tree is clean.
 
 ## Immediate instruction from the user
 
-Finish every existing dashboard menu before starting the next-generation research features or
-deploying to Vercel.
+The existing dashboard menus are complete and Automated Game Research is now the active workstream.
+Stages 1 and 2 are committed; Stages 3 and 4 are the current local changes. The next approved stage
+is 30/90-day durability and material-change alerts. Deployment to Vercel is handled separately by
+the user.
 
-Work order:
-
-1. Games / Explorer.
-2. Watchlist.
-3. Compare.
-4. Search / command palette.
-5. Final navigation, responsive, accessibility, and browser-flow pass.
-6. Only then start Automated Game Research and Steam/cross-platform work.
-7. Deploy to Vercel after the dashboard menus are complete.
-
-The approved future product direction is documented in `docs/NEXT_DEVELOPMENT_PLAN.md`. Do not
-implement that roadmap early. The product is now conceptually **Game Market Intelligence**, not a
-mobile-only product, but Steam must not appear as an active filter before its collector and real
-observations exist.
+The approved product direction is documented in `docs/NEXT_DEVELOPMENT_PLAN.md`. The product is
+conceptually **Game Market Intelligence**, not mobile-only, but Steam must not appear as an active
+filter before its collector and real observations exist.
 
 ## Repository and runtime
 
 - Repository: `git@github.com:Kosong-Interactive/analytic-dashboard.git`.
-- Current branch: `main`, tracking `origin/main`.
+- Current branch: `development`, tracking `origin/development`.
 - Package manager: npm with one root `package-lock.json`; never use pnpm.
 - Node: `22.23.3` in `.nvmrc`, minimum `22.12.0`. Run `nvm use` first.
 - Monorepo: npm workspaces + Turborepo.
@@ -60,9 +51,10 @@ Add Steam there, and to the database enum, only when its adapter and observation
 - Missing values remain missing; never turn them into zero.
 - Dashboard reads never trigger collection or classification.
 
-## Committed state on `main`
+## Current committed baseline
 
-Latest committed feature commit at handoff: `1cdbe78 feat: add manual label overrides on game detail`.
+Latest committed feature commit before the current uncommitted Stage 3 work:
+`b5552b4 feat: add research decision workflow`.
 
 ### Collection and persistence
 
@@ -173,9 +165,9 @@ spacing, model rotation, and token counts. Manual overrides are never touched.
 replaced the old `.agent/` folder); Claude Code reads `.claude/`. Keep skill text in sync between
 them. `.codex/` (reviewer agent configuration) is still untracked.
 
-## Newly approved future roadmap
+## Approved future roadmap
 
-`docs/NEXT_DEVELOPMENT_PLAN.md` is new and uncommitted. It records two user-approved plans:
+`docs/NEXT_DEVELOPMENT_PLAN.md` records two user-approved plans:
 
 1. **Automated Game Research** — deterministic Opportunity Score, separate Research Confidence,
    comparable-game evidence, counter-signals, studio fit, internal Shortlist/Reject/Prototype
@@ -210,7 +202,22 @@ priority over implementing them.
 - Migration `0004` (applied) adds append-only `opportunity_decisions`. The authenticated decision
   form records Shortlist/Reject/Prototype, actor, optional owner, note, and timestamp; earlier
   decisions remain visible as history.
-- Next stages: Studio Fit, AI research brief, and 30/90-day durability.
+- Stage 3 is implemented locally but not yet committed: `/settings/studio-fit` stores append-only
+  profile versions and `/research/[id]` displays Market Opportunity, Studio Fit, and Recommendation
+  Priority separately. `studio_fit_v1` scores only explicit platform support and preferred/avoided
+  taxonomy matches; it does not guess production requirements from labels. Migration `0005` adds
+  `studio_profiles` with RLS enabled and no browser policy; it has been applied and verified against
+  Supabase.
+- Stage 4 is implemented locally but not yet committed. `research-brief-v1` gives Gemini only a
+  bounded evidence registry and requires every statement/question to cite supplied evidence IDs.
+  Invalid or unknown citations are rejected. Migration `0006` adds append-only
+  `opportunity_research_briefs` with prompt/model/input-hash/token provenance and the exact evidence
+  snapshot; it is applied and verified against Supabase (16 tables, 7 migrations, no public
+  policies). Research Detail shows the brief, citation links, and expandable evidence registry.
+  The daily workflow step is gated by `ENABLE_RESEARCH_BRIEFS=true`; do not enable it without
+  explicit approval to send opportunity evidence to Gemini. Live `--plan` found 0 scored candidates,
+  so no model was called and no brief was written.
+- Next stage: 30/90-day durability, acceleration, history, and material-change alerts.
 
 ## Next work
 
@@ -222,14 +229,21 @@ priority over implementing them.
 3. Done: Research stage 2 detail and Shortlist/Reject/Prototype decision history.
    Remaining manual check: open one real detail page and save each decision state in the browser;
    automated tests and the production Webpack build pass, but the browser tool timed out at login.
-4. Research stage 3: configure Studio Fit and calculate Recommendation Priority separately from
-   Market Opportunity.
-5. Planned: replace **Global (US store)** with a **World** market built from several countries
+4. Research stage 3 automated checks pass locally and migration `0005` is applied. The desktop and
+   mobile Settings layout plus a real unscored Research Detail pending state were inspected in
+   Chrome with no console warnings/errors. Remaining manual step: save one intentional profile
+   version when the team is ready to enter real capabilities; no placeholder team profile was saved.
+5. Research stage 4 automated checks and live read-only planning pass. The real unscored Research
+   Detail empty state was inspected in Chrome at desktop and mobile sizes with no console
+   warnings/errors. Remaining: wait for scored opportunities, obtain explicit approval for Gemini
+   transmission, then run one low-volume live brief and inspect its citations in Chrome.
+6. Research stage 5: add 30/90-day durability, acceleration, history, and material-change alerts.
+7. Planned: replace **Global (US store)** with a **World** market built from several countries
    (see `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions). Mind the Google Play
    worldwide-metric double-counting note there.
-6. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
+8. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
    Steam as a data source, and the Steam delivery stages). Stage 1 is done.
-7. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
+9. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:
 
