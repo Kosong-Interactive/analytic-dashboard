@@ -215,7 +215,12 @@ priority over implementing them.
    2026-10-02/03), check that scored opportunities are sensible and review the card layout with
    real data.
 3. Research stage 2: `/research/[id]` with the full calculation and Shortlist/Reject/Prototype.
-4. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
+4. Planned: replace **Global (US store)** with a **World** market built from several countries
+   (see `docs/NEXT_DEVELOPMENT_PLAN.md` → Requested dashboard additions). Mind the Google Play
+   worldwide-metric double-counting note there.
+5. Next major feature: **Steam** as a third platform (see `docs/NEXT_DEVELOPMENT_PLAN.md` →
+   Steam as a data source, and the Steam delivery stages). Stage 1 is done.
+6. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 
 Design reference for current pages:
 

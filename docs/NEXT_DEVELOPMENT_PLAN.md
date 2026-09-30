@@ -73,6 +73,52 @@ carry that label in the selected storefront.
   summary header computed by the same roll-up as the Genres/Mechanics row, and a Label column
   showing rule/AI/manual and confidence. Each Genres/Mechanics label name links there.
 
+### World market from several countries (requested 2026-09-30, planned)
+
+Replace the **Global (US store)** market with **World**, built from several collected storefronts
+instead of using the US store as a proxy.
+
+- Stores never publish worldwide figures, so World is an aggregate of the storefronts this system
+  collects. Always show its coverage (e.g. "World · 8 countries") and never call it global or
+  complete.
+- Keep observations per country in storage (`store_apps` and snapshots stay country-scoped), and
+  build World at read or research time.
+- Do not sum raw metrics across countries. Google Play rating counts and install ranges are
+  worldwide per app, so adding them per country double-counts. App Store rating counts are per
+  storefront. Aggregate normalized signals instead (per-storefront percentiles, then a median or
+  coverage-weighted mean), and count a game once per platform.
+- Trend Score and Opportunity Score stay per storefront; World views combine normalized results
+  and report how many countries each game or cohort was observed in.
+- Candidate countries are to be decided by the team (for example us, gb, de, fr, br, jp, kr, in);
+  add them in `config/countries/enabled.json` and `supportedCountryCodes`. Indonesia stays its
+  own market.
+- Collection budget: every added country adds Apple search requests (about 22 seeds with 3-second
+  spacing) and Google Play chart requests. Check the 45-minute collection job limit, and split
+  the schedule by country if needed.
+- `.claude/rules/product-context.md` currently limits the MVP to Indonesia and the United States;
+  update it when this is implemented, since the team has now requested it.
+
+### Steam as a data source (requested 2026-09-30, next major feature)
+
+Collect Steam games as a third platform. The approved design is in **Cross-platform and Steam
+readiness** below; this request makes it the next large feature after the current dashboard items.
+
+- Stage 1 of that plan is done: platform-neutral product language and the platform capability
+  registry (`packages/shared/src/platforms.ts`).
+- Next: define Steam listing and observation contracts, then build a replaceable adapter in
+  `packages/collectors/src/steam/` with fixtures, throttling, caching, and a low-volume live
+  contract test. Evaluate sources before choosing one: the official Steam storefront and Web
+  API endpoints, and their rate limits and terms of use. Treat any third-party owner or player
+  figures as estimates with provenance, never as exact sales or downloads.
+- Steam observations are platform-specific (positive/negative reviews, review score, pricing and
+  discounts, chart rank where available). Never turn Steam sentiment into a five-star rating or
+  compare raw Steam review counts with mobile rating counts.
+- Steam is largely a single worldwide storefront, so its market is Global, and it must not be
+  mixed silently with country-scoped mobile data (see the platform/market compatibility rule
+  below). This ties in with the World market request above.
+- Adding `steam` needs a database enum migration and a registry entry, and Steam must not appear
+  as an active filter until real observations exist.
+
 ## Automated Game Research
 
 ### Product question
@@ -289,7 +335,7 @@ labels retain their taxonomy and prompt versions so old analysis remains interpr
 
 ### Steam delivery stages
 
-1. Neutralize product copy and introduce a central platform capability registry.
+1. Neutralize product copy and introduce a central platform capability registry. (Done)
 2. Define Steam listing and observation contracts without weakening current mobile semantics.
 3. Implement a replaceable Steam adapter, fixtures, throttling, caching, and a low-volume live
    contract test.
