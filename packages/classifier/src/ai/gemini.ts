@@ -4,7 +4,6 @@ import type { ClassificationInput } from "../input.js";
 import type { Taxonomy } from "../taxonomy.js";
 import {
   AI_PROMPT_VERSION,
-  AiResponseError,
   buildSystemInstruction,
   buildUserPrompt,
   parseAiResponse,
@@ -29,6 +28,20 @@ export interface GenerateResult {
   text: string;
   inputTokens: number;
   outputTokens: number;
+}
+
+export interface StructuredGeneration<T> {
+  model: string;
+  value: T;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+class InvalidStructuredOutput extends Error {
+  constructor(readonly cause: unknown) {
+    super(cause instanceof Error ? cause.message : "Structured output validation failed");
+    this.name = "InvalidStructuredOutput";
+  }
 }
 
 /** The two SDK calls the provider needs, so model rotation is testable without the network. */
@@ -126,12 +139,28 @@ export class GeminiProvider {
   }
 
   async classifyBatch(inputs: readonly ClassificationInput[], taxonomy: Taxonomy): Promise<BatchResult> {
-    const models = await this.availableModels();
     const request = {
       systemInstruction: buildSystemInstruction(taxonomy),
       prompt: buildUserPrompt(toPromptApps(inputs)),
       schema: responseJsonSchema(taxonomy),
     };
+
+    const generated = await this.generateStructured(request, (raw) => parseAiResponse(raw, inputs, taxonomy));
+    return {
+      model: generated.model,
+      promptVersion: AI_PROMPT_VERSION,
+      results: generated.value,
+      inputTokens: generated.inputTokens,
+      outputTokens: generated.outputTokens,
+    };
+  }
+
+  /** Shared structured generation path for classification and evidence-constrained research briefs. */
+  async generateStructured<T>(
+    request: { systemInstruction: string; prompt: string; schema: Record<string, unknown> },
+    parse: (raw: string) => T,
+  ): Promise<StructuredGeneration<T>> {
+    const models = await this.availableModels();
 
     for (const model of models) {
       if (this.exhausted.has(model)) continue;
@@ -140,21 +169,26 @@ export class GeminiProvider {
         const started = this.now();
         try {
           const response = await this.client.generate(model, request);
+          let value: T;
+          try {
+            value = parse(response.text);
+          } catch (error) {
+            throw new InvalidStructuredOutput(error);
+          }
           this.onEvent({ model, outcome: "ok", ms: this.now() - started });
           return {
             model,
-            promptVersion: AI_PROMPT_VERSION,
-            results: parseAiResponse(response.text, inputs, taxonomy),
+            value,
             inputTokens: response.inputTokens,
             outputTokens: response.outputTokens,
           };
         } catch (error) {
           this.onEvent({
             model,
-            outcome: error instanceof AiResponseError ? "invalid_output" : classifyGeminiError(error),
+            outcome: error instanceof InvalidStructuredOutput ? "invalid_output" : classifyGeminiError(error),
             ms: this.now() - started,
           });
-          if (error instanceof AiResponseError) {
+          if (error instanceof InvalidStructuredOutput) {
             // Malformed output: one retry on the same model, then move on.
             this.events.push(`${model}: ${error.message}`);
             if (attempt === 0) continue;

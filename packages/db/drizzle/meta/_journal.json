@@ -36,6 +36,20 @@
       "when": 1790732350562,
       "tag": "0004_flat_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790735981115,
+      "tag": "0005_elite_jackpot",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790737212760,
+      "tag": "0006_open_shard",
+      "breakpoints": true
     }
   ]
 }

@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "tsx --test src/taxonomy.test.ts src/input.test.ts src/rules.test.ts src/ai/prompt.test.ts src/ai/gemini.test.ts",
+    "test": "tsx --test src/taxonomy.test.ts src/input.test.ts src/rules.test.ts src/ai/prompt.test.ts src/ai/gemini.test.ts src/ai/research-brief.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
