@@ -30,4 +30,4 @@ Determine the remote default branch from Git; do not assume `main` or `master`.
 - Unverified live sources, coverage constraints, migration notes, or follow-ups
 ```
 
-Use GitHub, not GitLab. Do not claim checks passed unless they ran successfully. After creation, attach or report the PR URL.
+Use GitHub, not GitLab. Do not claim checks passed unless they ran successfully. Do not add AI attribution: no "Generated with Claude Code" footer, no co-author or collaborator credit for an assistant. After creation, attach or report the PR URL.

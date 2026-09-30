@@ -1,7 +1,7 @@
-import { Info } from "lucide-react";
-
 import { formatRelative } from "@/lib/format/format";
 import type { OverviewData } from "@/lib/overview/view-model";
+
+import { InfoHint } from "../common/info-hint";
 
 interface Kpi {
   label: string;
@@ -51,10 +51,7 @@ export function KpiCards({ data }: { data: OverviewData }) {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs text-dim">{item.label}</span>
-            <span title={item.tip} className="flex">
-              <Info aria-hidden className="size-[13px] text-dim" strokeWidth={1.8} />
-              <span className="sr-only">{item.tip}</span>
-            </span>
+            <InfoHint label={item.label}>{item.tip}</InfoHint>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[26px] font-semibold leading-none tracking-tight">
