@@ -71,6 +71,13 @@ and sample values, never the key):
 (set -a; . ./.env.local; set +a; npm run smoke:steam --workspace @analytic-dashboard/collectors)
 ```
 
+Steam Global collection (both charts, listings, `us`/`id` prices, review totals, players). About
+410 requests and 7 minutes for 200 games; `--dry-run` calls Steam but writes nothing:
+
+```bash
+npm run discover-steam --workspace @analytic-dashboard/collector -- --dry-run --max-games 5
+```
+
 ## Before committing
 
 ```bash

@@ -2,7 +2,7 @@ import { platformLabel } from "@analytic-dashboard/shared";
 
 import { formatRelative } from "@/lib/format/format";
 import { countryLabels } from "@/lib/overview/filters";
-import type { OverviewData, SourceState } from "@/lib/overview/view-model";
+import type { OverviewData, SourceState, SteamSourceStatus } from "@/lib/overview/view-model";
 import { cn } from "@/lib/utils";
 
 import { EmptyState, Panel } from "./panel";
@@ -19,7 +19,7 @@ const JOB_LABEL: Record<string, string> = {
   "discovery.chart": "chart discovery",
 };
 
-export function CoveragePanel({ data }: { data: OverviewData }) {
+export function CoveragePanel({ data, steam }: { data: OverviewData; steam: SteamSourceStatus }) {
   const { sources, asOf } = data;
 
   return (
@@ -64,10 +64,42 @@ export function CoveragePanel({ data }: { data: OverviewData }) {
           })}
         </ul>
       )}
+      <SteamCoverage steam={steam} asOf={asOf} />
       <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
         Coverage is sampled from discovery seeds, known IDs, and store charts. It is a research
         signal, not a complete catalogue, and install figures are ranges.
       </p>
     </Panel>
+  );
+}
+
+/**
+ * Steam is collected as a separate Global desktop source. It is shown here for freshness only;
+ * Steam has no filters or views yet and its metrics are never mixed with mobile ones.
+ */
+function SteamCoverage({ steam, asOf }: { steam: SteamSourceStatus; asOf: Date }) {
+  const state = STATE[steam.state];
+  return (
+    <div className="border-t border-line-soft">
+      <p className="px-4 pt-3 text-[11px] font-medium uppercase tracking-wide text-dim">Desktop</p>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", state.dot)} />
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-[13px]">
+            Steam
+            <span className="text-dim"> · chart discovery · Global</span>
+          </span>
+          <span className="text-[11.5px] text-dim">
+            {steam.lastCollectedAt
+              ? `Last collected ${formatRelative(steam.lastCollectedAt, asOf)} · ${steam.trackedGames.toLocaleString("en-US")} games tracked`
+              : "Not collected yet"}
+            {steam.latestErrorCount > 0
+              ? ` · latest run had ${steam.latestErrorCount} error${steam.latestErrorCount === 1 ? "" : "s"}`
+              : ""}
+          </span>
+        </div>
+        <span className={cn("text-xs", state.text)}>{state.label}</span>
+      </div>
+    </div>
   );
 }

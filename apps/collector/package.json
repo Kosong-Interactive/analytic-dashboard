@@ -7,13 +7,14 @@
     "build": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts src/jobs/classification.test.ts src/jobs/ai-classification.test.ts src/jobs/research.test.ts src/jobs/research-brief.test.ts",
+    "test": "tsx --test src/descriptor.test.ts src/jobs/discovery.test.ts src/runtime/config.test.ts src/jobs/classification.test.ts src/jobs/ai-classification.test.ts src/jobs/research.test.ts src/jobs/research-brief.test.ts src/jobs/steam-discovery.test.ts",
     "typecheck": "tsc --noEmit",
     "discover": "tsx src/index.ts discover",
     "classify": "tsx src/index.ts classify",
     "classify-ai": "tsx src/index.ts classify-ai",
     "research": "tsx src/index.ts research",
-    "research-brief": "tsx src/index.ts research-brief"
+    "research-brief": "tsx src/index.ts research-brief",
+    "discover-steam": "tsx src/index.ts discover-steam"
   },
   "dependencies": {
     "@analytic-dashboard/analytics": "0.0.0",

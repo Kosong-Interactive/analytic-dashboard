@@ -266,8 +266,20 @@ priority over implementing them.
    (live: Dota 2 tagged "Simulation"); prices only for `us`/`id`, with the currency checked
    against the formatted price; `recent` review window stays `null`. Fixtures and 16 tests are
    deterministic; `npm run smoke:steam` passed live on 2026-09-30. Web API terms: 100,000 calls a
-   day and no implied Valve endorsement. Next: Stage 4 (database enum + persistence of Steam Global
-   history, freshness/coverage). The user reports `STEAM_WEB_API_KEY` is configured locally and in
+   day and no implied Valve endorsement. Stage 4 (local, see below) persists Steam Global history.
+   **Stage 4:** migration `0007_steam_history` adds `steam_apps`, `steam_snapshots` (review totals
+   and current players, each group all-null or complete, totals must add up), `steam_chart_entries`,
+   `steam_prices` (change-only per country), and `steam_collector_runs`, all with RLS and no browser
+   grants. The `store` enum is deliberately **not** extended: adding `steam` rippled into 16+
+   mobile code paths (Game Detail, Trending, Search, Compare, classification) and would let Steam
+   rows reach mobile queries; a shared `mobile | desktop` platform type comes with Stage 5.
+   `npm run discover-steam --workspace @analytic-dashboard/collector -- [--dry-run] [--max-games 200] [--top-sellers 100]`
+   reads both charts, listings with `us` and `id` prices, then review totals and players per game.
+   It runs as the last step of `collect.yml` (skipped when a manual run targets one mobile store).
+   Overview's Data coverage shows a separate **Desktop · Steam (Global)** row; there are no Steam
+   filters or pages yet. Migration `0007` was applied to Supabase on 2026-09-30 (`db:verify`: 21 tables, RLS
+   enabled, 8 migrations, no public policies). The Overview reads the Steam tables, so any new
+   environment must run migrations before deploying this code. The user reports `STEAM_WEB_API_KEY` is configured locally and in
    GitHub Actions; do not expose or print it.
 9. Remaining manual checks: the Watchlist note Save flow and the login page on a phone.
 

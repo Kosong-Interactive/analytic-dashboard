@@ -621,9 +621,176 @@ export const jobs = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * Steam is a Global desktop platform with its own observation semantics, so it lives in its own
+ * tables rather than the country-scoped `store_apps`. Canonical cross-platform matching (`apps`)
+ * is deliberately absent until it can be reviewed; Steam rows never join mobile rows implicitly.
+ */
+export const steamApps = pgTable(
+  "steam_apps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    externalId: text("external_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    developerNames: text("developer_names").array().default(sql`'{}'::text[]`).notNull(),
+    publisherNames: text("publisher_names").array().default(sql`'{}'::text[]`).notNull(),
+    genres: text("genres").array().default(sql`'{}'::text[]`).notNull(),
+    categories: text("categories").array().default(sql`'{}'::text[]`).notNull(),
+    tags: text("tags").array().default(sql`'{}'::text[]`).notNull(),
+    releaseState: text("release_state").notNull(),
+    releaseDate: timestamp("release_date", { withTimezone: true }),
+    supportsWindows: boolean("supports_windows").notNull(),
+    supportsMacos: boolean("supports_macos").notNull(),
+    supportsLinux: boolean("supports_linux").notNull(),
+    isFree: boolean("is_free").notNull(),
+    headerImageUrl: text("header_image_url"),
+    storeUrl: text("store_url").notNull(),
+    source: text("source").notNull(),
+    metadataHash: text("metadata_hash").notNull(),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("steam_apps_external_id_uidx").on(table.externalId),
+    index("steam_apps_release_date_idx").on(table.releaseDate),
+    check("steam_apps_external_id_chk", sql`${table.externalId} ~ '^[1-9][0-9]*$'`),
+    check(
+      "steam_apps_release_state_chk",
+      sql`${table.releaseState} in ('released', 'early_access', 'upcoming', 'unknown')`,
+    ),
+  ],
+).enableRLS();
+
+/**
+ * Review totals and concurrent players, each with its own capture time. A group is either fully
+ * present or fully null: missing is never stored as zero.
+ */
+export const steamSnapshots = pgTable(
+  "steam_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    steamAppId: uuid("steam_app_id")
+      .notNull()
+      .references(() => steamApps.id, { onDelete: "cascade" }),
+    capturedAt: timestamp("captured_at", { withTimezone: true }).notNull(),
+    reviewPositive: bigint("review_positive", { mode: "number" }),
+    reviewNegative: bigint("review_negative", { mode: "number" }),
+    reviewTotal: bigint("review_total", { mode: "number" }),
+    reviewsCapturedAt: timestamp("reviews_captured_at", { withTimezone: true }),
+    reviewPurchaseScope: text("review_purchase_scope"),
+    reviewLanguageScope: text("review_language_scope").array(),
+    reviewOffTopicFiltered: boolean("review_off_topic_filtered"),
+    currentPlayers: bigint("current_players", { mode: "number" }),
+    playersCapturedAt: timestamp("players_captured_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("steam_snapshots_app_captured_uidx").on(table.steamAppId, table.capturedAt),
+    index("steam_snapshots_captured_at_idx").on(table.capturedAt),
+    check(
+      "steam_snapshots_reviews_group_chk",
+      sql`(${table.reviewTotal} is null and ${table.reviewPositive} is null and ${table.reviewNegative} is null and ${table.reviewsCapturedAt} is null)
+        or (${table.reviewPositive} >= 0 and ${table.reviewNegative} >= 0
+            and ${table.reviewTotal} = ${table.reviewPositive} + ${table.reviewNegative}
+            and ${table.reviewsCapturedAt} is not null and ${table.reviewPurchaseScope} is not null)`,
+    ),
+    check(
+      "steam_snapshots_players_group_chk",
+      sql`(${table.currentPlayers} is null and ${table.playersCapturedAt} is null)
+        or (${table.currentPlayers} >= 0 and ${table.playersCapturedAt} is not null)`,
+    ),
+    check(
+      "steam_snapshots_has_signal_chk",
+      sql`${table.reviewTotal} is not null or ${table.currentPlayers} is not null`,
+    ),
+  ],
+).enableRLS();
+
+export const steamChartEntries = pgTable(
+  "steam_chart_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    steamAppId: uuid("steam_app_id")
+      .notNull()
+      .references(() => steamApps.id, { onDelete: "cascade" }),
+    chart: text("chart").notNull(),
+    rank: integer("rank").notNull(),
+    lastWeekRank: integer("last_week_rank"),
+    capturedAt: timestamp("captured_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("steam_chart_entries_observation_uidx").on(table.steamAppId, table.chart, table.capturedAt),
+    index("steam_chart_entries_chart_captured_idx").on(table.chart, table.capturedAt),
+    check("steam_chart_entries_chart_chk", sql`${table.chart} in ('top_sellers', 'most_played', 'steam_deck')`),
+    check(
+      "steam_chart_entries_rank_chk",
+      sql`${table.rank} between 1 and 100 and (${table.lastWeekRank} is null or ${table.lastWeekRank} >= 1)`,
+    ),
+  ],
+).enableRLS();
+
+/** Regional prices. Stored on change (plus a daily heartbeat), per country and currency. */
+export const steamPrices = pgTable(
+  "steam_prices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    steamAppId: uuid("steam_app_id")
+      .notNull()
+      .references(() => steamApps.id, { onDelete: "cascade" }),
+    country: varchar("country", { length: 2 }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull(),
+    initialPrice: numeric("initial_price", { precision: 14, scale: 2 }).notNull(),
+    finalPrice: numeric("final_price", { precision: 14, scale: 2 }).notNull(),
+    discountPercent: smallint("discount_percent").notNull(),
+    capturedAt: timestamp("captured_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("steam_prices_observation_uidx").on(table.steamAppId, table.country, table.capturedAt),
+    check("steam_prices_country_lowercase_chk", sql`${table.country} = lower(${table.country})`),
+    check("steam_prices_currency_uppercase_chk", sql`${table.currency} = upper(${table.currency})`),
+    check(
+      "steam_prices_values_chk",
+      sql`${table.initialPrice} >= 0 and ${table.finalPrice} >= 0 and ${table.finalPrice} <= ${table.initialPrice}
+        and ${table.discountPercent} between 0 and 100`,
+    ),
+  ],
+).enableRLS();
+
+/** Health record per Steam collection run (Global market, so no country or locale). */
+export const steamCollectorRuns = pgTable(
+  "steam_collector_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    jobType: text("job_type").notNull(),
+    status: collectorRunStatusEnum("status").default("running").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    discoveredCount: integer("discovered_count").default(0).notNull(),
+    changedCount: integer("changed_count").default(0).notNull(),
+    retryCount: integer("retry_count").default(0).notNull(),
+    errorCount: integer("error_count").default(0).notNull(),
+    errorSample: text("error_sample"),
+    metadata: jsonb("metadata").default({}).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("steam_collector_runs_health_idx").on(table.jobType, table.startedAt),
+    check(
+      "steam_collector_runs_counts_nonnegative_chk",
+      sql`${table.discoveredCount} >= 0 and ${table.changedCount} >= 0 and ${table.retryCount} >= 0 and ${table.errorCount} >= 0`,
+    ),
+  ],
+).enableRLS();
+
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
 export type StoreApp = typeof storeApps.$inferSelect;
 export type NewStoreApp = typeof storeApps.$inferInsert;
 export type AppSnapshot = typeof appSnapshots.$inferSelect;
 export type NewAppSnapshot = typeof appSnapshots.$inferInsert;
+export type SteamApp = typeof steamApps.$inferSelect;
+export type SteamSnapshot = typeof steamSnapshots.$inferSelect;

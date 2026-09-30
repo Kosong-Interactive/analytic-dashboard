@@ -391,7 +391,7 @@ labels retain their taxonomy and prompt versions so old analysis remains interpr
 2. Define Steam listing and observation contracts without weakening current mobile semantics. (Done)
 3. Implement a replaceable Steam adapter, fixtures, throttling, caching, and a low-volume live
    contract test. (Done)
-4. Persist Steam Global history and expose freshness/coverage.
+4. Persist Steam Global history and expose freshness/coverage. (Done; migration `0007` applied 2026-09-30)
 5. Add Steam pages and filter activation.
 6. Enable cross-platform normalized scoring and migration opportunities.
 
