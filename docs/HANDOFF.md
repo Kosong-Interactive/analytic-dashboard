@@ -140,10 +140,11 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Known pitfalls
 
-- **Keep at least 2 database connections.** Through the Supabase transaction pooler, a single
-  postgres.js connection hangs forever when queries are queued the instant a previous one finishes
-  (e.g. `Promise.all` right after another query). `createDatabaseConnection` defaults to 3;
-  migrations use 1 and run sequentially.
+- **Never re-enable postgres.js pipelining.** Through the Supabase transaction pooler, queries
+  pipelined on a busy connection stall until the 2-minute statement timeout (error `57014`); this
+  made the Overview hang whenever its concurrent reads outnumbered the connections.
+  `createDatabaseConnection` sets `max_pipeline: 0` (extra queries wait for a free connection) and
+  defaults to 3 connections; with pipelining off even 1 connection completes, just slower.
 - A long-running `next dev` keeps its database connection. After applying a migration or after a
   burst of failed queries, restart the dev server before judging a page.
 - Raw `sql` fragments must pass dates as ISO strings with `::timestamptz`.
