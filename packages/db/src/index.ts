@@ -103,4 +103,5 @@ export {
   type ResearchRunInput,
   type ResearchRunSummary,
   type StoredOpportunity,
+  type StoredOpportunityPreview,
 } from "./repositories/research";

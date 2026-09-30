@@ -22,6 +22,11 @@ export interface StoredOpportunityInput {
   caveats: unknown;
 }
 
+export interface StoredOpportunityPreviewInput extends Omit<StoredOpportunityInput, "score"> {
+  score: null;
+  reason: string | null;
+}
+
 export interface ResearchRunInput {
   store: Store;
   status: "succeeded" | "failed";
@@ -75,6 +80,10 @@ export interface OpportunityCard {
   asOf: Date;
 }
 
+export interface OpportunityPreview extends Omit<OpportunityCard, "score" | "insight" | "earlySignal"> {
+  reason: string | null;
+}
+
 export type ResearchState =
   | { kind: "ready" }
   | { kind: "no_runs" }
@@ -83,6 +92,8 @@ export type ResearchState =
 
 export interface OpportunitiesView {
   cards: OpportunityCard[];
+  /** A real evaluated cohort without enough demand history for a score; never a recommendation. */
+  preview: OpportunityPreview | null;
   state: ResearchState;
   /** Newest run per store, for "updated" freshness; failed runs are flagged. */
   runs: Array<{ store: Store; asOf: Date; failed: boolean }>;
@@ -137,14 +148,39 @@ function toCard(row: StoredOpportunityInput): OpportunityCard | null {
   };
 }
 
+function toPreview(row: StoredOpportunityPreviewInput): OpportunityPreview | null {
+  const parsed = toCard({ ...row, score: 0 });
+  if (!parsed) return null;
+  return {
+    id: parsed.id,
+    title: parsed.title,
+    store: parsed.store,
+    country: parsed.country,
+    confidence: parsed.confidence,
+    confidenceBand: parsed.confidenceBand,
+    weightCoverage: parsed.weightCoverage,
+    memberCount: parsed.memberCount,
+    catalogueShare: parsed.catalogueShare,
+    whyNow: parsed.whyNow,
+    risks: parsed.risks,
+    caveats: parsed.caveats,
+    comparables: parsed.comparables,
+    browseHref: parsed.browseHref,
+    asOf: parsed.asOf,
+    reason: row.reason,
+  };
+}
+
 /** Cards for the Overview, plus a state that explains an empty panel instead of hiding it. */
 export function buildOpportunitiesView(input: {
   opportunities: readonly StoredOpportunityInput[];
+  preview?: StoredOpportunityPreviewInput | null;
   runs: readonly ResearchRunInput[];
   limit: number;
 }): OpportunitiesView {
   const parsed = input.opportunities.map(toCard);
   const cards = parsed.filter((card): card is OpportunityCard => card !== null).slice(0, input.limit);
+  const preview = cards.length === 0 && input.preview ? toPreview(input.preview) : null;
   const runs = input.runs.map((run) => ({ store: run.store, asOf: run.asOf, failed: run.status === "failed" }));
 
   let state: ResearchState;
@@ -161,5 +197,5 @@ export function buildOpportunitiesView(input: {
     };
   }
 
-  return { cards, state, runs, skipped: parsed.length - parsed.filter(Boolean).length };
+  return { cards, preview, state, runs, skipped: parsed.length - parsed.filter(Boolean).length };
 }

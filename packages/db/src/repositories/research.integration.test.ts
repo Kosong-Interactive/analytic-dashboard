@@ -81,8 +81,24 @@ describe("research repository", { skip: connection === null }, () => {
 
       const latest = await loadLatestOpportunities(tx, { stores: ["google_play"], country: "id", formulaVersion: "opportunity-test", limit: 5 });
       assert.deepEqual(latest.opportunities.map((o) => `${o.opportunityKey}:${o.score}`), ["arcade:80", "puzzle:60"]);
+      assert.equal(latest.preview, null);
       assert.equal(latest.runs[0]?.cohortsEvaluated, 3);
       assert.equal(latest.runs[0]?.opportunitiesScored, 2);
+    });
+  });
+
+  it("returns one real unscored cohort as a preview when no opportunity can be scored", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await recordResearchRun(tx, {
+        run: { ...run, asOf: new Date("2026-10-01T02:00:00Z"), inputHash: "preview" },
+        opportunities: [opportunity("small", null), { ...opportunity("large", null), memberCount: 20 }],
+      });
+
+      const latest = await loadLatestOpportunities(tx, { stores: ["google_play"], country: "id", formulaVersion: "opportunity-test", limit: 5 });
+      assert.deepEqual(latest.opportunities, []);
+      assert.equal(latest.preview?.opportunityKey, "large");
+      assert.equal(latest.preview?.score, null);
+      assert.equal(latest.preview?.reason, "demand is not measurable yet");
     });
   });
 

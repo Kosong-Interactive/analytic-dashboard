@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
 import { marketOpportunities, researchRuns, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
@@ -125,6 +125,11 @@ export interface StoredOpportunity {
   caveats: unknown;
 }
 
+export interface StoredOpportunityPreview extends Omit<StoredOpportunity, "score"> {
+  score: null;
+  reason: string | null;
+}
+
 const toNumber = (value: string | null) => (value === null ? null : Number(value));
 
 /**
@@ -134,8 +139,8 @@ const toNumber = (value: string | null) => (value === null ? null : Number(value
 export async function loadLatestOpportunities(
   db: DatabaseExecutor,
   query: { stores: readonly StoreId[]; country: string; formulaVersion: string; limit: number },
-): Promise<{ runs: ResearchRunSummary[]; opportunities: StoredOpportunity[] }> {
-  if (query.stores.length === 0) return { runs: [], opportunities: [] };
+): Promise<{ runs: ResearchRunSummary[]; opportunities: StoredOpportunity[]; preview: StoredOpportunityPreview | null }> {
+  if (query.stores.length === 0) return { runs: [], opportunities: [], preview: null };
 
   const rows = await db
     .selectDistinctOn([researchRuns.store, researchRuns.status], {
@@ -172,7 +177,7 @@ export async function loadLatestOpportunities(
     const ok = ofStore.find((row) => row.status === "succeeded");
     if (ok) successful.push(ok);
   }
-  if (successful.length === 0) return { runs, opportunities: [] };
+  if (successful.length === 0) return { runs, opportunities: [], preview: null };
 
   const runById = new Map(successful.map((run) => [run.id, run]));
   const opportunityRows = await db
@@ -182,9 +187,7 @@ export async function loadLatestOpportunities(
     .orderBy(desc(marketOpportunities.score), desc(marketOpportunities.confidence), marketOpportunities.opportunityKey)
     .limit(query.limit);
 
-  return {
-    runs,
-    opportunities: opportunityRows.flatMap((row) => {
+  const opportunities = opportunityRows.flatMap((row) => {
       const run = runById.get(row.runId);
       if (!run) return [];
       return {
@@ -208,6 +211,47 @@ export async function loadLatestOpportunities(
         counterSignals: row.counterSignals,
         caveats: row.caveats,
       };
-    }),
+    });
+
+  if (opportunities.length > 0) return { runs, opportunities, preview: null };
+
+  // Surface one real evaluated cohort while demand history is still too short to score it.
+  // It remains separate from scored opportunities so consumers cannot mistake it for a recommendation.
+  const [previewRow] = await db
+    .select()
+    .from(marketOpportunities)
+    .where(and(inArray(marketOpportunities.runId, [...runById.keys()]), isNull(marketOpportunities.score)))
+    .orderBy(desc(marketOpportunities.memberCount), desc(marketOpportunities.confidence), marketOpportunities.opportunityKey)
+    .limit(1);
+  const previewRun = previewRow ? runById.get(previewRow.runId) : undefined;
+  const preview = previewRow && previewRun
+    ? {
+        id: previewRow.id,
+        runId: previewRow.runId,
+        store: previewRun.store,
+        country: previewRun.country,
+        asOf: previewRun.asOf,
+        opportunityKey: previewRow.opportunityKey,
+        dimensions: previewRow.dimensions,
+        memberCount: previewRow.memberCount,
+        score: null,
+        reason: previewRow.reason,
+        weightCoverage: Number(previewRow.weightCoverage),
+        confidence: Number(previewRow.confidence),
+        confidenceBand: previewRow.confidenceBand,
+        insightType: previewRow.insightType,
+        components: previewRow.components,
+        facts: previewRow.facts,
+        comparables: previewRow.comparables,
+        positives: previewRow.positives,
+        counterSignals: previewRow.counterSignals,
+        caveats: previewRow.caveats,
+      }
+    : null;
+
+  return {
+    runs,
+    opportunities,
+    preview,
   };
 }

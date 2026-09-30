@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { buildOpportunitiesView, type ResearchRunInput, type StoredOpportunityInput } from "./view-model";
+import {
+  buildOpportunitiesView,
+  type ResearchRunInput,
+  type StoredOpportunityInput,
+  type StoredOpportunityPreviewInput,
+} from "./view-model";
 
 const asOf = new Date("2026-10-10T02:00:00Z");
 
@@ -46,6 +51,10 @@ const run = (overrides: Partial<ResearchRunInput> = {}): ResearchRunInput => ({
   ...overrides,
 });
 
+function preview(overrides: Partial<StoredOpportunityPreviewInput> = {}): StoredOpportunityPreviewInput {
+  return { ...stored("preview"), score: null, reason: "Demand history is not measurable yet", ...overrides };
+}
+
 describe("buildOpportunitiesView", () => {
   it("builds cards with a title, bounded evidence, comparables, and an explorer link", () => {
     const view = buildOpportunitiesView({ opportunities: [stored("o1")], runs: [run()], limit: 5 });
@@ -87,5 +96,31 @@ describe("buildOpportunitiesView", () => {
       limit: 5,
     });
     assert.deepEqual(waiting.state, { kind: "awaiting_scores", cohorts: 106, historyDays: 0.8 });
+  });
+
+  it("shows one real unscored cohort as a preview without marking research ready", () => {
+    const view = buildOpportunitiesView({
+      opportunities: [],
+      preview: preview(),
+      runs: [run({ opportunitiesScored: 0, historyDays: 0.9 })],
+      limit: 5,
+    });
+    assert.equal(view.state.kind, "awaiting_scores");
+    assert.equal(view.preview?.title, "Puzzle + Matching");
+    assert.equal(view.preview?.reason, "Demand history is not measurable yet");
+    assert.equal(view.preview?.browseHref, "/games?genre=puzzle&mechanic=matching&platform=google_play");
+  });
+
+  it("does not show a preview alongside scored opportunities or when its evidence is malformed", () => {
+    const ready = buildOpportunitiesView({ opportunities: [stored("ready")], preview: preview(), runs: [run()], limit: 5 });
+    assert.equal(ready.preview, null);
+
+    const malformed = buildOpportunitiesView({
+      opportunities: [],
+      preview: preview({ dimensions: [] }),
+      runs: [run({ opportunitiesScored: 0 })],
+      limit: 5,
+    });
+    assert.equal(malformed.preview, null);
   });
 });
