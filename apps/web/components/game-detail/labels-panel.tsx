@@ -3,7 +3,7 @@ import type { LabelRowInput, LabelStatus, ResolvedLabel } from "@/lib/labels/res
 import { cn } from "@/lib/utils";
 
 import { EmptyState, Panel } from "../overview/panel";
-import { AddLabelForm, LabelActions } from "./label-actions";
+import { AddLabelForm, LabelActions, type EditableLabelTarget } from "./label-actions";
 
 export const TYPE_LABELS: Record<string, string> = {
   genre: "Genre",
@@ -58,7 +58,7 @@ function Provenance({ row, title }: { row: LabelRowInput; title: string }) {
   );
 }
 
-function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId?: string }) {
+function LabelChip({ label, target }: { label: ResolvedLabel; target?: EditableLabelTarget }) {
   const confidence = label.automated ? `${Math.round(label.automated.confidence * 100)}%` : null;
   return (
     <li>
@@ -79,7 +79,7 @@ function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId?: s
             <span className="font-mono text-[11px] text-dim no-underline">{confidence}</span>
           ) : null}
           <span className="sr-only">
-            {STATUS_TEXT[label.status] || "Counted"}. Show evidence{storeAppId ? " and actions" : ""}
+            {STATUS_TEXT[label.status] || "Counted"}. Show evidence{target ? " and actions" : ""}
           </span>
         </summary>
         <div className="mt-1.5 max-w-md rounded-md border border-line bg-surface-alt p-2.5 text-[11px] leading-4 text-ink-soft">
@@ -88,27 +88,41 @@ function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId?: s
             {label.manual ? <Provenance row={label.manual} title="Decision" /> : null}
             {label.automated ? <Provenance row={label.automated} title="Detected by" /> : null}
           </div>
-          {storeAppId ? <LabelActions storeAppId={storeAppId} labelId={label.labelId} status={label.status} /> : null}
+          {target ? <LabelActions target={target} labelId={label.labelId} status={label.status} /> : null}
         </div>
       </details>
     </li>
   );
 }
 
+function editableTargetOf(input: {
+  readOnly: boolean;
+  storeAppId?: string;
+  steamApp?: { id: string; externalId: string };
+}): EditableLabelTarget | undefined {
+  if (input.readOnly) return undefined;
+  if (input.steamApp) return { kind: "steam", id: input.steamApp.id, externalId: input.steamApp.externalId };
+  if (input.storeAppId) return { kind: "mobile", id: input.storeAppId };
+  return undefined;
+}
+
 export function LabelsPanel({
   storeAppId,
+  steamApp,
   labels,
   options = [],
   readOnly = false,
 }: {
   /** Required unless `readOnly`; manual decisions are stored per listing. */
   storeAppId?: string;
+  /** Steam game identity used by its route-local Server Action. */
+  steamApp?: { id: string; externalId: string };
   labels: ResolvedLabel[];
   options?: Array<{ id: string; type: string; displayName: string }>;
   /** Shows labels with their evidence but offers no Confirm, Reject, or Add. */
   readOnly?: boolean;
 }) {
-  const editableId = readOnly ? undefined : storeAppId;
+  const editableTarget = editableTargetOf({ readOnly, storeAppId, steamApp });
   const types = Object.keys(TYPE_LABELS);
   const present = new Set(labels.filter((l) => l.status !== "rejected").map((l) => l.labelId));
   const addOptions = types
@@ -142,7 +156,7 @@ export function LabelsPanel({
                 <dd>
                   <ul className="flex flex-wrap items-start gap-1.5">
                     {ofType.map((label) => (
-                      <LabelChip key={label.labelId} label={label} storeAppId={editableId} />
+                      <LabelChip key={label.labelId} label={label} target={editableTarget} />
                     ))}
                   </ul>
                 </dd>
@@ -151,9 +165,9 @@ export function LabelsPanel({
           })}
         </dl>
       )}
-      {editableId ? (
+      {editableTarget ? (
         <div className="border-t border-line-soft px-4 py-3">
-          <AddLabelForm storeAppId={editableId} options={addOptions} />
+          <AddLabelForm target={editableTarget} options={addOptions} />
         </div>
       ) : null}
       <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
@@ -161,7 +175,7 @@ export function LabelsPanel({
         replaces the rule labels once it exists and must quote the listing as evidence. Dimmed labels are below{" "}
         {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence and are not counted.
         {readOnly
-          ? " Steam labels cannot be confirmed or rejected by hand yet."
+          ? " Manual corrections are unavailable on this view."
           : " Your confirmations and rejections are recorded with your email, override automated labels in every view, and are never overwritten by reclassification."}
       </p>
     </Panel>

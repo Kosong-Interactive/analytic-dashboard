@@ -1,6 +1,6 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 
-import { appLabels, classificationRuns, steamAppLabels, steamClassificationRuns, taxonomyLabels } from "../schema/index";
+import { appLabels, classificationRuns, steamAppLabels, steamApps, steamClassificationRuns, taxonomyLabels } from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 
 export type LabelType = (typeof taxonomyLabels.$inferInsert)["type"];
@@ -239,6 +239,85 @@ export async function clearManualLabel(
       ),
     )
     .returning({ id: appLabels.id });
+  return removed.length > 0;
+}
+
+/** Returns the id only when a crafted Steam decision still points at a tracked game. */
+export async function findSteamAppId(
+  db: DatabaseExecutor,
+  steamAppId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ id: steamApps.id })
+    .from(steamApps)
+    .where(eq(steamApps.id, steamAppId))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+/** Steam counterpart of `setManualLabel`; automated classification never touches this row. */
+export async function setSteamManualLabel(
+  db: DatabaseExecutor,
+  input: {
+    steamAppId: string;
+    labelId: string;
+    taxonomyVersion: string;
+    decision: ManualDecision;
+    actor: string;
+    decidedAt: Date;
+  },
+): Promise<void> {
+  const evidence = [
+    {
+      field: "metadata",
+      excerpt: `${input.decision === "confirm" ? "Confirmed" : "Rejected"} by ${input.actor} at ${input.decidedAt.toISOString()}`,
+    },
+  ];
+  const confidence = input.decision === "confirm" ? "1.000" : "0.000";
+
+  await db
+    .insert(steamAppLabels)
+    .values({
+      steamAppId: input.steamAppId,
+      labelId: input.labelId,
+      source: "manual",
+      confidence,
+      evidence,
+      taxonomyVersion: input.taxonomyVersion,
+      promptVersion: MANUAL_PROMPT_VERSION,
+      model: null,
+      inputHash: MANUAL_INPUT_HASH,
+      isManualOverride: true,
+    })
+    .onConflictDoUpdate({
+      target: [
+        steamAppLabels.steamAppId,
+        steamAppLabels.labelId,
+        steamAppLabels.source,
+        steamAppLabels.taxonomyVersion,
+        steamAppLabels.promptVersion,
+        steamAppLabels.inputHash,
+      ],
+      set: { confidence, evidence, updatedAt: sql`now()` },
+    });
+}
+
+/** Removes one Steam manual decision so the resolved AI or rule label applies again. */
+export async function clearSteamManualLabel(
+  db: DatabaseExecutor,
+  input: { steamAppId: string; labelId: string; taxonomyVersion: string },
+): Promise<boolean> {
+  const removed = await db
+    .delete(steamAppLabels)
+    .where(
+      and(
+        eq(steamAppLabels.steamAppId, input.steamAppId),
+        eq(steamAppLabels.labelId, input.labelId),
+        eq(steamAppLabels.taxonomyVersion, input.taxonomyVersion),
+        eq(steamAppLabels.source, "manual"),
+      ),
+    )
+    .returning({ id: steamAppLabels.id });
   return removed.length > 0;
 }
 

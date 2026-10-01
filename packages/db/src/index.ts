@@ -51,6 +51,8 @@ export {
 } from "./queries/game-history";
 export {
   clearManualLabel,
+  clearSteamManualLabel,
+  findSteamAppId,
   loadInputHashes,
   loadRuleInputHashes,
   loadSteamInputHashes,
@@ -59,6 +61,7 @@ export {
   replaceSteamAutomatedLabels,
   replaceRuleLabels,
   setManualLabel,
+  setSteamManualLabel,
   syncTaxonomyLabels,
   type AutomatedLabelRow,
   type AutomatedSource,

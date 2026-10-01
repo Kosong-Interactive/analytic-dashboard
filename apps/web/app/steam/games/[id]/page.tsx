@@ -15,6 +15,7 @@ import { resolveListingLabels } from "@/lib/labels/resolve";
 import { buildSteamMetrics, buildSteamSeries } from "@/lib/steam/detail-view";
 import { formatPrice, formatRatio, positiveRatio } from "@/lib/steam/format";
 import { getSteamGame } from "@/lib/steam/get-steam";
+import { listSteamTaxonomyOptions } from "@/lib/steam/manual-labels";
 import { parseSteamQuery, steamChartLabels, steamHref } from "@/lib/steam/query";
 
 interface SteamGamePageProps {
@@ -45,7 +46,7 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
   await requireUser(`/steam/games/${id}`);
   if (!steamIdPattern.test(id)) notFound();
   const query = parseSteamQuery(await searchParams);
-  const result = await getSteamGame(id);
+  const [result, taxonomy] = await Promise.all([getSteamGame(id), listSteamTaxonomyOptions()]);
   if (!result) notFound();
   const { game, labels, source, asOf } = result;
   const { snapshot } = game;
@@ -202,7 +203,11 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
         </div>
       </div>
 
-      <LabelsPanel readOnly labels={resolveListingLabels(labels)} />
+      <LabelsPanel
+        steamApp={{ id: game.steamAppId, externalId: game.externalId }}
+        labels={resolveListingLabels(labels)}
+        options={taxonomy}
+      />
 
       <Panel title="Steam tags and categories" description="As listed by Steam; these are store labels, not this system's classification.">
         <div className="flex flex-col gap-3 border-t border-line-soft px-4 py-3 text-xs">

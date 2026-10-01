@@ -80,10 +80,10 @@ approves sending opportunity evidence to Gemini.
 
 Branch state (2026-10-01): PR #10 (`development` → `main`) was merged as `50fca81`; `main` contains
 the Steam `taxonomy-v2` / `steam-rules-v2` feature and button-style Game Opportunities CTAs on top
-of the earlier Steam stage 6 work. `development` and `origin/development` are at `ffddc8b`; the
-one-commit difference from `main` is the merge commit, not missing feature work. The user reported
-that the post-merge schedule, taxonomy activation, and stage 6 re-check are done. The current
-uncommitted feature is Desktop opportunity decisions. Migration `0009` is applied to Supabase.
+of the earlier Steam stage 6 work. `development` contains persisted Desktop opportunity decisions
+and manual Confirm/Reject/Undo for Steam labels; migration `0009` is applied to Supabase and the
+Steam label feature needs no migration. The user reported that the post-merge schedule, taxonomy
+activation, and stage 6 re-check are done.
 
 **Production is deployed by hand with the Vercel CLI from the user's laptop** (deployments carry
 no git metadata), not from `main`; check `vercel ls analytic-dashboard` for what is live. The
@@ -207,8 +207,8 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   `taxonomy-v2` adds Survival, Sandbox, Colony simulation, Extraction, Automation, Factory
   building, Resource management, and Session-based progression only for Steam. Perspective,
   controller support, Early Access, and production scope remain outside gameplay taxonomy for a
-  future structured-facet feature. The v2 code is implemented and tested in the working tree, but
-  neither rule nor Gemini reclassification has been run against Supabase yet.
+  future structured-facet feature. The user reported that taxonomy v2 was activated and the
+  reclassification was completed after merge.
 
 ### Dashboard
 
@@ -233,8 +233,10 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   `/steam/charts`. On Desktop the country only picks the regional price (IDR or USD); charts,
   players and reviews are global and labelled "Global". Steam review ratio is never shown as
   stars. Trending shows the Steam Trend Score plus rank movers from `last_week_rank` (labelled as
-  rank change). No Watchlist, Compare, Research, or manual label
-  editing on Steam. Games/detail are built from `loadSteamGameList` and `loadSteamGameDetail`
+  rank change). No Watchlist, Compare, or Research on Steam. Steam Game Detail now supports manual
+  Confirm, Reject, Undo, and Add label actions against active taxonomy v2; the same manual > AI >
+  rule resolution drives detail and aggregate pages, and automated reruns preserve manual rows.
+  Games/detail are built from `loadSteamGameList` and `loadSteamGameDetail`
   (`packages/db`); tables are `SteamGamesTable`/`SteamChartTable` (Plan A: shared primitives
   `Panel`, `Pager`, `SegmentedLinks`, `KpiGrid`, `MetricCardGrid`, `ChartPanel`, `LabelsPanel`
   with `readOnly`, filter fields in `components/filters/fields.tsx`; row bodies are not shared
@@ -289,6 +291,10 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   22.23.3. Migration `0009` is live and the focused repository integration test passed against
   Supabase inside a rolled-back transaction (append, evidence, history, and latest status). An
   authenticated visual/save check remains before merge.
+- Steam manual label editing passes the web tests and a focused repository integration test
+  against Supabase in a rolled-back transaction (Confirm, Reject, Undo, precedence, and survival
+  across automated upserts). No migration is required. An authenticated visual/save check on the
+  Steam Game Detail page remains.
 - Durability needs 30/90 days of daily research results.
 - Manual checks not yet done: a real Shortlist/Reject/Prototype save, a real Studio Fit profile
   version (enter only the team's real capabilities), the Watchlist note save, login and Overview
@@ -303,14 +309,12 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 Decisions that wait on the user are marked **(ask)**.
 
-1. Finish the authenticated visual/save check for **Desktop opportunity decisions** on both
-   Indonesia and US market views, then merge through a pull request when requested.
-2. **Manual Confirm/Reject for Steam labels** (`steam_app_labels` already has the `manual`
-   source; needs a write path and the detail-page actions, `LabelsPanel` is currently
-   `readOnly`).
-3. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
+1. Finish the authenticated visual/save checks for **Desktop opportunity decisions** on both
+   Indonesia and US market views and for **Steam manual labels**, then merge through a pull request
+   when requested.
+2. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
    Play's worldwide metrics when aggregating.
-4. Smaller: faster classification input loading (it transfers every description, ~75 s from a
+3. Smaller: faster classification input loading (it transfers every description, ~75 s from a
    laptop), a dedicated new-release discovery path; `/games` is the heaviest page (about 530 KB
    of HTML, 1.2 s in production).
 
