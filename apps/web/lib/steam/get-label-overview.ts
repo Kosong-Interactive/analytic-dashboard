@@ -3,7 +3,7 @@ import "server-only";
 import { loadSteamLabelGames, loadSteamLabelMembership, loadSteamSourceHealth, type LabelType } from "@analytic-dashboard/db";
 
 import { getDatabase } from "../database";
-import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "../labels/constants";
+import { MIN_LABEL_CONFIDENCE, STEAM_TAXONOMY_VERSION } from "../labels/constants";
 import { toSteamSourceStatus } from "../overview/view-model";
 import { buildSteamLabelOverview } from "./label-overview";
 import type { SteamLabelQuery } from "./label-query";
@@ -13,7 +13,7 @@ export async function getSteamLabelOverview<T extends LabelType>(query: SteamLab
   const [games, membership, health] = await Promise.all([
     loadSteamLabelGames(db),
     loadSteamLabelMembership(db, {
-      taxonomyVersion: TAXONOMY_VERSION,
+      taxonomyVersion: STEAM_TAXONOMY_VERSION,
       types: [query.type],
       minConfidence: MIN_LABEL_CONFIDENCE,
     }),

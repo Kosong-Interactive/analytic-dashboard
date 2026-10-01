@@ -70,4 +70,39 @@ describe("applyRules", () => {
     assert.equal(bySlug.get("roguelike")?.evidence[0]?.excerpt, "Steam tag: Roguelike");
     assert.equal(bySlug.get("free_to_play")?.evidence[0]?.excerpt, "Steam US price: 0");
   });
+
+  it("maps taxonomy-v2 PC concepts only for Steam listings", () => {
+    const steam = labelsOf([
+      listing({
+        store: "steam",
+        title: "Colony Frontier",
+        description: "A sandbox colony simulation with factory building, automation, and resource management.",
+        storeTags: ["Survival", "Colony Sim", "Factory Automation"],
+      }),
+    ]);
+    const slugs = new Set(steam.map((label) => label.slug));
+    assert.ok(slugs.has("survival"));
+    assert.ok(slugs.has("sandbox"));
+    assert.ok(slugs.has("colony_simulation"));
+    assert.ok(slugs.has("automation"));
+    assert.ok(slugs.has("factory_building"));
+    assert.ok(slugs.has("resource_management"));
+
+    const mobile = labelsOf([
+      listing({ description: "A sandbox colony simulation with factory building and automation." }),
+    ]);
+    assert.equal(mobile.some((label) => slugs.has(label.slug)), false);
+  });
+
+  it("recognizes extraction and session-based progression evidence", () => {
+    const labels = labelsOf([
+      listing({
+        store: "steam",
+        title: "Night Raid",
+        description: "An extraction shooter with run-based progression: loot and extract before the timer ends.",
+      }),
+    ]);
+    assert.ok(labels.some((label) => label.slug === "extraction"));
+    assert.ok(labels.some((label) => label.slug === "session_based_progression"));
+  });
 });

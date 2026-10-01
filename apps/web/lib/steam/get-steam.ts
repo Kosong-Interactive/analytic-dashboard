@@ -13,7 +13,7 @@ import {
 } from "@analytic-dashboard/db";
 
 import { getDatabase } from "../database";
-import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "../labels/constants";
+import { MIN_LABEL_CONFIDENCE, STEAM_TAXONOMY_VERSION } from "../labels/constants";
 import { toSteamSourceStatus } from "../overview/view-model";
 import type { SteamQuery } from "./query";
 
@@ -33,7 +33,7 @@ export async function getSteamGame(externalId: string, asOf: Date = new Date()) 
     loadSteamSourceHealth(db),
   ]);
   if (!game) return null;
-  const labels = await loadSteamGameLabels(db, { steamAppId: game.steamAppId, taxonomyVersion: TAXONOMY_VERSION });
+  const labels = await loadSteamGameLabels(db, { steamAppId: game.steamAppId, taxonomyVersion: STEAM_TAXONOMY_VERSION });
   return { game, labels, source: toSteamSourceStatus(health, asOf), asOf };
 }
 
@@ -43,7 +43,7 @@ export async function getSteamGameCatalog(country: SteamQuery["country"], asOf: 
   const [list, membership, health] = await Promise.all([
     loadSteamGameList(db),
     loadSteamLabelMembership(db, {
-      taxonomyVersion: TAXONOMY_VERSION,
+      taxonomyVersion: STEAM_TAXONOMY_VERSION,
       types: ["genre", "subgenre", "core_mechanic", "meta_mechanic", "theme", "multiplayer_mode"],
       minConfidence: MIN_LABEL_CONFIDENCE,
     }),

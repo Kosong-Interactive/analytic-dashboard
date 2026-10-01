@@ -18,6 +18,7 @@ import { traceStep } from "../runtime/trace-step.js";
 
 /** Taxonomy files are versioned; older ones stay so earlier labels remain explainable. */
 export const ACTIVE_TAXONOMY = "config/taxonomy/v1.json";
+export const ACTIVE_STEAM_TAXONOMY = "config/taxonomy/v2.json";
 
 /**
  * Deterministic rule classification for every tracked app. `--dry-run` computes labels

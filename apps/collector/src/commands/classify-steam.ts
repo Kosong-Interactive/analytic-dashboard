@@ -15,7 +15,7 @@ import { config as loadEnv } from "dotenv";
 import { runSteamRuleClassification, type SteamClassificationStore } from "../jobs/steam-classification.js";
 import { getRepositoryRoot } from "../runtime/config.js";
 import { traceStep } from "../runtime/trace-step.js";
-import { ACTIVE_TAXONOMY } from "./classify.js";
+import { ACTIVE_STEAM_TAXONOMY } from "./classify.js";
 
 /**
  * Deterministic rule classification for every tracked Steam game. `--dry-run` computes labels
@@ -28,7 +28,7 @@ export async function runClassifySteamCommand(argv: string[]): Promise<number> {
   });
   const dryRun = values["dry-run"] === true;
   const root = getRepositoryRoot();
-  const taxonomy = parseTaxonomy(JSON.parse(readFileSync(resolve(root, ACTIVE_TAXONOMY), "utf8")));
+  const taxonomy = parseTaxonomy(JSON.parse(readFileSync(resolve(root, ACTIVE_STEAM_TAXONOMY), "utf8")));
 
   loadEnv({ path: resolve(root, ".env.local"), quiet: true });
   const connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL;
