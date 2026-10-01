@@ -109,4 +109,4 @@ Perintah collector, migrasi, dan smoke test ada di `docs/OPERATIONS.md`.
 - `docs/MVP_IMPLEMENTATION_PLAN.md`: ruang lingkup produk, arsitektur, dan fase pengerjaan
 - `docs/OPERATIONS.md`: perintah collector, migrasi, dan smoke test
 - `docs/NEXT_DEVELOPMENT_PLAN.md`: roadmap berikutnya (riset otomatis, Steam)
-- `docs/CLAUDE_HANDOFF.md`: status terkini dan perintah verifikasi
+- `docs/HANDOFF.md`: status terkini untuk agent berikutnya (Codex maupun Claude) dan perintah verifikasi

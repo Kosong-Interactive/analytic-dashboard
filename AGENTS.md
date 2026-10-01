@@ -4,6 +4,8 @@ The canonical product and implementation plan is `docs/MVP_IMPLEMENTATION_PLAN.m
 
 Detailed project rules live in `.claude/rules/`. If this file and a focused rule disagree, follow the focused rule and flag the mismatch.
 
+Read `docs/HANDOFF.md` before starting work: it is the shared, tool-neutral handoff for Codex and Claude Code (current state, working agreements, pitfalls, next work). Update it whenever you finish or change a feature.
+
 ## Product
 
 `analytic-dashboard` is a mobile-game market research dashboard. It collects public Apple App Store and Google Play observations, stores historical snapshots, calculates trends, and classifies game features and mechanics.
