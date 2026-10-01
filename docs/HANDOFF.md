@@ -82,8 +82,13 @@ Branch state (2026-10-01): PR #10 (`development` → `main`) was merged as `50fc
 the Steam `taxonomy-v2` / `steam-rules-v2` feature and button-style Game Opportunities CTAs on top
 of the earlier Steam stage 6 work. `development` contains persisted Desktop opportunity decisions
 and manual Confirm/Reject/Undo for Steam labels; migration `0009` is applied to Supabase and the
-Steam label feature needs no migration. The user reported that the post-merge schedule, taxonomy
-activation, and stage 6 re-check are done.
+Steam label feature needs no migration. PR #9 was merged earlier on 2026-10-01 (03:16 UTC).
+**Taxonomy v2 was not actually in the database until 2026-10-01 14:55 WIB**: PR #10 merged at 06:18
+UTC, after the last scheduled run (05:56 UTC), while the manually deployed web code already read
+Steam labels with `taxonomy-v2`, so Steam Genres, Mechanics, labels, comparison and opportunities
+were empty. `classify-steam` (rules, 151 games, 1,292 labels) and `classify-steam-ai` (151 games,
+1,035 labels, 5 rejected, 2 empty, about 106k tokens) were then run by hand and the pages filled.
+If you deploy web code that reads a new taxonomy version, run both classifiers first.
 
 **Production is deployed by hand with the Vercel CLI from the user's laptop** (deployments carry
 no git metadata), not from `main`; check `vercel ls analytic-dashboard` for what is live. The
@@ -107,8 +112,7 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   TOP_FREE/TOP_PAID/GROSSING × 100, Google TOP_FREE/TOP_PAID/GROSSING × 25). Apple chart job:
   `discovery.chart` for `app_store`; Trend Score uses `TOP_FREE` only. Rank gain for Apple needs
   about 3.5 days of chart history after the first collection. Mobile taxonomy remains immutable
-  `config/taxonomy/v1.json`; Steam uses the v1 superset `config/taxonomy/v2.json` in the current
-  working-tree feature.
+  `config/taxonomy/v1.json`; Steam uses the v1 superset `config/taxonomy/v2.json` (merged).
 - `.github/workflows/collect.yml` runs every 6 hours at minute 17 on `main`: discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
@@ -284,17 +288,18 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   today, so every Desktop opportunity is a low-confidence "Early signal" (1 of 3 platforms).
 - The user reported on 2026-10-01 that the deploy and the visual check are fine; the agent only
   ever verified response times and data, never screenshots of the Desktop pages.
-- The merged `taxonomy-v2` and Game Opportunities button CTA changes passed `npm run check` on
-  Node 22.23.3. A local browser reached the login page but had no authenticated session, so the CTA
-  styling was not visually checked by the agent on the protected Overview pages.
-- Desktop decision code passes `npm run check` and the DB migration metadata check on Node
-  22.23.3. Migration `0009` is live and the focused repository integration test passed against
-  Supabase inside a rolled-back transaction (append, evidence, history, and latest status). An
-  authenticated visual/save check remains before merge.
-- Steam manual label editing passes the web tests and a focused repository integration test
-  against Supabase in a rolled-back transaction (Confirm, Reject, Undo, precedence, and survival
-  across automated upserts). No migration is required. An authenticated visual/save check on the
-  Steam Game Detail page remains.
+- Checked in the signed-in production browser on 2026-10-01: the Desktop Overview (header toggle,
+  Desktop-only sidebar, KPI cards, button-style CTAs on the opportunity cards), Steam Mechanics,
+  Steam Game Detail (charts, classification evidence, Confirm and Undo), and the opportunity
+  evidence page in the Indonesia and US views. Known cosmetic issue: the rank history charts on
+  Steam Game Detail show 0 on the Y axis for a #1 rank.
+- Desktop decisions: migration `0009` is live and the repository integration test passed in a
+  rolled-back transaction. In production the evidence page shows the "Team decision" panel with
+  Shortlist, Reject, and Start Prototype in both market views, and "No team decision has been
+  recorded". A real save was **not** made because decisions are append-only history; do one real
+  save when the team decides on a direction.
+- Steam manual label editing is verified end to end in production: Confirm on Counter-Strike 2 /
+  Shooting recorded the actor and time, and Undo returned the label to its automated state.
 - Durability needs 30/90 days of daily research results.
 - Manual checks not yet done: a real Shortlist/Reject/Prototype save, a real Studio Fit profile
   version (enter only the team's real capabilities), the Watchlist note save, login and Overview
@@ -309,9 +314,11 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 Decisions that wait on the user are marked **(ask)**.
 
-1. Finish the authenticated visual/save checks for **Desktop opportunity decisions** on both
-   Indonesia and US market views and for **Steam manual labels**, then merge through a pull request
-   when requested.
+1. Merge the open PR (`development` → `main`: Desktop opportunity decisions, manual Steam labels,
+   the evidence-page loading state) and watch the next scheduled run on `main`. The mobile Trend
+   Scores are still missing: Google Play history starts 2026-09-29 10:40 UTC and Apple charts
+   2026-09-30 11:53 UTC, so scores should appear after about 2026-10-02 22:40 UTC (Google Play)
+   and 2026-10-04 (Apple); re-check `/steam/compare` and the Overview then.
 2. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
    Play's worldwide metrics when aggregating.
 3. Smaller: faster classification input loading (it transfers every description, ~75 s from a
