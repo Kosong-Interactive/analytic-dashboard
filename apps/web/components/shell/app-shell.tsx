@@ -38,7 +38,7 @@ export async function AppShell({ filters, active, buildHref, noCounterpart, chil
           userEmail={user?.email ?? null}
           noCounterpart={noCounterpart}
         />
-        {platformModeOf(active) === "mobile" ? <MarketNotice country={filters.country} /> : null}
+        {platformModeOf(active) === "mobile" ? <MarketNotice filters={filters} /> : null}
         <main id="main" tabIndex={-1} className="flex flex-col gap-5 px-4 py-6 outline-none sm:px-7 sm:pb-8">
           {children}
         </main>

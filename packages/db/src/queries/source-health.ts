@@ -1,6 +1,6 @@
 import { and, desc, inArray } from "drizzle-orm";
 
-import { collectorRuns, type StoreId } from "../schema/index";
+import { collectorRuns, storeApps, type StoreId } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 
 export interface SourceHealthRow {
@@ -77,4 +77,14 @@ export async function loadSourceHealth(
       lastCollectedDiscoveredCount: good ? good.discoveredCount : null,
     };
   });
+}
+
+/** Storefronts, among those given, that have at least one tracked listing. */
+export async function loadTrackedStorefronts(db: DatabaseExecutor, countries: readonly string[]): Promise<string[]> {
+  if (countries.length === 0) return [];
+  const rows = await db
+    .selectDistinct({ country: storeApps.country })
+    .from(storeApps)
+    .where(inArray(storeApps.country, [...countries]));
+  return rows.map((row) => row.country);
 }

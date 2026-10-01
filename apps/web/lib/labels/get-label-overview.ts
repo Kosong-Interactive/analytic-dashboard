@@ -7,6 +7,7 @@ import { loadScoredSelection } from "../scoring/load-scored";
 import { buildLabelOverview, type LabelOverview } from "./aggregate";
 import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "./constants";
 import type { LabelQuery } from "./query";
+import { storefrontsOf } from "../overview/filters";
 
 
 export async function getLabelOverview<T extends LabelType>(query: LabelQuery<T>): Promise<LabelOverview & { asOf: Date }> {
@@ -17,6 +18,7 @@ export async function getLabelOverview<T extends LabelType>(query: LabelQuery<T>
     loadLabelMembership(getDatabase(), {
       stores,
       country: query.country,
+      countries: storefrontsOf(query),
       taxonomyVersion: TAXONOMY_VERSION,
       types: [query.type],
       minConfidence: MIN_LABEL_CONFIDENCE,

@@ -9,7 +9,7 @@ import {
   type LabelPageConfig,
   type LabelQuery,
 } from "@/lib/labels/query";
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 
 import { EmptyState, Panel } from "../overview/panel";
 import { AppShell } from "../shell/app-shell";
@@ -42,7 +42,7 @@ export async function LabelPage<T extends LabelType>({ config, query, active, ti
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">{title}</h1>
         <p className="text-[15px] text-dim">
-          {intro} · {countryLabels[query.country]} · {platformLabels[query.platform]}
+          {intro} · {scopeLabel(query)} · {platformLabels[query.platform]}
         </p>
       </div>
 

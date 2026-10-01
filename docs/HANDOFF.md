@@ -118,11 +118,24 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   locales (`en_XX`) because the keyword rules and taxonomy are English; Google Play `lang` comes
   from the locale prefix, Apple ignores it. Stage 1 (done): market model, header
   `Indonesia | SEA | World` on Mobile, and a notice that SEA/World currently show one storefront.
-  Stage 2 (done in code; first collection run by hand on 2026-10-01): daily schedule, stale
-  threshold 36 h, initial collection for the 11 new storefronts. Stage 3 (not started): aggregate
-  SEA and World at read time from per-storefront percentiles (never summed raw metrics; Google
-  Play counts are worldwide per app) and replace the one-storefront stand-in (Indonesia `id`, SEA
-  `sg`, World `us`). Stage 4 (not started): cross-platform comparison and opportunities per
+  Stage 2 (done): daily schedule, stale threshold 36 h, and the first collection of the 11 new
+  storefronts run by hand on 2026-10-01 (33 jobs, all succeeded, no errors; 14,413 listings and
+  4,761 distinct games across 13 storefronts; about 2 minutes per storefront). Stage 3 (code done,
+  not yet committed when this was written): `aggregateMarketGames` in
+  `packages/analytics/src/market-aggregate.ts` and `loadMarketSelection` in
+  `apps/web/lib/scoring/load-market.ts`. A game seen in several storefronts is counted once per
+  platform; the market score is the median storefront score and the shown listing is that
+  storefront's (so rating, rank, and score breakdown belong to one real listing); unscored
+  storefronts are left out of the median; the earliest sighting in any storefront is the first
+  observed date; raw counts are never summed. `parseOverviewFilters` derives `market` from the
+  `country` URL parameter (any storefront selects its market, old `?country=us` opens World) and
+  sets `country` to the market's first storefront; filter objects built without `market` stay one
+  storefront (game detail, research). Label membership and the watchlist read all storefronts of
+  the market (`storefrontsOf`). Headings use `scopeLabel`, and `MarketNotice` states how many
+  storefronts are collected. Combined selections are cached 5 minutes per instance
+  (`createTtlCache`) because loading World takes about 3 s locally (SEA 2.5 s). The Mobile Overview
+  Game Opportunities panel, Research, and the Steam views still use the market's first storefront
+  (stage 4). Stage 4 (not started): cross-platform comparison and opportunities per
   market. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
   at 200 apps per run, so the backlog from the new storefronts takes days.
 - `.github/workflows/collect.yml` runs **once a day at 22:17 UTC (05:17 WIB)** on `main` (job

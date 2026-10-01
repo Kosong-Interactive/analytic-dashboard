@@ -8,7 +8,7 @@ import { SegmentedLinks } from "@/components/shell/segmented-links";
 import { WatchlistList } from "@/components/watchlist/watchlist-list";
 import { requireUser } from "@/lib/auth/session";
 import { MAX_COMPARED } from "@/lib/compare/comparison";
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 import { getWatchlist } from "@/lib/watchlist/get-watchlist";
 import {
   parseWatchlistQuery,
@@ -33,7 +33,7 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">Watchlist</h1>
         <p className="text-[15px] text-dim">
-          Games the team is following · {countryLabels[query.country]} · {platformLabels[query.platform]}
+          Games the team is following · {scopeLabel(query)} · {platformLabels[query.platform]}
         </p>
       </div>
 

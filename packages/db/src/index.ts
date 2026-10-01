@@ -39,6 +39,7 @@ export {
 } from "./queries/trend-inputs";
 export {
   loadSourceHealth,
+  loadTrackedStorefronts,
   type SourceHealthRow,
 } from "./queries/source-health";
 export {

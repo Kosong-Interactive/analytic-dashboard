@@ -14,7 +14,7 @@ import { MAX_COMPARED, toggleCompareId } from "@/lib/compare/comparison";
 import { getExplorer } from "@/lib/explorer/get-explorer";
 import { clearedExplorerFilters, explorerHref, explorerSortLabels, parseExplorerQuery } from "@/lib/explorer/query";
 import { MIN_LABEL_CONFIDENCE } from "@/lib/labels/constants";
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 
 export const metadata = { title: "Games · Game Analytic" };
 
@@ -33,7 +33,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">Games</h1>
         <p className="text-[15px] text-dim">
-          Every tracked game · {countryLabels[query.country]} · {platformLabels[query.platform]} · {list.tracked} tracked
+          Every tracked game · {scopeLabel(query)} · {platformLabels[query.platform]} · {list.tracked} tracked
         </p>
       </div>
 

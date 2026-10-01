@@ -4,7 +4,7 @@ import { Pager } from "@/components/releases/pagination";
 import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedLinks } from "@/components/shell/segmented-links";
 import { requireUser } from "@/lib/auth/session";
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 import { buildReleasesList } from "@/lib/releases/list";
 import {
   parseReleasesQuery,
@@ -37,7 +37,7 @@ export default async function NewReleasesPage({ searchParams }: NewReleasesPageP
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">New Releases</h1>
         <p className="text-[15px] text-dim">
-          Games whose store release date falls in the last {query.days} days · {countryLabels[query.country]} ·{" "}
+          Games whose store release date falls in the last {query.days} days · {scopeLabel(query)} ·{" "}
           {platformLabels[query.platform]}
         </p>
       </div>
