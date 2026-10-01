@@ -1,5 +1,4 @@
 import type { PlatformLabelSignal } from "@analytic-dashboard/analytics";
-import Link from "next/link";
 
 import { formatRelative } from "@/lib/format/format";
 import { getPlatformDatasets } from "@/lib/steam/get-compare";
@@ -13,6 +12,7 @@ import {
   type ComparedPlatform,
 } from "@/lib/steam/platform-compare";
 
+import { LinkButton } from "../common/link-button";
 import { EmptyState, Panel } from "../overview/panel";
 
 export function percentileText(value: number): string {
@@ -69,9 +69,9 @@ function Card({ card, available, country }: { card: SteamOpportunityCard; availa
           ))}
         </ul>
       </details>
-      <Link href={evidenceHref(card, country)} className="text-xs text-ink-soft underline-offset-2 hover:underline">
+      <LinkButton href={evidenceHref(card, country)} className="mt-auto self-start">
         View evidence
-      </Link>
+      </LinkButton>
     </li>
   );
 }
@@ -86,9 +86,9 @@ export async function SteamOpportunitiesSection({ country }: { country: "id" | "
       title="Game Opportunities"
       description="Research directions from labels that stand out on Steam and mobile · platform_opportunity_v1"
       action={
-        <Link href="/steam/compare" className="text-xs text-ink-soft underline-offset-2 hover:underline">
+        <LinkButton href="/steam/compare" variant="secondary">
           Platform comparison
-        </Link>
+        </LinkButton>
       }
     >
       {list.cards.length === 0 ? (

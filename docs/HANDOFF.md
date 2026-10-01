@@ -1,6 +1,6 @@
 # Handoff
 
-Updated: 2026-09-30
+Updated: 2026-10-01
 
 The single handoff for every coding agent working on this repository (Codex, Claude Code, or
 another AGENTS.md-compatible tool). It describes the current state, not session history. Update it
@@ -78,7 +78,23 @@ approves sending opportunity evidence to Gemini.
 
 ## Current state
 
-Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked otherwise.
+Branch state (2026-10-01): PR #9 (`development` → `main`) was merged as `fe5a85e`; `main` contains
+mobile upfront price, Steam rule/AI classification (migration `0008`), Steam Desktop pages and the
+Mobile|Desktop header, Desktop parity with Mobile, Apple game charts, the serverless pool change,
+the session-pooler docs, and Steam stage 6 (`4aefb50`, `68d269e`). `development` remains at
+`68d269e`; the one-commit difference is the merge commit on `main`, not missing feature work. No
+post-merge `collect.yml` run had started when this was checked at 03:26 UTC, so the new scheduled
+path still needs one green run on `main`.
+
+**Production is deployed by hand with the Vercel CLI from the user's laptop** (deployments carry
+no git metadata), not from `main`; check `vercel ls analytic-dashboard` for what is live. The
+Vercel CLI works in this environment for reading (`vercel logs --project analytic-dashboard
+--environment production --since 1h`, `vercel ls`, `vercel inspect`). Environment values are
+type Sensitive and cannot be read back; to change one, overwrite it in the Vercel dashboard and
+redeploy. Everything under "Current state" is on `development` unless it says otherwise.
+
+Uncommitted changes from other tools or people may be in the working tree (`AGENTS.md`,
+`README.md` pointer line, `docs/CLAUDE_HANDOFF.md`); leave them alone.
 
 ### Collection and schedule
 
@@ -91,7 +107,9 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - Discovery seeds are versioned; active `config/discovery-seeds/mvp-v3.json` (22 Apple terms × 50, Apple
   TOP_FREE/TOP_PAID/GROSSING × 100, Google TOP_FREE/TOP_PAID/GROSSING × 25). Apple chart job:
   `discovery.chart` for `app_store`; Trend Score uses `TOP_FREE` only. Rank gain for Apple needs
-  about 3.5 days of chart history after the first collection. Taxonomy `config/taxonomy/v1.json`.
+  about 3.5 days of chart history after the first collection. Mobile taxonomy remains immutable
+  `config/taxonomy/v1.json`; Steam uses the v1 superset `config/taxonomy/v2.json` in the current
+  working-tree feature.
 - `.github/workflows/collect.yml` runs every 6 hours at minute 17 on `main`: discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
@@ -114,7 +132,8 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   `market_opportunities`, `opportunity_decisions`, `opportunity_research_briefs`.
 - Steam (`0007`): `steam_apps`, `steam_snapshots`, `steam_chart_entries`, `steam_prices`,
   `steam_collector_runs`. The `store` enum deliberately has **no** `steam` value: adding it rippled
-  into 16+ mobile code paths. A shared `mobile | desktop` platform type is planned for Steam stage 5.
+  into 16+ mobile code paths. Desktop is a separate mode in the UI (`PlatformMode`), not a store.
+  Migration `0008` adds `steam_app_labels` and `steam_classification_runs`.
 
 ### Analytics and research
 
@@ -172,7 +191,7 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - Rules (`rules-v1`) and Gemini (`ai-v2`, model rotation via `models.list`, SDK retries disabled,
   `maxOutputTokens` capped, evidence must quote the input). Resolution manual > AI > rule; once an
   app has an AI run its rule labels are ignored. Roll-ups hide automated labels below 0.6.
-- Steam games: rules (`steam-rules-v1`: Steam user tags at 0.75 confidence, keyword rules on
+- Steam games: rules (`steam-rules-v2`: Steam user tags at 0.75 confidence, keyword rules on
   title/description, price) and Gemini (`ai-v2`, same prompt and provider as mobile; Steam genres
   and tags are sent as "store genres", so evidence may quote a tag). Stored in `steam_app_labels` / `steam_classification_runs`; run
   `npm run classify-steam --workspace @analytic-dashboard/collector` (also a step in `collect.yml`).
@@ -182,6 +201,11 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   runs on 2026-10-01: rules labelled 150 games (1,196 labels); AI labelled all 150 (973 labels, 3
   rejected by validation, 2 empty, about 100k tokens, no errors). AI still leans on noisy tags
   (Dota 2 keeps Simulation and Tower defense), so judge quality before trusting Steam labels.
+  `taxonomy-v2` adds Survival, Sandbox, Colony simulation, Extraction, Automation, Factory
+  building, Resource management, and Session-based progression only for Steam. Perspective,
+  controller support, Early Access, and production scope remain outside gameplay taxonomy for a
+  future structured-facet feature. The v2 code is implemented and tested in the working tree, but
+  neither rule nor Gemini reclassification has been run against Supabase yet.
 
 ### Dashboard
 
@@ -198,6 +222,9 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   (Research, Studio Fit, Search, Steam Charts) pass `noCounterpart` to `AppShell` and lead to the
   other mode's Overview.
 - Steam Trending and the Overview Trending panel now show `steam_trend_v1` (see Analytics).
+- Game Opportunities CTAs on both Mobile and Desktop use accessible button styling while retaining
+  link semantics. Mobile uses primary View evidence plus secondary Browse buttons; Desktop uses
+  primary View evidence and a secondary Platform comparison button.
 - Desktop pages mirror Mobile: `/steam` (Overview), `/steam/trending`, `/steam/new-releases`,
   `/steam/genres`, `/steam/mechanics`, `/steam/games`, `/steam/games/[id]`, plus Desktop-only
   `/steam/charts`. On Desktop the country only picks the regional price (IDR or USD); charts,
@@ -218,6 +245,16 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Known pitfalls
 
+- **Vercel `DATABASE_URL` must be the session pooler (port 5432).** On 2026-10-01 production
+  pages hung until the 300 s function timeout (`canceling statement due to statement timeout`,
+  process exit 128 in the logs) because it pointed at the transaction pooler; the user replaced
+  it and `/`, `/trending`, `/games`, `/steam*` then answered in 0.15-1.2 s. The session pooler's
+  pool is small and shared by every client (each serverless instance, `next dev`, the collector),
+  so `apps/web/lib/database.ts` uses 2 connections per instance, closes idle ones after 10 s, and
+  recycles them after 5 min (`idleTimeoutSeconds`, `maxLifetimeSeconds` in
+  `packages/db/src/client.ts`; unset for the collector). If pages hang again, look at Function
+  Logs and the Supabase pooler pool size first, and avoid firing many sequential requests at
+  production while testing.
 - **Use the Supabase session pooler (port 5432) for `DATABASE_URL`.** Through the transaction
   pooler (port 6543), postgres.js queries pipelined on a busy connection stall until the 2-minute
   statement timeout (error `57014`) whenever concurrent reads outnumber the connections; the
@@ -235,31 +272,51 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Waiting on data or manual checks
 
-- Trend Scores (and therefore opportunities) need about 3.5 days of history; first expected around
-  2026-10-02/03. Then review scored opportunities and the Overview cards with real data.
+- Mobile Trend Scores need about 3.5 days of history; first expected around 2026-10-02/03. Apple
+  charts were first collected on 2026-10-01 (297 Indonesia and 299 US chart entries), so Apple
+  rank gain appears at about the same time. Then re-check `/steam/compare`, the Game
+  Opportunities panel, and the Mobile Overview cards with real data: only Steam has momentum
+  today, so every Desktop opportunity is a low-confidence "Early signal" (1 of 3 platforms).
+- The user reported on 2026-10-01 that the deploy and the visual check are fine; the agent only
+  ever verified response times and data, never screenshots of the Desktop pages.
+- The working-tree `taxonomy-v2` and Game Opportunities button CTA changes passed `npm run check`
+  on Node 22.23.3 (lint, all workspace typechecks/tests, and production build). A local browser
+  reached the login page but had no authenticated session, so the new CTA styling was not visually
+  checked on the protected Overview pages.
 - Durability needs 30/90 days of daily research results.
 - Manual checks not yet done: a real Shortlist/Reject/Prototype save, a real Studio Fit profile
   version (enter only the team's real capabilities), the Watchlist note save, login and Overview
   info popovers on a phone, and one live research brief (needs the user's approval and scored
   opportunities).
-- Steam: the Desktop coverage row has not been seen in a browser yet. The first scheduled Steam
-  step on `main` (run 36695320984) collected 150 listings but failed because five valid games
-  returned 404 for optional current-player data. The adapter fix is on `development`, and a
-  read-only live smoke against affected App ID `2288340` returned `currentPlayers: null`; it still
-  needs merge to `main` and a workflow rerun before the schedule can be called healthy.
+- Steam: the first scheduled Steam step on `main` (run 36695320984) collected 150 listings but failed because five valid games
+  returned 404 for optional current-player data. The adapter fix is now on `main`, and a read-only
+  live smoke against affected App ID `2288340` returned `currentPlayers: null`; it still needs a
+  post-merge workflow run before the schedule can be called healthy.
 
 ## Next work (recommended order)
 
-1. **Steam:** review the AI labels on `/steam/genres` and `/steam/games` (tag noise), then Steam
-   stage 6 (normalized cross-platform score; needs a few days of Steam history) and manual
-   Confirm/Reject for Steam labels.
-2. **Verify Apple charts** after the first scheduled run: `chart_entries` for `app_store` and rank
-   gain appearing in Trend Score components after about 3.5 days.
-3. **World market** from several countries for Mobile (team must choose countries; mind Google
-   Play's worldwide metrics when aggregating).
-4. **Steam stage 6 follow-ups** — stage 6 (6.1–6.4) is done; open items are persisting Shortlist/Reject for Desktop opportunities, re-checking the formulas once mobile Trend Scores exist (about 2026-10-02/03), and `taxonomy-v2` for PC concepts.
-5. Smaller: faster classification input loading (it transfers every description, ~75 s from a
-   laptop), a dedicated new-release discovery path.
+Decisions that wait on the user are marked **(ask)**.
+
+1. Confirm the first post-merge scheduled `collect.yml` run on `main` is green, including Apple
+   charts, `Classify Steam games with rules`, and `... with AI`.
+2. **Publish and activate `taxonomy-v2`.** The user approved the gameplay labels and the code is
+   complete in the working tree. Commit/push when requested, then run rule classification so v2
+   labels exist before judging the Steam UI. Gemini v2 reclassification is still a separate live
+   action (about 100k tokens) and has not run.
+3. **Re-check Steam stage 6 with real mobile scores** (about 2026-10-02/03): thresholds (strong
+   0.6, weak 0.4, thin share ratio 0.5, minimum 3 games, 5 labels) and weights are the agent's
+   proposals in versioned config; a change after the team relies on them needs a new version.
+4. **Persist Desktop opportunity decisions** (Shortlist, Reject, Prototype). The existing tables
+   are keyed to mobile (`market_opportunities`, `opportunity_decisions`), so this needs a new
+   migration. **(ask)** before writing it.
+5. **Manual Confirm/Reject for Steam labels** (`steam_app_labels` already has the `manual`
+   source; needs a write path and the detail-page actions, `LabelsPanel` is currently
+   `readOnly`).
+6. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
+   Play's worldwide metrics when aggregating.
+7. Smaller: faster classification input loading (it transfers every description, ~75 s from a
+   laptop), a dedicated new-release discovery path; `/games` is the heaviest page (about 530 KB
+   of HTML, 1.2 s in production).
 
 ## Commands
 

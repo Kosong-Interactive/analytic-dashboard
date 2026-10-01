@@ -6,7 +6,7 @@ import type { ClassificationInput, ClassificationListing } from "./input.js";
 export const RULES_VERSION = "rules-v1";
 
 /** Version of the Steam-only tag rules. Mobile hashes use `RULES_VERSION` and are unaffected. */
-export const STEAM_RULES_VERSION = "steam-rules-v1";
+export const STEAM_RULES_VERSION = "steam-rules-v2";
 
 const STORE_GENRE_CONFIDENCE = 0.95;
 const PRICE_CONFIDENCE = 0.95;
@@ -84,7 +84,7 @@ const STORE_GENRES: Record<string, string> = {
  * Steam user tags (lowercase) to taxonomy labels. Only tags that map cleanly onto the existing
  * vocabulary are listed; anything else is left to description keywords or AI.
  */
-const STEAM_TAGS: Record<string, readonly LabelRef[]> = {
+const STEAM_TAGS_V1: Record<string, readonly LabelRef[]> = {
   action: [["genre", "action"]],
   adventure: [["genre", "adventure"]],
   arcade: [["genre", "arcade"]],
@@ -178,6 +178,29 @@ const STEAM_TAGS: Record<string, readonly LabelRef[]> = {
   "free to play": [["monetization_clue", "free_to_play"]],
 };
 
+/** Steam-only concepts added by taxonomy-v2. Keep v1 mappings above unchanged. */
+const STEAM_TAGS_V2: Record<string, readonly LabelRef[]> = {
+  survival: [["subgenre", "survival"]],
+  "survival horror": [["subgenre", "survival"]],
+  "open world survival craft": [
+    ["subgenre", "survival"],
+    ["subgenre", "sandbox"],
+    ["core_mechanic", "crafting"],
+  ],
+  sandbox: [["subgenre", "sandbox"]],
+  "colony sim": [["subgenre", "colony_simulation"]],
+  "extraction shooter": [
+    ["subgenre", "extraction"],
+    ["core_mechanic", "shooting"],
+  ],
+  automation: [["core_mechanic", "automation"]],
+  "factory automation": [
+    ["core_mechanic", "automation"],
+    ["core_mechanic", "factory_building"],
+  ],
+  "resource management": [["core_mechanic", "resource_management"]],
+};
+
 const w = (source: string) => new RegExp(`\\b(?:${source})\\b`, "gi");
 
 const KEYWORD_RULES: readonly KeywordRule[] = [
@@ -243,6 +266,18 @@ const KEYWORD_RULES: readonly KeywordRule[] = [
   { id: "kw.subscription", labels: [["monetization_clue", "subscription"]], patterns: [w("subscriptions?|vip membership|auto-renew(?:ing|able)?")] },
 ];
 
+/** PC/Desktop concepts introduced by taxonomy-v2; mobile classification never applies these. */
+const STEAM_KEYWORD_RULES_V2: readonly KeywordRule[] = [
+  { id: "steam.kw.survival", labels: [["subgenre", "survival"]], patterns: [w("survival (?:game|crafting|experience)|fight to survive")] },
+  { id: "steam.kw.sandbox", labels: [["subgenre", "sandbox"]], patterns: [w("sandbox")] },
+  { id: "steam.kw.colony_simulation", labels: [["subgenre", "colony_simulation"]], patterns: [w("colony sim(?:ulation)?|(?:build|manage) (?:a|your) colony")] },
+  { id: "steam.kw.extraction", labels: [["subgenre", "extraction"]], patterns: [w("extraction shooter|extract with (?:your )?loot|loot and extract")] },
+  { id: "steam.kw.automation", labels: [["core_mechanic", "automation"]], patterns: [w("automation|automate (?:production|your factory|workflows?)")] },
+  { id: "steam.kw.factory_building", labels: [["core_mechanic", "factory_building"]], patterns: [w("factory build(?:er|ing)|build (?:a|your) factory")] },
+  { id: "steam.kw.resource_management", labels: [["core_mechanic", "resource_management"]], patterns: [w("resource management|manage (?:scarce|limited) resources")] },
+  { id: "steam.kw.session_progression", labels: [["meta_mechanic", "session_based_progression"]], patterns: [w("session[- ]based progression|run[- ]based progression|meta progression|progress between runs")] },
+];
+
 interface Hit {
   type: TaxonomyLabelType;
   slug: string;
@@ -259,7 +294,8 @@ export function applyRules(input: ClassificationInput): RuleLabel[] {
   const hits = input.listings.flatMap((listing) => [
     ...storeGenreHits(listing),
     ...priceHits(listing),
-    ...keywordHits(listing),
+    ...keywordHits(listing, KEYWORD_RULES),
+    ...(listing.store === "steam" ? keywordHits(listing, STEAM_KEYWORD_RULES_V2) : []),
     ...steamTagHits(listing),
   ]);
   return mergeHits(hits);
@@ -282,15 +318,18 @@ function storeGenreHits(listing: ClassificationListing): Hit[] {
 }
 
 function steamTagHits(listing: ClassificationListing): Hit[] {
-  return (listing.storeTags ?? []).flatMap((tag) =>
-    (STEAM_TAGS[tag.trim().toLowerCase()] ?? []).map(([type, slug]) => ({
+  if (listing.store !== "steam") return [];
+  return (listing.storeTags ?? []).flatMap((tag) => {
+    const normalized = tag.trim().toLowerCase();
+    const refs = [...(STEAM_TAGS_V1[normalized] ?? []), ...(STEAM_TAGS_V2[normalized] ?? [])];
+    return refs.map(([type, slug]) => ({
       type,
       slug,
       confidence: STEAM_TAG_CONFIDENCE,
       evidence: { field: "store_category" as const, excerpt: `Steam tag: ${tag}` },
       ruleId: "steam.tag",
-    })),
-  );
+    }));
+  });
 }
 
 function priceHits(listing: ClassificationListing): Hit[] {
@@ -307,9 +346,9 @@ function priceHits(listing: ClassificationListing): Hit[] {
   ];
 }
 
-function keywordHits(listing: ClassificationListing): Hit[] {
+function keywordHits(listing: ClassificationListing, rules: readonly KeywordRule[]): Hit[] {
   const hits: Hit[] = [];
-  for (const rule of KEYWORD_RULES) {
+  for (const rule of rules) {
     const title = firstMatch(rule.patterns, listing.title);
     const description = listing.description ? matches(rule.patterns, listing.description) : [];
 
@@ -394,6 +433,14 @@ export function ruleLabelRefs(): LabelRef[] {
   refs.set("monetization_clue:premium", ["monetization_clue", "premium"]);
   refs.set("monetization_clue:free_to_play", ["monetization_clue", "free_to_play"]);
   for (const rule of KEYWORD_RULES) for (const ref of rule.labels) refs.set(`${ref[0]}:${ref[1]}`, ref);
-  for (const tagRefs of Object.values(STEAM_TAGS)) for (const ref of tagRefs) refs.set(`${ref[0]}:${ref[1]}`, ref);
+  for (const tagRefs of Object.values(STEAM_TAGS_V1)) for (const ref of tagRefs) refs.set(`${ref[0]}:${ref[1]}`, ref);
+  return [...refs.values()];
+}
+
+/** Every rule label Steam taxonomy-v2 must contain, including the unchanged v1 vocabulary. */
+export function steamRuleLabelRefs(): LabelRef[] {
+  const refs = new Map(ruleLabelRefs().map((ref) => [`${ref[0]}:${ref[1]}`, ref]));
+  for (const tagRefs of Object.values(STEAM_TAGS_V2)) for (const ref of tagRefs) refs.set(`${ref[0]}:${ref[1]}`, ref);
+  for (const rule of STEAM_KEYWORD_RULES_V2) for (const ref of rule.labels) refs.set(`${ref[0]}:${ref[1]}`, ref);
   return [...refs.values()];
 }

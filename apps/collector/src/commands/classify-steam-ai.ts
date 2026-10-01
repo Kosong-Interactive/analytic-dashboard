@@ -17,7 +17,7 @@ import { runAiClassification } from "../jobs/ai-classification.js";
 import { toAiClassificationStore, type SteamAiBackend } from "../jobs/steam-classification.js";
 import { getRepositoryRoot } from "../runtime/config.js";
 import { traceStep } from "../runtime/trace-step.js";
-import { ACTIVE_TAXONOMY } from "./classify.js";
+import { ACTIVE_STEAM_TAXONOMY } from "./classify.js";
 
 const optionsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(5_000).default(200),
@@ -51,7 +51,7 @@ export async function runClassifySteamAiCommand(argv: string[]): Promise<number>
   const connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL;
   if (!connectionString) throw new Error("Set DATABASE_URL in the repository root .env.local.");
 
-  const taxonomy = parseTaxonomy(JSON.parse(readFileSync(resolve(root, ACTIVE_TAXONOMY), "utf8")));
+  const taxonomy = parseTaxonomy(JSON.parse(readFileSync(resolve(root, ACTIVE_STEAM_TAXONOMY), "utf8")));
   const provider = new GeminiProvider({
     client: createGeminiClient(apiKey),
     onEvent: (event) => console.info(JSON.stringify({ event: "classification.steam.ai.request", ...event })),

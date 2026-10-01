@@ -14,7 +14,7 @@ import {
 } from "./steam-classification.js";
 
 const taxonomy = parseTaxonomy({
-  version: "taxonomy-v1",
+  version: "taxonomy-v2",
   labels: {
     genre: { action: "Action" },
     subgenre: { roguelike: "Roguelike" },
