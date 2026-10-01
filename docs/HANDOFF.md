@@ -78,12 +78,11 @@ approves sending opportunity evidence to Gemini.
 
 ## Current state
 
-Branch state (2026-10-01): PR #10 (`development` → `main`) was merged as `50fca81`; `main` contains
-the Steam `taxonomy-v2` / `steam-rules-v2` feature and button-style Game Opportunities CTAs on top
-of the earlier Steam stage 6 work. `development` contains persisted Desktop opportunity decisions
-and manual Confirm/Reject/Undo for Steam labels; migration `0009` is applied to Supabase and the
-Steam label feature needs no migration. PR #9 was merged earlier on 2026-10-01 (03:16 UTC).
-**Taxonomy v2 was not actually in the database until 2026-10-01 14:55 WIB**: PR #10 merged at 06:18
+Branch state (2026-10-01): `main` is at `a5286d1` (PR #11 merged at 08:05 UTC) and contains
+everything below: PR #9 (price, Steam pages, stage 6, Apple charts, Steam AI), PR #10 (Steam
+`taxonomy-v2`, button-style opportunity CTAs), and PR #11 (persisted Desktop opportunity
+decisions with migration `0009`, manual Confirm/Reject/Undo for Steam labels, the evidence-page
+loading state). `development` equals `main`. **Taxonomy v2 was not actually in the database until 2026-10-01 14:55 WIB**: PR #10 merged at 06:18
 UTC, after the last scheduled run (05:56 UTC), while the manually deployed web code already read
 Steam labels with `taxonomy-v2`, so Steam Genres, Mechanics, labels, comparison and opportunities
 were empty. `classify-steam` (rules, 151 games, 1,292 labels) and `classify-steam-ai` (151 games,
@@ -291,8 +290,8 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 - Checked in the signed-in production browser on 2026-10-01: the Desktop Overview (header toggle,
   Desktop-only sidebar, KPI cards, button-style CTAs on the opportunity cards), Steam Mechanics,
   Steam Game Detail (charts, classification evidence, Confirm and Undo), and the opportunity
-  evidence page in the Indonesia and US views. Known cosmetic issue: the rank history charts on
-  Steam Game Detail show 0 on the Y axis for a #1 rank.
+  evidence page in the Indonesia and US views. The rank history charts on Steam Game Detail now
+  floor the Y axis at 1 (it showed 0 for a #1 rank before; not yet seen in the browser after the fix).
 - Desktop decisions: migration `0009` is live and the repository integration test passed in a
   rolled-back transaction. In production the evidence page shows the "Team decision" panel with
   Shortlist, Reject, and Start Prototype in both market views, and "No team decision has been
@@ -314,16 +313,30 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 Decisions that wait on the user are marked **(ask)**.
 
-1. Merge the open PR (`development` → `main`: Desktop opportunity decisions, manual Steam labels,
-   the evidence-page loading state) and watch the next scheduled run on `main`. The mobile Trend
-   Scores are still missing: Google Play history starts 2026-09-29 10:40 UTC and Apple charts
+1. Watch the next scheduled run on `main` (first one with Steam `taxonomy-v2` and the decision
+   code). The mobile Trend Scores are still missing: Google Play history starts 2026-09-29 10:40 UTC and Apple charts
    2026-09-30 11:53 UTC, so scores should appear after about 2026-10-02 22:40 UTC (Google Play)
    and 2026-10-04 (Apple); re-check `/steam/compare` and the Overview then.
 2. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
    Play's worldwide metrics when aggregating.
-3. Smaller: faster classification input loading (it transfers every description, ~75 s from a
-   laptop), a dedicated new-release discovery path; `/games` is the heaviest page (about 530 KB
-   of HTML, 1.2 s in production).
+3. Findings from the 2026-10-01 clean-up (nothing left to do unless noted):
+   - Classification input loading is not slow: 2–3 s for about 5 MB, locally and in CI. The slow
+     part of `Classify games with rules` (about 190 s) and `with AI` (about 520 s) was writing each
+     changed app as its own sequential transaction over a high-latency link (about 1.7 s per app).
+     Writes now overlap with `forEachConcurrent` (3 at a time, equal to the pool); a mock of that
+     pattern ran 2.6x faster. Re-read the step times on the next scheduled run.
+   - `/games` is not heavy where it matters: 533 KB decoded but 30 KB transferred (compressed), and
+     it loads in about 0.6 s in production. The size is Next.js flight data plus the table and card
+     markup. No change needed.
+   - A dedicated new-release path is **not** feasible with the current sources. Apple's classic RSS
+     `newfreeapplications` / `newpaidapplications` Games feeds return about 100 apps per country,
+     but none released in the last 30 days (Indonesia median age 52 days, all within 90 days), so
+     they would only widen the 90-day window and add a few hundred apps to classify. The Google
+     Play scraper offers only `TOP_FREE`, `TOP_PAID`, `GROSSING`, and Steam has no such endpoint
+     wired. **(ask)** before adding the Apple feeds.
+   - Text sizes on the dashboard were raised one step (named sizes `xs` to `sm` to `base`, pixel
+     sizes about +15%, chart fonts 13/14). Check wide tables and the phone layout after the next
+     deploy.
 
 ## Commands
 

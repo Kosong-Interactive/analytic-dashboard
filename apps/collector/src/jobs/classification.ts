@@ -9,6 +9,8 @@ import {
 } from "@analytic-dashboard/classifier";
 import type { RuleLabelRow, TaxonomyLabelInput } from "@analytic-dashboard/db";
 
+import { forEachConcurrent } from "../runtime/concurrency.js";
+
 /** Everything the rule classification job needs from storage, so it is testable without a database. */
 export interface ClassificationStore {
   syncTaxonomy(taxonomyVersion: string, labels: TaxonomyLabelInput[]): Promise<Map<string, string>>;
@@ -40,6 +42,9 @@ export interface ClassificationSummary {
 
 const ERROR_SAMPLE_MAX_LENGTH = 300;
 
+/** Matches the default connection pool, so overlapping writes never wait for a connection. */
+const WRITE_CONCURRENCY = 3;
+
 /**
  * Deterministic rule labels for every canonical app. Rerunnable: an unchanged input hash is
  * skipped, and a changed one replaces only that app's previous rule labels.
@@ -68,6 +73,7 @@ export async function runRuleClassification(
   };
   const errors: string[] = [];
 
+  const pending: Array<{ input: ClassificationInput; inputHash: string }> = [];
   for (const input of inputs) {
     const inputHash = classificationInputHash(input, {
       taxonomyVersion: taxonomy.version,
@@ -75,9 +81,13 @@ export async function runRuleClassification(
     });
     if (storedHashes.get(input.appId) === inputHash) {
       summary.unchanged += 1;
-      continue;
+    } else {
+      pending.push({ input, inputHash });
     }
+  }
 
+  // Each app is its own transaction, so over a high-latency link the writes dominate; overlap them.
+  await forEachConcurrent(pending, WRITE_CONCURRENCY, async ({ input, inputHash }) => {
     const labels: RuleLabelRow[] = applyRules(input).flatMap((label) => {
       const labelId = labelIds.get(`${label.type}:${label.slug}`);
       // A rule may only emit labels of the controlled vocabulary.
@@ -100,7 +110,7 @@ export async function runRuleClassification(
     } catch (error) {
       errors.push(`${input.appId}: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
-  }
+  });
 
   summary.errorCount = errors.length;
   summary.errorSample = errors.length > 0 ? errors.join("; ").slice(0, ERROR_SAMPLE_MAX_LENGTH) : null;
