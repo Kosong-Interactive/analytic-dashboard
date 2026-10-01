@@ -1,6 +1,9 @@
 import type { PlatformLabelSignal } from "@analytic-dashboard/analytics";
+import { loadLatestDesktopOpportunityDecisions, type DesktopOpportunityDecisionRow } from "@analytic-dashboard/db";
 
 import { formatRelative } from "@/lib/format/format";
+import { getDatabase } from "@/lib/database";
+import { opportunityDecisionLabels } from "@/lib/research/detail-view-model";
 import { getPlatformDatasets } from "@/lib/steam/get-compare";
 import { selectOpportunities, type SteamOpportunityCard } from "@/lib/steam/opportunities";
 import {
@@ -14,6 +17,8 @@ import {
 
 import { LinkButton } from "../common/link-button";
 import { EmptyState, Panel } from "../overview/panel";
+import { desktopDecisionTone } from "./desktop-decision-panel";
+import { cn } from "@/lib/utils";
 
 export function percentileText(value: number): string {
   return `top ${Math.max(1, Math.round((1 - value) * 100))}%`;
@@ -32,7 +37,17 @@ export function evidenceHref(card: Pick<SteamOpportunityCard, "type" | "slug">, 
   return country === "id" ? base : `${base}?country=${country}`;
 }
 
-function Card({ card, available, country }: { card: SteamOpportunityCard; available: readonly ComparedPlatform[]; country: "id" | "us" }) {
+function Card({
+  card,
+  available,
+  country,
+  decision,
+}: {
+  card: SteamOpportunityCard;
+  available: readonly ComparedPlatform[];
+  country: "id" | "us";
+  decision: DesktopOpportunityDecisionRow | null;
+}) {
   return (
     <li className="flex flex-col gap-3 rounded-[10px] border border-line bg-surface-alt px-4 py-3.5">
       <div className="flex flex-col gap-1">
@@ -51,6 +66,11 @@ function Card({ card, available, country }: { card: SteamOpportunityCard; availa
             </span>
           ) : null}
           <span className="text-dim">{card.measured} of {card.total} platforms measured</span>
+          {decision ? (
+            <span className={cn("rounded border px-1.5 py-px font-medium", desktopDecisionTone[decision.status])}>
+              {opportunityDecisionLabels[decision.status]}
+            </span>
+          ) : null}
         </p>
       </div>
       <p className="text-xs leading-5 text-ink-soft">{modeHints[card.mode]}.</p>
@@ -80,6 +100,10 @@ function Card({ card, available, country }: { card: SteamOpportunityCard; availa
 export async function SteamOpportunitiesSection({ country }: { country: "id" | "us" }) {
   const { datasets, asOf, steamSource } = await getPlatformDatasets(country);
   const list = selectOpportunities({ datasets, asOf });
+  const decisions = await loadLatestDesktopOpportunityDecisions(getDatabase(), {
+    country,
+    labels: list.cards.map((card) => ({ labelType: card.type, labelSlug: card.slug })),
+  });
 
   return (
     <Panel
@@ -102,7 +126,13 @@ export async function SteamOpportunitiesSection({ country }: { country: "id" | "
       ) : (
         <ul className="grid grid-cols-1 gap-3 border-t border-line-soft p-4 md:grid-cols-2 xl:grid-cols-3">
           {list.cards.map((card) => (
-            <Card key={card.key} card={card} available={list.available} country={country} />
+            <Card
+              key={card.key}
+              card={card}
+              available={list.available}
+              country={country}
+              decision={decisions.get(card.key) ?? null}
+            />
           ))}
         </ul>
       )}
@@ -111,7 +141,7 @@ export async function SteamOpportunitiesSection({ country }: { country: "id" | "
         {asOf.toISOString().slice(0, 16).replace("T", " ")} UTC · {list.candidates} of {list.assessed} labels reach a
         direction. Each platform is ranked against its own labels, never on one shared score, and a platform that is
         unavailable or not yet measurable counts as missing, not as weak. These are research signals from sampled charts,
-        not market facts, and no Shortlist or Reject decision is stored for Desktop yet.
+        not market facts. Team decisions are stored as an append-only history with the evidence version reviewed at the time.
       </p>
     </Panel>
   );

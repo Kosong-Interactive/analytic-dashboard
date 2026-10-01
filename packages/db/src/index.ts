@@ -51,6 +51,8 @@ export {
 } from "./queries/game-history";
 export {
   clearManualLabel,
+  clearSteamManualLabel,
+  findSteamAppId,
   loadInputHashes,
   loadRuleInputHashes,
   loadSteamInputHashes,
@@ -59,6 +61,7 @@ export {
   replaceSteamAutomatedLabels,
   replaceRuleLabels,
   setManualLabel,
+  setSteamManualLabel,
   syncTaxonomyLabels,
   type AutomatedLabelRow,
   type AutomatedSource,
@@ -118,6 +121,15 @@ export {
   type StoredOpportunity,
   type StoredOpportunityPreview,
 } from "./repositories/research";
+export {
+  loadDesktopOpportunityDecisions,
+  loadLatestDesktopOpportunityDecisions,
+  recordDesktopOpportunityDecision,
+  type DesktopOpportunityDecisionRow,
+  type DesktopOpportunityDecisionStatus,
+  type DesktopOpportunityIdentity,
+  type DesktopOpportunityLabelType,
+} from "./repositories/desktop-opportunity-decisions";
 export {
   createStudioProfileVersion,
   loadLatestStudioProfile,

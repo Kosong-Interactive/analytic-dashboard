@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 
 import { EmptyState, Panel } from "@/components/overview/panel";
 import { AppShell } from "@/components/shell/app-shell";
+import { DesktopDecisionPanel } from "@/components/steam/desktop-decision-panel";
 import { percentileText, signalLine } from "@/components/steam/opportunities-panel";
 import { requireUser } from "@/lib/auth/session";
 import { formatRelative } from "@/lib/format/format";
 import { getPlatformDatasets } from "@/lib/steam/get-compare";
-import { buildLabelEvidence } from "@/lib/steam/opportunities";
+import { getDesktopOpportunityDecisions } from "@/lib/steam/desktop-decisions";
+import { buildLabelEvidence, OPPORTUNITY_MODES } from "@/lib/steam/opportunities";
 import {
   compareTypeLabels,
   compareTypeValues,
@@ -40,6 +42,7 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
   const { datasets, asOf, steamSource } = await getPlatformDatasets(country);
   const evidence = buildLabelEvidence({ datasets, type, slug, asOf });
   if (!evidence) notFound();
+  const decisions = await getDesktopOpportunityDecisions({ country, labelType: type, labelSlug: slug });
   const { row } = evidence;
   const countryQuery = country === "id" ? "" : `&country=${country}`;
 
@@ -71,6 +74,15 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
           ))}
         </ul>
       </Panel>
+
+      {OPPORTUNITY_MODES.includes(row.opportunity.mode) ? (
+        <DesktopDecisionPanel
+          decisions={decisions}
+          country={country}
+          labelType={type}
+          labelSlug={slug}
+        />
+      ) : null}
 
       <Panel title="Platform signals" description="Each platform ranks this label against its own labels by median trend score">
         <div className="overflow-x-auto">

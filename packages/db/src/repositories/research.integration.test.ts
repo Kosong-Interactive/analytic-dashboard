@@ -15,6 +15,11 @@ import {
 } from "./research";
 import { createStudioProfileVersion, loadLatestStudioProfile } from "./studio-profiles";
 import { loadLatestResearchBrief, loadResearchBriefInputHashes, recordResearchBrief } from "./research-briefs";
+import {
+  loadDesktopOpportunityDecisions,
+  loadLatestDesktopOpportunityDecisions,
+  recordDesktopOpportunityDecision,
+} from "./desktop-opportunity-decisions";
 
 // Needs a migrated PostgreSQL. Every test rolls back, so nothing is left behind.
 const connectionString = process.env.TEST_DATABASE_URL;
@@ -165,6 +170,54 @@ describe("research repository", { skip: connection === null }, () => {
       assert.equal(decisions.length, 1);
       assert.equal(decisions[0]?.status, "shortlisted");
       assert.equal(decisions[0]?.actor, "tester@example.com");
+    });
+  });
+
+  it("appends Desktop decisions with evidence and loads the latest decision per label", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const base = {
+        country: "id",
+        labelType: "genre" as const,
+        labelSlug: "survival",
+        labelDisplayName: "Survival",
+        formulaVersion: "platform_opportunity_v1",
+        steamTaxonomyVersion: "taxonomy-v2",
+        mobileTaxonomyVersion: "taxonomy-v1",
+        note: "Validate the adaptation",
+        owner: "Prototype team",
+        actor: "tester@example.com",
+        evidence: { mode: "steam_to_mobile", measured: 2 },
+      };
+      await recordDesktopOpportunityDecision(tx, {
+        ...base,
+        status: "shortlisted",
+        createdAt: new Date("2026-10-01T03:00:00Z"),
+      });
+      await recordDesktopOpportunityDecision(tx, {
+        ...base,
+        status: "prototype",
+        note: "Prototype approved",
+        createdAt: new Date("2026-10-01T04:00:00Z"),
+      });
+
+      const history = await loadDesktopOpportunityDecisions(tx, {
+        country: "id",
+        labelType: "genre",
+        labelSlug: "survival",
+      });
+      assert.equal(history.length, 2);
+      assert.equal(history[0]?.status, "prototype");
+      assert.deepEqual(history[0]?.evidence, { mode: "steam_to_mobile", measured: 2 });
+
+      const latest = await loadLatestDesktopOpportunityDecisions(tx, {
+        country: "id",
+        labels: [
+          { labelType: "genre", labelSlug: "survival" },
+          { labelType: "theme", labelSlug: "fantasy" },
+        ],
+      });
+      assert.equal(latest.get("genre:survival")?.status, "prototype");
+      assert.equal(latest.has("theme:fantasy"), false);
     });
   });
 

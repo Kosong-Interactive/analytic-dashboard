@@ -3,28 +3,35 @@
 import { useActionState } from "react";
 
 import { changeLabel, type LabelActionState } from "@/app/games/[id]/actions";
+import { changeSteamLabel } from "@/app/steam/games/[id]/actions";
 import type { LabelStatus } from "@/lib/labels/resolve";
 
 const initial: LabelActionState = { ok: null };
 const buttonClass =
   "h-7 rounded-md border border-line-strong px-2 text-[11px] text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-50";
 
+export type EditableLabelTarget =
+  | { kind: "mobile"; id: string }
+  | { kind: "steam"; id: string; externalId: string };
+
 /** Confirm, reject, or undo a decision on one label. Each button submits its own intent. */
 export function LabelActions({
-  storeAppId,
+  target,
   labelId,
   status,
 }: {
-  storeAppId: string;
+  target: EditableLabelTarget;
   labelId: string;
   status: LabelStatus;
 }) {
-  const [state, action, pending] = useActionState(changeLabel, initial);
+  const action = target.kind === "steam" ? changeSteamLabel : changeLabel;
+  const [state, formAction, pending] = useActionState(action, initial);
   const decided = status === "confirmed" || status === "rejected";
 
   return (
-    <form action={action} className="mt-2 flex flex-wrap items-center gap-1.5">
-      <input type="hidden" name="storeAppId" value={storeAppId} />
+    <form action={formAction} className="mt-2 flex flex-wrap items-center gap-1.5">
+      <input type="hidden" name={target.kind === "steam" ? "steamAppId" : "storeAppId"} value={target.id} />
+      {target.kind === "steam" ? <input type="hidden" name="externalId" value={target.externalId} /> : null}
       <input type="hidden" name="labelId" value={labelId} />
       {status !== "confirmed" ? (
         <button type="submit" name="intent" value="confirm" disabled={pending} className={buttonClass}>
@@ -52,16 +59,18 @@ export function LabelActions({
 }
 
 export function AddLabelForm({
-  storeAppId,
+  target,
   options,
 }: {
-  storeAppId: string;
+  target: EditableLabelTarget;
   options: Array<{ group: string; labels: Array<{ id: string; displayName: string }> }>;
 }) {
-  const [state, action, pending] = useActionState(changeLabel, initial);
+  const action = target.kind === "steam" ? changeSteamLabel : changeLabel;
+  const [state, formAction, pending] = useActionState(action, initial);
   return (
-    <form action={action} className="flex flex-wrap items-end gap-2">
-      <input type="hidden" name="storeAppId" value={storeAppId} />
+    <form action={formAction} className="flex flex-wrap items-end gap-2">
+      <input type="hidden" name={target.kind === "steam" ? "steamAppId" : "storeAppId"} value={target.id} />
+      {target.kind === "steam" ? <input type="hidden" name="externalId" value={target.externalId} /> : null}
       <input type="hidden" name="intent" value="confirm" />
       <label className="flex flex-col gap-1 text-[11px] text-dim">
         Add a label

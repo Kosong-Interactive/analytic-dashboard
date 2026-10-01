@@ -4,17 +4,22 @@ import { after, describe, it } from "node:test";
 import { and, eq } from "drizzle-orm";
 
 import { createDatabaseConnection } from "../client";
-import { appLabels, classificationRuns, storeApps } from "../schema/index";
+import { appLabels, classificationRuns, steamApps, storeApps } from "../schema/index";
 import { loadClassificationInputs } from "../queries/classification-inputs";
 import { loadLabelMembership } from "../queries/label-membership";
 import { loadListingLabels } from "../queries/listing-labels";
+import { loadSteamGameLabels, loadSteamLabelMembership } from "../queries/steam-labels";
 import {
   clearManualLabel,
+  clearSteamManualLabel,
+  findSteamAppId,
   loadInputHashes,
   loadRuleInputHashes,
   replaceAutomatedLabels,
   replaceRuleLabels,
+  replaceSteamAutomatedLabels,
   setManualLabel,
+  setSteamManualLabel,
   syncTaxonomyLabels,
 } from "./classification";
 import type { DatabaseExecutor } from "./executor";
@@ -238,6 +243,91 @@ describe("classification repositories", { skip: connection === null }, () => {
 
       assert.equal(await clearManualLabel(tx, decision), true);
       assert.deepEqual((await membership()).map((r) => `${r.slug}:${r.source}`), ["puzzle:rule"]);
+    });
+  });
+
+  it("records Steam manual decisions that override and survive automated labels", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const [steamGame] = await tx
+        .insert(steamApps)
+        .values({
+          externalId: "999999999991",
+          title: "Steam manual-label integration fixture",
+          description: "Competitive shooter.",
+          releaseState: "released",
+          supportsWindows: true,
+          supportsMacos: false,
+          supportsLinux: true,
+          isFree: true,
+          storeUrl: "https://store.steampowered.com/app/999999999991/",
+          source: "test",
+          metadataHash: "s".repeat(64),
+        })
+        .returning({ id: steamApps.id });
+      assert.ok(steamGame);
+      assert.equal(await findSteamAppId(tx, steamGame.id), steamGame.id);
+
+      const ids = await syncTaxonomyLabels(tx, { taxonomyVersion: "taxonomy-steam-test", labels });
+      const puzzle = ids.get("genre:puzzle");
+      assert.ok(puzzle);
+      await replaceSteamAutomatedLabels(tx, {
+        source: "rule",
+        steamAppId: steamGame.id,
+        taxonomyVersion: "taxonomy-steam-test",
+        classifierVersion: "steam-rules-test",
+        model: null,
+        inputHash: "r1",
+        labels: [{ labelId: puzzle, confidence: 0.95, evidence: [] }],
+      });
+
+      const decision = {
+        steamAppId: steamGame.id,
+        labelId: puzzle,
+        taxonomyVersion: "taxonomy-steam-test",
+        actor: "analyst@example.com",
+        decidedAt: new Date("2026-10-01T10:00:00Z"),
+      };
+      await setSteamManualLabel(tx, { ...decision, decision: "confirm" });
+      assert.deepEqual(
+        (await loadSteamLabelMembership(tx, {
+          taxonomyVersion: "taxonomy-steam-test",
+          types: ["genre"],
+          minConfidence: 0.6,
+        })).map((row) => `${row.slug}:${row.source}`),
+        ["puzzle:manual"],
+      );
+
+      await setSteamManualLabel(tx, { ...decision, decision: "reject" });
+      assert.deepEqual(
+        await loadSteamLabelMembership(tx, {
+          taxonomyVersion: "taxonomy-steam-test",
+          types: ["genre"],
+          minConfidence: 0.6,
+        }),
+        [],
+      );
+      const detail = await loadSteamGameLabels(tx, {
+        steamAppId: steamGame.id,
+        taxonomyVersion: "taxonomy-steam-test",
+      });
+      assert.deepEqual(detail.map((row) => `${row.source}:${row.confidence}`).sort(), ["manual:0", "rule:0.95"]);
+
+      await replaceSteamAutomatedLabels(tx, {
+        source: "rule",
+        steamAppId: steamGame.id,
+        taxonomyVersion: "taxonomy-steam-test",
+        classifierVersion: "steam-rules-test",
+        model: null,
+        inputHash: "r2",
+        labels: [{ labelId: puzzle, confidence: 0.9, evidence: [] }],
+      });
+      assert.equal(await clearSteamManualLabel(tx, decision), true);
+      const membership = await loadSteamLabelMembership(tx, {
+        taxonomyVersion: "taxonomy-steam-test",
+        types: ["genre"],
+        minConfidence: 0.6,
+      });
+      assert.deepEqual(membership.map((row) => `${row.slug}:${row.source}`), ["puzzle:rule"]);
     });
   });
 

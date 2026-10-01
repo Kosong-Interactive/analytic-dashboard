@@ -6,6 +6,7 @@ import type { TrendingScore } from "@analytic-dashboard/analytics";
 import type { OverviewCandidate } from "../overview/view-model";
 import { buildLabelOverview, type MembershipRow } from "./aggregate";
 import { genresPage, labelHref, mechanicsPage, parseLabelQuery } from "./query";
+import { steamManualLabelInputSchema } from "../steam/manual-label-input";
 
 const asOf = new Date("2026-09-30T12:00:00Z");
 const daysAgo = (d: number) => new Date(asOf.getTime() - d * 86_400_000);
@@ -90,5 +91,22 @@ describe("label page query", () => {
     const query = parseLabelQuery(mechanicsPage, {});
     assert.equal(labelHref(mechanicsPage, query, {}), "/mechanics");
     assert.equal(labelHref(mechanicsPage, query, { type: "theme", sort: "momentum" }), "/mechanics?type=theme&sort=momentum");
+  });
+});
+
+describe("steamManualLabelInputSchema", () => {
+  const valid = {
+    steamAppId: "00000000-0000-4000-8000-000000000001",
+    labelId: "00000000-0000-4000-8000-000000000002",
+    intent: "confirm",
+  };
+
+  it("accepts a tracked-game identity and supported decision", () => {
+    assert.equal(steamManualLabelInputSchema.safeParse(valid).success, true);
+  });
+
+  it("rejects malformed ids and unknown decisions", () => {
+    assert.equal(steamManualLabelInputSchema.safeParse({ ...valid, steamAppId: "730" }).success, false);
+    assert.equal(steamManualLabelInputSchema.safeParse({ ...valid, intent: "delete" }).success, false);
   });
 });

@@ -64,6 +64,13 @@
       "when": 1790765830499,
       "tag": "0008_steam_classification",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790835764476,
+      "tag": "0009_lucky_terrax",
+      "breakpoints": true
     }
   ]
 }

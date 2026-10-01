@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { desktopOpportunityDecisionSchema } from "./desktop-decision-input";
 import { buildLabelEvidence, selectOpportunities } from "./opportunities";
 import type { PlatformDataset } from "./platform-compare";
 
@@ -101,5 +102,31 @@ describe("buildLabelEvidence", () => {
 
   it("returns null for an unknown label", () => {
     assert.equal(buildLabelEvidence({ datasets, type: "genre", slug: "nope", asOf }), null);
+  });
+});
+
+describe("desktopOpportunityDecisionSchema", () => {
+  it("accepts a supported market and trims optional decision fields", () => {
+    const parsed = desktopOpportunityDecisionSchema.parse({
+      country: "id",
+      labelType: "core_mechanic",
+      labelSlug: "deck_building",
+      status: "prototype",
+      note: "  Validate controls  ",
+      owner: "  Prototype team  ",
+    });
+    assert.equal(parsed.note, "Validate controls");
+    assert.equal(parsed.owner, "Prototype team");
+  });
+
+  it("rejects unsupported markets and malformed label identities", () => {
+    assert.equal(desktopOpportunityDecisionSchema.safeParse({
+      country: "gb",
+      labelType: "genre",
+      labelSlug: "Bad Slug",
+      status: "shortlisted",
+      note: "",
+      owner: "",
+    }).success, false);
   });
 });
