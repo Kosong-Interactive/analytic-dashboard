@@ -5,3 +5,6 @@ export * from "./trending.js";
 export * from "./opportunity.js";
 export * from "./studio-fit.js";
 export * from "./opportunity-history.js";
+export * from "./steam-trend-score.js";
+export * from "./platform-labels.js";
+export * from "./platform-opportunity.js";

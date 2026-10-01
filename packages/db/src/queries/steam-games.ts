@@ -1,6 +1,6 @@
-import { and, eq, max } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, max } from "drizzle-orm";
 
-import { steamApps, steamChartEntries } from "../schema/index";
+import { steamApps, steamChartEntries, steamSnapshots } from "../schema/index";
 import type { DatabaseExecutor } from "../repositories/executor";
 import {
   loadLatestSteamPrices,
@@ -104,4 +104,45 @@ export async function loadSteamGameList(db: DatabaseExecutor): Promise<SteamGame
       charts: positions.get(app.steamAppId) ?? { most_played: null, top_sellers: null },
     })),
   };
+}
+
+export interface SteamHistoryReading {
+  capturedAt: Date;
+  currentPlayers: number | null;
+  reviewPositive: number | null;
+  reviewTotal: number | null;
+}
+
+/**
+ * Readings of every Steam game from `since` on, plus the reading in force at `since` (snapshots are
+ * stored on change, so the baseline may be older than the window). Oldest first per game.
+ */
+export async function loadSteamSnapshotHistory(
+  db: DatabaseExecutor,
+  since: Date,
+): Promise<Map<string, SteamHistoryReading[]>> {
+  const columns = {
+    steamAppId: steamSnapshots.steamAppId,
+    capturedAt: steamSnapshots.capturedAt,
+    currentPlayers: steamSnapshots.currentPlayers,
+    reviewPositive: steamSnapshots.reviewPositive,
+    reviewTotal: steamSnapshots.reviewTotal,
+  };
+  const [inWindow, baseline] = await Promise.all([
+    db.select(columns).from(steamSnapshots).where(gte(steamSnapshots.capturedAt, since)).orderBy(asc(steamSnapshots.capturedAt)),
+    db
+      .selectDistinctOn([steamSnapshots.steamAppId], columns)
+      .from(steamSnapshots)
+      .where(lt(steamSnapshots.capturedAt, since))
+      .orderBy(steamSnapshots.steamAppId, desc(steamSnapshots.capturedAt)),
+  ]);
+
+  const byApp = new Map<string, SteamHistoryReading[]>();
+  for (const { steamAppId, ...reading } of [...baseline, ...inWindow]) {
+    const readings = byApp.get(steamAppId) ?? [];
+    readings.push(reading);
+    byApp.set(steamAppId, readings);
+  }
+  for (const readings of byApp.values()) readings.sort((a, b) => a.capturedAt.getTime() - b.capturedAt.getTime());
+  return byApp;
 }

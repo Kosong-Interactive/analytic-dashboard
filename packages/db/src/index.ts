@@ -170,6 +170,8 @@ export {
 } from "./queries/steam-labels";
 export {
   loadSteamGameList,
+  loadSteamSnapshotHistory,
+  type SteamHistoryReading,
   type SteamChartPosition,
   type SteamGameList,
   type SteamGameListRow,
