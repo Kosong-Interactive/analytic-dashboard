@@ -104,7 +104,10 @@ export {
   type CatalogSearchResult,
 } from "./queries/catalog-search";
 export {
+  loadCohortOpportunityDecisions,
   loadLatestOpportunities,
+  loadMarketOpportunityIndex,
+  loadOpportunitiesByIds,
   loadOpportunityHistories,
   loadOpportunityDecisions,
   loadOpportunityDetail,
@@ -115,6 +118,7 @@ export {
   type OpportunityDecisionStatus,
   type OpportunityDetailRow,
   type OpportunityHistoryIdentity,
+  type MarketOpportunityIndexRow,
   type OpportunityHistoryRow,
   type OpportunityRowInput,
   type ResearchRunInput,

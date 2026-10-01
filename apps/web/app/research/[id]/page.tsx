@@ -4,7 +4,7 @@ import { EmptyState, Panel } from "@/components/overview/panel";
 import { OpportunityDetail } from "@/components/research/opportunity-detail";
 import { AppShell } from "@/components/shell/app-shell";
 import { requireUser } from "@/lib/auth/session";
-import { overviewHref, type OverviewFilters } from "@/lib/overview/filters";
+import { overviewHref, parseOverviewFilters, type OverviewFilters } from "@/lib/overview/filters";
 import { getOpportunityDetail } from "@/lib/research/get-opportunity-detail";
 
 export const metadata = { title: "Research Evidence · Game Analytic" };
@@ -32,10 +32,8 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
     );
   }
 
-  const filters: OverviewFilters = {
-    country: result.view.country === "us" ? "us" : "id",
-    platform: result.view.store,
-  };
+  // A SEA or World storefront keeps its market in the shell, so the switch and links stay in it.
+  const filters = parseOverviewFilters({ country: result.view.country, platform: result.view.store });
   return (
     <AppShell noCounterpart filters={filters} active="overview" buildHref={(change) => overviewHref(filters, change)}>
       <OpportunityDetail

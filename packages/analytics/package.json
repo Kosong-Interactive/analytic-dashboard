@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "tsx --test src/velocity.test.ts src/normalize.test.ts src/trend-score.test.ts src/trending.test.ts src/opportunity.test.ts src/studio-fit.test.ts src/opportunity-history.test.ts src/steam-trend-score.test.ts src/platform-labels.test.ts src/platform-opportunity.test.ts src/market-aggregate.test.ts",
+    "test": "tsx --test src/velocity.test.ts src/normalize.test.ts src/trend-score.test.ts src/trending.test.ts src/opportunity.test.ts src/studio-fit.test.ts src/opportunity-history.test.ts src/steam-trend-score.test.ts src/platform-labels.test.ts src/platform-opportunity.test.ts src/market-aggregate.test.ts src/market-opportunities.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

@@ -4,7 +4,7 @@ import { platformLabel } from "@analytic-dashboard/shared";
 
 import { formatRelative } from "@/lib/format/format";
 import { countryLabels } from "@/lib/overview/filters";
-import type { ConfidenceBand, OpportunitiesView, OpportunityCard, OpportunityPreview } from "@/lib/research/view-model";
+import type { ConfidenceBand, OpportunitiesView, OpportunityCard, OpportunityPreview, OpportunityScope } from "@/lib/research/view-model";
 import { cn } from "@/lib/utils";
 
 import { LinkButton } from "../common/link-button";
@@ -18,6 +18,22 @@ const bandStyles: Record<ConfidenceBand, { label: string; text: string }> = {
 
 function market(country: string): string {
   return countryLabels[country as keyof typeof countryLabels] ?? country.toUpperCase();
+}
+
+/** A combined market shows its name and how many storefronts stand behind it; a single storefront shows its name. */
+function scopeText(country: string, scope: OpportunityScope | null): string {
+  return scope ? scope.label : market(country);
+}
+
+function ScopeNote({ scope }: { scope: OpportunityScope | null }) {
+  if (!scope) return null;
+  const scored = scope.scored === 0 ? "none scored yet" : `${scope.scored} scored`;
+  return (
+    <p className="text-[13px] text-dim">
+      Combined market: seen in {scope.evaluated} of {scope.total} storefronts, {scored}. The score is the median
+      storefront, and the evidence below is that storefront&apos;s.
+    </p>
+  );
 }
 
 function EvidenceList({ title, lines, tone }: { title: string; lines: string[]; tone?: string }) {
@@ -42,7 +58,7 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
         <div className="flex min-w-0 flex-col gap-1">
           <h3 className="text-base font-semibold">{card.title}</h3>
           <p className="text-[13.5px] text-dim">
-            {platformLabel(card.store)} · {market(card.country)}
+            {platformLabel(card.store)} · {scopeText(card.country, card.scope)}
             {card.insight ? ` · ${card.insight}` : ""}
           </p>
         </div>
@@ -60,6 +76,7 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
         <span className="text-dim"> · {Math.round(card.weightCoverage * 100)}% of score weight measurable</span>
       </p>
 
+      <ScopeNote scope={card.scope} />
       <EvidenceList title="Why now" lines={card.whyNow} />
       <EvidenceList title="Risks" lines={card.risks} tone="text-down" />
 
@@ -120,7 +137,7 @@ function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Dat
           <p className="text-[13px] font-medium uppercase tracking-wider text-star">Candidate preview · awaiting score</p>
           <h3 className="text-base font-semibold">{preview.title}</h3>
           <p className="text-[13.5px] text-dim">
-            {platformLabel(preview.store)} · {market(preview.country)}
+            {platformLabel(preview.store)} · {scopeText(preview.country, preview.scope)}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end text-right">
@@ -154,6 +171,7 @@ function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Dat
         ) : null}
       </div>
 
+      <ScopeNote scope={preview.scope} />
       {preview.reason ? <p className="text-sm text-dim">Why pending: {preview.reason}</p> : null}
       <EvidenceList title="Caveats" lines={preview.caveats.slice(0, 2)} />
 
@@ -209,7 +227,7 @@ export function OpportunitiesPanel({ view, asOf }: { view: OpportunitiesView; as
     >
       {failedRuns.length > 0 && view.cards.length > 0 ? (
         <p role="status" className="mx-4 mb-3 rounded-md border border-star/40 bg-star/10 px-3 py-2 text-sm text-ink-soft">
-          The latest research run failed for {failedRuns.map((run) => platformLabel(run.store)).join(" and ")}; showing the
+          The latest research run failed for {[...new Set(failedRuns.map((run) => platformLabel(run.store)))].join(" and ")}; showing the
           last successful results.
         </p>
       ) : null}

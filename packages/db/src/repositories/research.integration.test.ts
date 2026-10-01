@@ -4,7 +4,10 @@ import { after, describe, it } from "node:test";
 import { createDatabaseConnection } from "../client";
 import type { DatabaseExecutor } from "./executor";
 import {
+  loadCohortOpportunityDecisions,
   loadLatestOpportunities,
+  loadMarketOpportunityIndex,
+  loadOpportunitiesByIds,
   loadOpportunityHistories,
   loadOpportunityDecisions,
   loadOpportunityDetail,
@@ -284,6 +287,77 @@ describe("research repository", { skip: connection === null }, () => {
       assert.equal(hashes.has(`${opportunityId}:brief-input-hash`), true);
       const brief = await loadLatestResearchBrief(tx, opportunityId);
       assert.equal(brief?.model, "fake-model");
+    });
+  });
+
+  it("indexes the latest run of every storefront of a market and loads full rows by id", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await recordResearchRun(tx, {
+        run: { ...run, country: "sg", asOf: new Date("2026-10-01T02:00:00Z"), inputHash: "old" },
+        opportunities: [opportunity("puzzle", 10)],
+      });
+      await recordResearchRun(tx, {
+        run: { ...run, country: "sg", asOf: new Date("2026-10-02T02:00:00Z"), inputHash: "sg" },
+        opportunities: [opportunity("puzzle", 70), opportunity("rpg", null)],
+      });
+      await recordResearchRun(tx, {
+        run: { ...run, country: "th", asOf: new Date("2026-10-02T02:00:00Z"), inputHash: "th" },
+        opportunities: [opportunity("puzzle", 50)],
+      });
+      await recordResearchRun(tx, {
+        run: { ...run, country: "us", asOf: new Date("2026-10-02T02:00:00Z"), inputHash: "us" },
+        opportunities: [opportunity("puzzle", 99)],
+      });
+
+      const { runs, index } = await loadMarketOpportunityIndex(tx, {
+        stores: ["google_play"],
+        countries: ["sg", "th", "vn"],
+        formulaVersion: "opportunity-test",
+      });
+      assert.deepEqual(runs.map((r) => r.country).sort(), ["sg", "th"]);
+      assert.deepEqual(
+        index.map((row) => `${row.country}:${row.opportunityKey}:${row.score}`).sort(),
+        ["sg:puzzle:70", "sg:rpg:null", "th:puzzle:50"],
+      );
+
+      const full = await loadOpportunitiesByIds(tx, index.map((row) => row.id));
+      const rpg = full.find((row) => row.opportunityKey === "rpg");
+      assert.equal(rpg?.score, null);
+      assert.equal(full.find((row) => row.country === "th")?.score, 50);
+    });
+  });
+
+  it("reads team decisions by cohort across the storefronts of a market", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      for (const [country, hash] of [["sg", "sg"], ["th", "th"], ["us", "us"]] as const) {
+        await recordResearchRun(tx, {
+          run: { ...run, country, asOf: new Date("2026-10-02T02:00:00Z"), inputHash: hash },
+          opportunities: [opportunity("puzzle", 60)],
+        });
+      }
+      const { index } = await loadMarketOpportunityIndex(tx, {
+        stores: ["google_play"],
+        countries: ["sg", "th", "us"],
+        formulaVersion: "opportunity-test",
+      });
+      const idOf = (country: string) => index.find((row) => row.country === country)?.id ?? "";
+      for (const country of ["sg", "us"]) {
+        await recordOpportunityDecision(tx, {
+          opportunityId: idOf(country),
+          status: "shortlisted",
+          note: null,
+          owner: null,
+          actor: "tester@example.com",
+        });
+      }
+
+      const sea = await loadCohortOpportunityDecisions(tx, {
+        store: "google_play",
+        countries: ["sg", "th", "vn"],
+        formulaVersion: "opportunity-test",
+        opportunityKey: "puzzle",
+      });
+      assert.deepEqual(sea.map((d) => d.opportunityId), [idOf("sg")]);
     });
   });
 });
