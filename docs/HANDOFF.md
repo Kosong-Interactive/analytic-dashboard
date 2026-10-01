@@ -282,6 +282,16 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 ## Known pitfalls
 
+- **The session pooler has a hard client limit (`pool_size`, 15 on this project).** On 2026-10-01
+  `/`, `/games`, and game detail crashed in production with `EMAXCONNSESSION max clients reached in
+  session mode`: frozen serverless instances keep their sockets, so every deployment leaves old
+  instances holding slots, and bulk jobs run from a laptop (3 connections each) add to it. Clients,
+  not running queries, are what count (`pg_stat_activity` showed no active queries). Mitigation:
+  the web uses 1 connection per instance (`apps/web/lib/database.ts`), the error page says the
+  database is busy, and heavy jobs belong to the scheduled CI run, not to a laptop in working
+  hours. Clearing a saturated pool: save the Pool Size setting in Supabase (Database, Settings,
+  Connection pooling), which restarts the pooler and drops every old client; raising it to 25-30
+  also gives headroom. Avoid chains of deployments while it is saturated.
 - **Vercel `DATABASE_URL` must be the session pooler (port 5432).** On 2026-10-01 production
   pages hung until the 300 s function timeout (`canceling statement due to statement timeout`,
   process exit 128 in the logs) because it pointed at the transaction pooler; the user replaced

@@ -11,14 +11,15 @@ export default function ErrorBoundary({
 }) {
   useEffect(() => {
     // Only the digest is logged; the message can contain connection details.
-    console.error("overview failed", error.digest);
+    console.error("page failed", error.digest);
   }, [error]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 px-6 text-center">
-      <h1 className="text-xl font-semibold">The overview could not be loaded</h1>
+      <h1 className="text-xl font-semibold">This page could not be loaded</h1>
       <p className="text-base text-dim">
-        The data source did not respond. Nothing was changed. Try again in a moment.
+        The database is busy or did not respond, which usually clears within a minute. Nothing was
+        changed. Try again in a moment.
       </p>
       <button
         type="button"

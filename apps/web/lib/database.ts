@@ -21,8 +21,11 @@ export function getDatabase(): Database {
     }
     globalForDatabase.__analyticsDatabase =
       createDatabaseConnection(connectionString, {
-        // Serverless: give pooler connections back soon after a request, or idle instances starve it.
-        maxConnections: 2,
+        // The session pooler admits only a few clients in total (15 on this project) and every
+        // serverless instance, including frozen ones from earlier deployments, keeps its sockets.
+        // One connection per instance halves that footprint; queries of one request still go out
+        // together and share it, and no web transaction runs a query outside its own `tx`.
+        maxConnections: 1,
         idleTimeoutSeconds: 10,
         maxLifetimeSeconds: 300,
       }).db;
