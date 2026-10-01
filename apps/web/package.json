@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/overview/filters.test.ts lib/overview/view-model.test.ts lib/trending/query.test.ts lib/trending/list.test.ts lib/auth/redirect.test.ts lib/root-env.test.ts lib/games/view-model.test.ts lib/releases/releases.test.ts lib/labels/labels.test.ts lib/labels/resolve.test.ts lib/explorer/explorer.test.ts lib/watchlist/watchlist.test.ts lib/compare/compare.test.ts lib/search/search.test.ts lib/format/price.test.ts lib/shell/navigation.test.ts lib/steam/detail-view.test.ts lib/steam/format.test.ts lib/steam/releases.test.ts lib/steam/games-list.test.ts lib/steam/label-overview.test.ts lib/research/research.test.ts lib/supabase/signing-keys.test.ts"
+    "test": "tsx --test lib/overview/filters.test.ts lib/overview/view-model.test.ts lib/trending/query.test.ts lib/trending/list.test.ts lib/auth/redirect.test.ts lib/root-env.test.ts lib/games/view-model.test.ts lib/releases/releases.test.ts lib/labels/labels.test.ts lib/labels/resolve.test.ts lib/explorer/explorer.test.ts lib/watchlist/watchlist.test.ts lib/compare/compare.test.ts lib/search/search.test.ts lib/format/price.test.ts lib/shell/navigation.test.ts lib/steam/detail-view.test.ts lib/steam/format.test.ts lib/steam/opportunities.test.ts lib/steam/compare-query.test.ts lib/steam/platform-compare.test.ts lib/steam/trend.test.ts lib/steam/releases.test.ts lib/steam/games-list.test.ts lib/steam/label-overview.test.ts lib/research/research.test.ts lib/supabase/signing-keys.test.ts"
   },
   "dependencies": {
     "@analytic-dashboard/analytics": "0.0.0",

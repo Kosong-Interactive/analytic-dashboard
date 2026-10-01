@@ -1,16 +1,20 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { KpiGrid, type Kpi } from "@/components/overview/kpi-cards";
 import { EmptyState, Panel } from "@/components/overview/panel";
 import { AppShell } from "@/components/shell/app-shell";
 import { SteamChartTable } from "@/components/steam/chart-table";
 import { SteamFreshness } from "@/components/steam/freshness";
+import { SteamOpportunitiesFallback, SteamOpportunitiesSection } from "@/components/steam/opportunities-panel";
 import { SteamGamesTable } from "@/components/steam/games-table";
+import { SteamTrendTable } from "@/components/steam/trend-table";
 import { requireUser } from "@/lib/auth/session";
 import { formatRelative } from "@/lib/format/format";
-import { getSteamChart, getSteamGameCatalog } from "@/lib/steam/get-steam";
+import { getSteamChart, getSteamTrendInputs } from "@/lib/steam/get-steam";
 import { parseSteamGamesQuery } from "@/lib/steam/games-query";
 import { buildSteamReleasesList, parseSteamReleasesQuery } from "@/lib/steam/releases";
+import { buildSteamTrendList } from "@/lib/steam/trend";
 import { parseSteamQuery, steamHref } from "@/lib/steam/query";
 
 export const metadata = { title: "Steam Overview · Game Analytic" };
@@ -27,11 +31,12 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
   await requireUser("/steam");
   const params = await searchParams;
   const query = parseSteamQuery({ country: params.country });
-  const [catalog, played] = await Promise.all([
-    getSteamGameCatalog(query.country),
+  const [{ catalog, history }, played] = await Promise.all([
+    getSteamTrendInputs(query.country),
     getSteamChart({ country: query.country, chart: "most_played" }),
   ]);
   const { asOf, source } = catalog;
+  const trend = buildSteamTrendList({ games: catalog.games, history, asOf });
 
   const released = buildSteamReleasesList({
     games: catalog.games,
@@ -87,19 +92,30 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
       <SteamFreshness source={source} capturedAt={catalog.chartCapturedAt.most_played} asOf={asOf} />
       <KpiGrid items={kpis} />
 
+      <Suspense fallback={<SteamOpportunitiesFallback />}>
+        <SteamOpportunitiesSection country={query.country} />
+      </Suspense>
+
       <Panel
         title="Trending Games"
-        description="Steam Global"
+        description="Steam Trend Score (steam_trend_v1) · Steam Global · scored within Steam only"
         action={
           <Link href="/steam/trending" className="text-xs text-ink-soft underline-offset-2 hover:underline">
-            Rank movers
+            Full ranking and rank movers
           </Link>
         }
       >
-        <EmptyState title="Desktop trend score is not available yet">
-          A separate Desktop score is being prepared. Until then the Trending page shows chart movement against last
-          week, which is a rank change and not a Trend Score.
-        </EmptyState>
+        {trend.rows.length === 0 ? (
+          <EmptyState title="No Steam games scored yet">
+            The Steam Trend Score needs at least three tracked games and enough measurable signals.
+          </EmptyState>
+        ) : (
+          <SteamTrendTable
+            rows={trend.rows.slice(0, 5)}
+            country={query.country}
+            caption={`Top ${Math.min(5, trend.rows.length)} of ${trend.scoredCount} scored Steam games by Steam Trend Score`}
+          />
+        )}
       </Panel>
 
       <Panel

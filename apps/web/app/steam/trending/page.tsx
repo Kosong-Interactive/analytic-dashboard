@@ -5,9 +5,11 @@ import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedLinks } from "@/components/shell/segmented-links";
 import { SteamFreshness } from "@/components/steam/freshness";
 import { RankMoversTable } from "@/components/steam/rank-movers";
+import { SteamTrendTable } from "@/components/steam/trend-table";
 import { requireUser } from "@/lib/auth/session";
-import { getSteamGameCatalog } from "@/lib/steam/get-steam";
+import { getSteamTrendInputs } from "@/lib/steam/get-steam";
 import { buildRankMovers } from "@/lib/steam/rank-movers";
+import { buildSteamTrendList } from "@/lib/steam/trend";
 import { parseSteamQuery, steamChartLabels, steamChartValues, steamHref } from "@/lib/steam/query";
 
 export const metadata = { title: "Steam Trending · Game Analytic" };
@@ -19,7 +21,8 @@ interface SteamTrendingPageProps {
 export default async function SteamTrendingPage({ searchParams }: SteamTrendingPageProps) {
   await requireUser("/steam/trending");
   const query = parseSteamQuery(await searchParams);
-  const catalog = await getSteamGameCatalog(query.country);
+  const { catalog, history, asOf } = await getSteamTrendInputs(query.country);
+  const trend = buildSteamTrendList({ games: catalog.games, history, asOf });
   const movers = buildRankMovers(catalog.games, query.chart);
   const base = "/steam/trending";
   const countryQuery = query.country === "id" ? "" : `country=${query.country}`;
@@ -37,12 +40,30 @@ export default async function SteamTrendingPage({ searchParams }: SteamTrendingP
 
       <SteamFreshness source={catalog.source} capturedAt={catalog.chartCapturedAt[query.chart]} asOf={catalog.asOf} />
 
-      <Panel title="Trend Score" description="Steam Trend Score is not available yet">
-        <EmptyState title="Desktop trend score is being prepared">
-          Mobile Trend Score is built from store ratings, rating velocity, and country breadth, which Steam does not
-          have. A separate, versioned Desktop score is planned, so no Steam score is shown here and the Mobile score is
-          never applied to Steam games.
-        </EmptyState>
+      <Panel
+        title="Steam Trend Score"
+        description={`steam_trend_v1 · ranked within the ${trend.tracked} tracked Steam games · Steam Global`}
+      >
+        {trend.rows.length === 0 ? (
+          <EmptyState title="No Steam games scored yet">
+            The score needs at least three tracked games and enough measurable signals. Run the Steam discovery job to
+            collect them.
+          </EmptyState>
+        ) : (
+          <SteamTrendTable
+            rows={trend.rows.slice(0, 25)}
+            country={query.country}
+            caption={`Top ${Math.min(25, trend.rows.length)} of ${trend.scoredCount} scored Steam games by Steam Trend Score`}
+          />
+        )}
+        <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+          {trend.scoredCount} of {trend.tracked} tracked games scored
+          {trend.averageCoverage === null ? "" : `, on average ${Math.round(trend.averageCoverage * 100)}% of the score weight measurable`}
+          . Chart rank gain uses Steam&apos;s own last-week rank, so it counts from the first collection; player growth,
+          review speed, and sentiment change need about 3.5 days of history and are left out (not counted as zero) until
+          then. Steam has no star ratings or country breadth, so this is a separate formula from the Mobile Trend Score and
+          the two are never compared directly.
+        </p>
       </Panel>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

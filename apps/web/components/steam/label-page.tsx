@@ -1,4 +1,5 @@
 import type { LabelType } from "@analytic-dashboard/db";
+import Link from "next/link";
 
 import { MIN_LABEL_CONFIDENCE } from "@/lib/labels/constants";
 import { getSteamLabelOverview } from "@/lib/steam/get-label-overview";
@@ -41,6 +42,15 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
       </div>
 
       <SteamFreshness source={view.source} capturedAt={null} asOf={view.asOf} />
+
+      <p className="text-xs text-dim">
+        <Link
+          href={`/steam/compare?type=${query.type}${query.country === "id" ? "" : `&country=${query.country}`}`}
+          className="text-ink-soft underline-offset-2 hover:underline"
+        >
+          Compare these labels with Google Play and App Store
+        </Link>
+      </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SegmentedLinks

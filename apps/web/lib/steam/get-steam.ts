@@ -1,11 +1,14 @@
 import "server-only";
 
+import { cache } from "react";
+
 import {
   loadSteamChart,
   loadSteamGameDetail,
   loadSteamGameLabels,
   loadSteamGameList,
   loadSteamLabelMembership,
+  loadSteamSnapshotHistory,
   loadSteamSourceHealth,
 } from "@analytic-dashboard/db";
 
@@ -48,3 +51,19 @@ export async function getSteamGameCatalog(country: SteamQuery["country"], asOf: 
   ]);
   return { ...list, membership, country, source: toSteamSourceStatus(health, asOf), asOf };
 }
+
+const TREND_HISTORY_DAYS = 14;
+
+/**
+ * Catalog plus the reading history Steam Trend Score needs (twice the 7-day window). Shared within
+ * one request, so a page and the opportunities panel on it read Steam once.
+ */
+export const getSteamTrendInputs = cache(async (country: SteamQuery["country"]) => {
+  const asOf = new Date();
+  const since = new Date(asOf.getTime() - TREND_HISTORY_DAYS * 24 * 60 * 60 * 1000);
+  const [catalog, history] = await Promise.all([
+    getSteamGameCatalog(country, asOf),
+    loadSteamSnapshotHistory(getDatabase(), since),
+  ]);
+  return { catalog, history, asOf };
+});
