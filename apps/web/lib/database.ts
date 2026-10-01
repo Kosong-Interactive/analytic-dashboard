@@ -20,7 +20,12 @@ export function getDatabase(): Database {
       throw new Error("DATABASE_URL is not configured");
     }
     globalForDatabase.__analyticsDatabase =
-      createDatabaseConnection(connectionString).db;
+      createDatabaseConnection(connectionString, {
+        // Serverless: give pooler connections back soon after a request, or idle instances starve it.
+        maxConnections: 2,
+        idleTimeoutSeconds: 10,
+        maxLifetimeSeconds: 300,
+      }).db;
   }
   return globalForDatabase.__analyticsDatabase;
 }
