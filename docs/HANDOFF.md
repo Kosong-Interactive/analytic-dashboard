@@ -78,12 +78,11 @@ approves sending opportunity evidence to Gemini.
 
 ## Current state
 
-Branch state (2026-10-01): PR #10 (`development` → `main`) was merged as `50fca81`; `main` contains
-the Steam `taxonomy-v2` / `steam-rules-v2` feature and button-style Game Opportunities CTAs on top
-of the earlier Steam stage 6 work. `development` contains persisted Desktop opportunity decisions
-and manual Confirm/Reject/Undo for Steam labels; migration `0009` is applied to Supabase and the
-Steam label feature needs no migration. PR #9 was merged earlier on 2026-10-01 (03:16 UTC).
-**Taxonomy v2 was not actually in the database until 2026-10-01 14:55 WIB**: PR #10 merged at 06:18
+Branch state (2026-10-01): `main` is at `a5286d1` (PR #11 merged at 08:05 UTC) and contains
+everything below: PR #9 (price, Steam pages, stage 6, Apple charts, Steam AI), PR #10 (Steam
+`taxonomy-v2`, button-style opportunity CTAs), and PR #11 (persisted Desktop opportunity
+decisions with migration `0009`, manual Confirm/Reject/Undo for Steam labels, the evidence-page
+loading state). `development` equals `main`. **Taxonomy v2 was not actually in the database until 2026-10-01 14:55 WIB**: PR #10 merged at 06:18
 UTC, after the last scheduled run (05:56 UTC), while the manually deployed web code already read
 Steam labels with `taxonomy-v2`, so Steam Genres, Mechanics, labels, comparison and opportunities
 were empty. `classify-steam` (rules, 151 games, 1,292 labels) and `classify-steam-ai` (151 games,
@@ -113,7 +112,42 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   `discovery.chart` for `app_store`; Trend Score uses `TOP_FREE` only. Rank gain for Apple needs
   about 3.5 days of chart history after the first collection. Mobile taxonomy remains immutable
   `config/taxonomy/v1.json`; Steam uses the v1 superset `config/taxonomy/v2.json` (merged).
-- `.github/workflows/collect.yml` runs every 6 hours at minute 17 on `main`: discovery → rule
+- **World market (in progress, requested 2026-09-30).** Mobile markets are Indonesia (`id`), SEA
+  (`sg th vn ph my`), and World (`us jp kr gb de br in`) in `packages/shared/src/markets.ts`; all 13
+  storefronts are enabled in `config/countries/enabled.json` (version 2). New storefronts use English
+  locales (`en_XX`) because the keyword rules and taxonomy are English; Google Play `lang` comes
+  from the locale prefix, Apple ignores it. Stage 1 (done): market model, header
+  `Indonesia | SEA | World` on Mobile, and a notice that SEA/World currently show one storefront.
+  Stage 2 (done): daily schedule, stale threshold 36 h, and the first collection of the 11 new
+  storefronts run by hand on 2026-10-01 (33 jobs, all succeeded, no errors; 14,413 listings and
+  4,761 distinct games across 13 storefronts; about 2 minutes per storefront). Stage 3 (code done,
+  not yet committed when this was written): `aggregateMarketGames` in
+  `packages/analytics/src/market-aggregate.ts` and `loadMarketSelection` in
+  `apps/web/lib/scoring/load-market.ts`. A game seen in several storefronts is counted once per
+  platform; the market score is the median storefront score and the shown listing is that
+  storefront's (so rating, rank, and score breakdown belong to one real listing); unscored
+  storefronts are left out of the median; the earliest sighting in any storefront is the first
+  observed date; raw counts are never summed. `parseOverviewFilters` derives `market` from the
+  `country` URL parameter (any storefront selects its market, old `?country=us` opens World) and
+  sets `country` to the market's first storefront; filter objects built without `market` stay one
+  storefront (game detail, research). Label membership and the watchlist read all storefronts of
+  the market (`storefrontsOf`). Headings use `scopeLabel`, and `MarketNotice` states how many
+  storefronts are collected. Combined selections are cached 5 minutes per instance
+  (`createTtlCache`), and `loadTrendCandidates` takes `countries` so a market loads once per store
+  (5 queries) instead of once per storefront (World 2.3 s, SEA 1.8 s locally over one connection).
+  Stage 4 (done in code): `/steam/compare`, the Desktop Game Opportunities panel, the evidence
+  page, and Desktop decisions work per mobile market. The mobile side of a comparison is Indonesia,
+  SEA, or World (a `Mobile market` switch on `/steam/compare`; any storefront in `?country=` picks
+  its market, `MarketHomeCountry` = `id` | `sg` | `us` identifies it). Steam stays Global. The
+  Desktop header still offers Indonesia | Global, which maps to the Indonesia and World mobile
+  markets. Decisions are stored with the market's identifying storefront in `country` (`us` rows
+  recorded before markets existed now read as World). The Mobile Overview Game Opportunities panel
+  and Research still use the market's first storefront. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
+  at 200 apps per run, so the backlog from the new storefronts takes days.
+- `.github/workflows/collect.yml` runs **once a day at 22:17 UTC (05:17 WIB)** on `main` (job
+  timeout 90 minutes; the daily research job at 01:43 UTC runs after it; sources count as stale
+  after 36 h, both in the web view-model and in `apps/collector/src/jobs/research.ts`). It runs:
+  discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
 - Steam (desktop, Global): `SteamCollector` (`packages/collectors/src/steam/`) uses only the
@@ -254,6 +288,16 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 ## Known pitfalls
 
+- **The session pooler has a hard client limit (`pool_size`, 15 on this project).** On 2026-10-01
+  `/`, `/games`, and game detail crashed in production with `EMAXCONNSESSION max clients reached in
+  session mode`: frozen serverless instances keep their sockets, so every deployment leaves old
+  instances holding slots, and bulk jobs run from a laptop (3 connections each) add to it. Clients,
+  not running queries, are what count (`pg_stat_activity` showed no active queries). Mitigation:
+  the web uses 1 connection per instance (`apps/web/lib/database.ts`), the error page says the
+  database is busy, and heavy jobs belong to the scheduled CI run, not to a laptop in working
+  hours. Clearing a saturated pool: save the Pool Size setting in Supabase (Database, Settings,
+  Connection pooling), which restarts the pooler and drops every old client; raising it to 25-30
+  also gives headroom. Avoid chains of deployments while it is saturated.
 - **Vercel `DATABASE_URL` must be the session pooler (port 5432).** On 2026-10-01 production
   pages hung until the 300 s function timeout (`canceling statement due to statement timeout`,
   process exit 128 in the logs) because it pointed at the transaction pooler; the user replaced
@@ -291,8 +335,8 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 - Checked in the signed-in production browser on 2026-10-01: the Desktop Overview (header toggle,
   Desktop-only sidebar, KPI cards, button-style CTAs on the opportunity cards), Steam Mechanics,
   Steam Game Detail (charts, classification evidence, Confirm and Undo), and the opportunity
-  evidence page in the Indonesia and US views. Known cosmetic issue: the rank history charts on
-  Steam Game Detail show 0 on the Y axis for a #1 rank.
+  evidence page in the Indonesia and US views. The rank history charts on Steam Game Detail now
+  floor the Y axis at 1 (it showed 0 for a #1 rank before; not yet seen in the browser after the fix).
 - Desktop decisions: migration `0009` is live and the repository integration test passed in a
   rolled-back transaction. In production the evidence page shows the "Team decision" panel with
   Shortlist, Reject, and Start Prototype in both market views, and "No team decision has been
@@ -314,16 +358,30 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 Decisions that wait on the user are marked **(ask)**.
 
-1. Merge the open PR (`development` → `main`: Desktop opportunity decisions, manual Steam labels,
-   the evidence-page loading state) and watch the next scheduled run on `main`. The mobile Trend
-   Scores are still missing: Google Play history starts 2026-09-29 10:40 UTC and Apple charts
+1. Watch the next scheduled run on `main` (first one with Steam `taxonomy-v2` and the decision
+   code). The mobile Trend Scores are still missing: Google Play history starts 2026-09-29 10:40 UTC and Apple charts
    2026-09-30 11:53 UTC, so scores should appear after about 2026-10-02 22:40 UTC (Google Play)
    and 2026-10-04 (Apple); re-check `/steam/compare` and the Overview then.
 2. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
    Play's worldwide metrics when aggregating.
-3. Smaller: faster classification input loading (it transfers every description, ~75 s from a
-   laptop), a dedicated new-release discovery path; `/games` is the heaviest page (about 530 KB
-   of HTML, 1.2 s in production).
+3. Findings from the 2026-10-01 clean-up (nothing left to do unless noted):
+   - Classification input loading is not slow: 2–3 s for about 5 MB, locally and in CI. The slow
+     part of `Classify games with rules` (about 190 s) and `with AI` (about 520 s) was writing each
+     changed app as its own sequential transaction over a high-latency link (about 1.7 s per app).
+     Writes now overlap with `forEachConcurrent` (3 at a time, equal to the pool); a mock of that
+     pattern ran 2.6x faster. Re-read the step times on the next scheduled run.
+   - `/games` is not heavy where it matters: 533 KB decoded but 30 KB transferred (compressed), and
+     it loads in about 0.6 s in production. The size is Next.js flight data plus the table and card
+     markup. No change needed.
+   - A dedicated new-release path is **not** feasible with the current sources. Apple's classic RSS
+     `newfreeapplications` / `newpaidapplications` Games feeds return about 100 apps per country,
+     but none released in the last 30 days (Indonesia median age 52 days, all within 90 days), so
+     they would only widen the 90-day window and add a few hundred apps to classify. The Google
+     Play scraper offers only `TOP_FREE`, `TOP_PAID`, `GROSSING`, and Steam has no such endpoint
+     wired. **(ask)** before adding the Apple feeds.
+   - Text sizes on the dashboard were raised one step (named sizes `xs` to `sm` to `base`, pixel
+     sizes about +15%, chart fonts 13/14). Check wide tables and the phone layout after the next
+     deploy.
 
 ## Commands
 

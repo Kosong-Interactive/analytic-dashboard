@@ -1,7 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "countries": {
     "id": { "locale": "id_ID" },
-    "us": { "locale": "en_US" }
+    "us": { "locale": "en_US" },
+    "sg": { "locale": "en_SG" },
+    "th": { "locale": "en_TH" },
+    "vn": { "locale": "en_VN" },
+    "ph": { "locale": "en_PH" },
+    "my": { "locale": "en_MY" },
+    "jp": { "locale": "en_JP" },
+    "kr": { "locale": "en_KR" },
+    "gb": { "locale": "en_GB" },
+    "de": { "locale": "en_DE" },
+    "br": { "locale": "en_BR" },
+    "in": { "locale": "en_IN" }
   }
 }

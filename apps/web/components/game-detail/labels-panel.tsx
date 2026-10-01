@@ -65,7 +65,7 @@ function LabelChip({ label, target }: { label: ResolvedLabel; target?: EditableL
       <details>
         <summary
           className={cn(
-            "inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs [&::-webkit-details-marker]:hidden",
+            "inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm [&::-webkit-details-marker]:hidden",
             "focus-visible:outline-2 focus-visible:outline-accent",
             label.status === "confirmed" && "border-accent/60 text-ink",
             label.status === "counted" && "border-line-strong text-ink-soft",
@@ -74,15 +74,15 @@ function LabelChip({ label, target }: { label: ResolvedLabel; target?: EditableL
           )}
         >
           {label.displayName}
-          {label.status === "confirmed" ? <span className="text-[11px] text-accent">✓</span> : null}
+          {label.status === "confirmed" ? <span className="text-[13px] text-accent">✓</span> : null}
           {confidence && label.status !== "confirmed" ? (
-            <span className="font-mono text-[11px] text-dim no-underline">{confidence}</span>
+            <span className="font-mono text-[13px] text-dim no-underline">{confidence}</span>
           ) : null}
           <span className="sr-only">
             {STATUS_TEXT[label.status] || "Counted"}. Show evidence{target ? " and actions" : ""}
           </span>
         </summary>
-        <div className="mt-1.5 max-w-md rounded-md border border-line bg-surface-alt p-2.5 text-[11px] leading-4 text-ink-soft">
+        <div className="mt-1.5 max-w-md rounded-md border border-line bg-surface-alt p-2.5 text-[13px] leading-4 text-ink-soft">
           {STATUS_TEXT[label.status] ? <p className="mb-1 font-medium text-ink">{STATUS_TEXT[label.status]}</p> : null}
           <div className="flex flex-col gap-2">
             {label.manual ? <Provenance row={label.manual} title="Decision" /> : null}
@@ -152,7 +152,7 @@ export function LabelsPanel({
             if (ofType.length === 0) return null;
             return (
               <div key={type} className="flex flex-col gap-1.5">
-                <dt className="text-[11px] text-dim">{TYPE_LABELS[type]}</dt>
+                <dt className="text-[13px] text-dim">{TYPE_LABELS[type]}</dt>
                 <dd>
                   <ul className="flex flex-wrap items-start gap-1.5">
                     {ofType.map((label) => (
@@ -170,7 +170,7 @@ export function LabelsPanel({
           <AddLabelForm target={editableTarget} options={addOptions} />
         </div>
       ) : null}
-      <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-dim">
         Labels are inferences from store data, not store facts: keyword rules first, then an AI classification that
         replaces the rule labels once it exists and must quote the listing as evidence. Dimmed labels are below{" "}
         {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence and are not counted.

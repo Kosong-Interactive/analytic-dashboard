@@ -4,10 +4,19 @@ import { describe, it } from "node:test";
 import { createCollectorDescriptor } from "./descriptor.js";
 
 describe("collector descriptor", () => {
-  it("enables the approved MVP sources and countries", () => {
-    assert.deepEqual(createCollectorDescriptor(), {
+  it("lists the storefronts given and both mobile sources", () => {
+    assert.deepEqual(createCollectorDescriptor(["id", "us"]), {
       countries: ["id", "us"],
       sources: ["app_store", "google_play"],
     });
+  });
+
+  it("rejects a storefront the code does not support", () => {
+    assert.throws(() => createCollectorDescriptor(["id", "xx"]));
+  });
+
+  it("reads the enabled storefronts from the configuration file by default", () => {
+    const { countries } = createCollectorDescriptor();
+    assert.deepEqual(countries, ["id", "us", "sg", "th", "vn", "ph", "my", "jp", "kr", "gb", "de", "br", "in"]);
   });
 });

@@ -8,7 +8,7 @@ import type { LabelStatus } from "@/lib/labels/resolve";
 
 const initial: LabelActionState = { ok: null };
 const buttonClass =
-  "h-7 rounded-md border border-line-strong px-2 text-[11px] text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-50";
+  "h-7 rounded-md border border-line-strong px-2 text-[13px] text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-50";
 
 export type EditableLabelTarget =
   | { kind: "mobile"; id: string }
@@ -48,9 +48,9 @@ export function LabelActions({
           Undo my decision
         </button>
       ) : null}
-      {pending ? <span className="text-[11px] text-dim">Saving…</span> : null}
+      {pending ? <span className="text-[13px] text-dim">Saving…</span> : null}
       {state.ok === false ? (
-        <span role="alert" className="text-[11px] text-down">
+        <span role="alert" className="text-[13px] text-down">
           {state.error}
         </span>
       ) : null}
@@ -72,13 +72,13 @@ export function AddLabelForm({
       <input type="hidden" name={target.kind === "steam" ? "steamAppId" : "storeAppId"} value={target.id} />
       {target.kind === "steam" ? <input type="hidden" name="externalId" value={target.externalId} /> : null}
       <input type="hidden" name="intent" value="confirm" />
-      <label className="flex flex-col gap-1 text-[11px] text-dim">
+      <label className="flex flex-col gap-1 text-[13px] text-dim">
         Add a label
         <select
           name="labelId"
           required
           defaultValue=""
-          className="h-8 max-w-[16rem] rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-accent"
+          className="h-8 max-w-[16rem] rounded-md border border-line-strong bg-surface px-2 text-[15px] text-ink focus-visible:outline-2 focus-visible:outline-accent"
         >
           <option value="" disabled>
             Choose a label…
@@ -97,12 +97,12 @@ export function AddLabelForm({
       <button
         type="submit"
         disabled={pending}
-        className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+        className="h-8 rounded-md bg-accent px-3 text-[15px] font-medium text-canvas hover:opacity-90 disabled:opacity-60"
       >
         {pending ? "Adding…" : "Add"}
       </button>
       {state.ok === false ? (
-        <span role="alert" className="text-xs text-down">
+        <span role="alert" className="text-sm text-down">
           {state.error}
         </span>
       ) : null}

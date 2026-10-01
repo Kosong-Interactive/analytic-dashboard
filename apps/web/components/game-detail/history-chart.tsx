@@ -43,15 +43,17 @@ export function HistoryChart({ points, label, invert = false, decimals = 0 }: Hi
         type: "time",
         axisLine: { lineStyle: { color: INK.grid } },
         axisTick: { show: false },
-        axisLabel: { color: INK.axis, fontSize: 11, hideOverlap: true },
+        axisLabel: { color: INK.axis, fontSize: 13, hideOverlap: true },
         splitLine: { show: false },
       },
       yAxis: {
         type: "value",
         inverse: invert,
         scale: true,
+        // A chart rank starts at 1: without a floor a constant #1 is drawn between 0 and 2.
+        ...(invert ? { min: 1, max: (range: { max: number }) => Math.max(Math.ceil(range.max), 2) } : {}),
         minInterval: decimals === 0 ? 1 : undefined,
-        axisLabel: { color: INK.axis, fontSize: 11, formatter: (v: number) => format(v) },
+        axisLabel: { color: INK.axis, fontSize: 13, formatter: (v: number) => format(v) },
         splitLine: { lineStyle: { color: INK.grid, width: 1 } },
       },
       tooltip: {
@@ -59,7 +61,7 @@ export function HistoryChart({ points, label, invert = false, decimals = 0 }: Hi
         axisPointer: { type: "line", lineStyle: { color: INK.axis } },
         backgroundColor: INK.tooltipBg,
         borderColor: INK.tooltipBorder,
-        textStyle: { color: INK.text, fontSize: 12 },
+        textStyle: { color: INK.text, fontSize: 14 },
         valueFormatter: (value: unknown) => (typeof value === "number" ? format(value) : "—"),
       },
       series: [

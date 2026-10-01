@@ -55,9 +55,9 @@ function SummaryCards({ view }: { view: OpportunityDetailView }) {
     <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {cards.map((card) => (
         <div key={card.label} className="rounded-[10px] border border-line bg-surface p-4">
-          <dt className="text-[11px] uppercase tracking-wider text-dim">{card.label}</dt>
-          <dd className="mt-2 text-2xl font-semibold tracking-tight">{card.value}</dd>
-          {card.detail ? <p className="mt-1 text-xs capitalize text-dim">{card.detail}</p> : null}
+          <dt className="text-[13px] uppercase tracking-wider text-dim">{card.label}</dt>
+          <dd className="mt-2 text-3xl font-semibold tracking-tight">{card.value}</dd>
+          {card.detail ? <p className="mt-1 text-sm capitalize text-dim">{card.detail}</p> : null}
         </div>
       ))}
     </dl>
@@ -78,37 +78,37 @@ function RecommendationPanel({
     <Panel
       title="Recommendation Priority"
       description="Market attractiveness and studio feasibility stay separate · recommendation_priority_v1"
-      action={<Link href="/settings/studio-fit" className="text-xs text-accent underline-offset-2 hover:underline">Configure Studio Fit</Link>}
+      action={<Link href="/settings/studio-fit" className="text-sm text-accent underline-offset-2 hover:underline">Configure Studio Fit</Link>}
     >
       <div className="grid grid-cols-1 border-t border-line-soft md:grid-cols-3">
         <div className="border-b border-line-soft p-4 md:border-b-0 md:border-r">
-          <p className="text-[11px] uppercase tracking-wider text-dim">Market Opportunity</p>
-          <p className="mt-2 text-3xl font-semibold">{value(view.score)}</p>
-          <p className="mt-1 text-xs text-dim">{view.formulaVersion} · storefront evidence</p>
+          <p className="text-[13px] uppercase tracking-wider text-dim">Market Opportunity</p>
+          <p className="mt-2 text-4xl font-semibold">{value(view.score)}</p>
+          <p className="mt-1 text-sm text-dim">{view.formulaVersion} · storefront evidence</p>
         </div>
         <div className="border-b border-line-soft p-4 md:border-b-0 md:border-r">
-          <p className="text-[11px] uppercase tracking-wider text-dim">Studio Fit</p>
-          <p className="mt-2 text-3xl font-semibold">{value(studioFit?.score)}</p>
-          <p className="mt-1 text-xs text-dim">
+          <p className="text-[13px] uppercase tracking-wider text-dim">Studio Fit</p>
+          <p className="mt-2 text-4xl font-semibold">{value(studioFit?.score)}</p>
+          <p className="mt-1 text-sm text-dim">
             {profile ? `profile v${profile.version} · ${Math.round((studioFit?.coverage ?? 0) * 100)}% measurable` : "profile not configured"}
           </p>
         </div>
         <div className="p-4">
-          <p className="text-[11px] uppercase tracking-wider text-dim">Recommendation Priority</p>
-          <p className="mt-2 text-3xl font-semibold text-accent">{value(studioFit?.recommendationPriority)}</p>
-          <p className="mt-1 text-xs text-dim">65% market · 35% fit · requires both scores</p>
+          <p className="text-[13px] uppercase tracking-wider text-dim">Recommendation Priority</p>
+          <p className="mt-2 text-4xl font-semibold text-accent">{value(studioFit?.recommendationPriority)}</p>
+          <p className="mt-1 text-sm text-dim">65% market · 35% fit · requires both scores</p>
         </div>
       </div>
       {!profile ? (
-        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-xs text-ink-soft">Configure the studio profile before feasibility can be measured.</p>
+        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-sm text-ink-soft">Configure the studio profile before feasibility can be measured.</p>
       ) : studioFit?.reason ? (
-        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-xs text-ink-soft">Studio Fit pending: {studioFit.reason}.</p>
+        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-sm text-ink-soft">Studio Fit pending: {studioFit.reason}.</p>
       ) : null}
       {profile && studioFit ? (
         <div className="grid grid-cols-1 border-t border-line-soft xl:grid-cols-2">
           <div className="p-4 xl:border-r xl:border-line-soft">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Measured fit</p>
-            <ul className="mt-2 flex flex-col gap-2 text-xs leading-5 text-ink-soft">
+            <p className="text-[13px] font-medium uppercase tracking-wider text-dim">Measured fit</p>
+            <ul className="mt-2 flex flex-col gap-2 text-sm leading-5 text-ink-soft">
               {studioFit.components.map((component) => (
                 <li key={component.key} className="flex justify-between gap-4"><span>{component.evidence}</span><span>{component.value === null ? "—" : percent(component.value)}</span></li>
               ))}
@@ -116,11 +116,11 @@ function RecommendationPanel({
             {studioFit.gaps.length > 0 ? <div className="mt-3"><Lines lines={studioFit.gaps} empty="" tone="text-down" /></div> : null}
           </div>
           <div className="p-4">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Profile context</p>
-            <p className="mt-2 text-xs leading-5 text-ink-soft">{profile.teamSize} people · {profile.targetDurationMonths} month target · 2D {capabilityLabels[profile.capability2d]} · 3D {capabilityLabels[profile.capability3d]}</p>
-            <p className="mt-1 text-xs leading-5 text-ink-soft">Backend {capabilityLabels[profile.onlineBackendCapability]} · Content {capabilityLabels[profile.contentProductionCapability]} · Live-ops {capabilityLabels[profile.liveOpsCapability]}</p>
-            <p className="mt-1 text-xs leading-5 text-dim">Monetization: {profile.monetizationCapabilities.length === 0 ? "not configured" : profile.monetizationCapabilities.map((item) => monetizationLabels[item]).join(", ")}</p>
-            <p className="mt-3 text-[11px] leading-5 text-dim">{studioFit.caveats[0]}</p>
+            <p className="text-[13px] font-medium uppercase tracking-wider text-dim">Profile context</p>
+            <p className="mt-2 text-sm leading-5 text-ink-soft">{profile.teamSize} people · {profile.targetDurationMonths} month target · 2D {capabilityLabels[profile.capability2d]} · 3D {capabilityLabels[profile.capability3d]}</p>
+            <p className="mt-1 text-sm leading-5 text-ink-soft">Backend {capabilityLabels[profile.onlineBackendCapability]} · Content {capabilityLabels[profile.contentProductionCapability]} · Live-ops {capabilityLabels[profile.liveOpsCapability]}</p>
+            <p className="mt-1 text-sm leading-5 text-dim">Monetization: {profile.monetizationCapabilities.length === 0 ? "not configured" : profile.monetizationCapabilities.map((item) => monetizationLabels[item]).join(", ")}</p>
+            <p className="mt-3 text-[13px] leading-5 text-dim">{studioFit.caveats[0]}</p>
           </div>
         </div>
       ) : null}
@@ -129,9 +129,9 @@ function RecommendationPanel({
 }
 
 function Lines({ lines, empty, tone }: { lines: string[]; empty: string; tone?: string }) {
-  if (lines.length === 0) return <p className="text-xs text-dim">{empty}</p>;
+  if (lines.length === 0) return <p className="text-sm text-dim">{empty}</p>;
   return (
-    <ul className={cn("flex flex-col gap-2 text-xs leading-5 text-ink-soft", tone)}>
+    <ul className={cn("flex flex-col gap-2 text-sm leading-5 text-ink-soft", tone)}>
       {lines.map((line) => (
         <li key={line} className="border-l border-line-strong pl-3">
           {line}
@@ -148,8 +148,8 @@ function ScoreBreakdown({ view }: { view: OpportunityDetailView }) {
       description={`${view.formulaVersion} · missing components remain missing and are never converted to zero`}
     >
       <div className="overflow-x-auto border-t border-line-soft">
-        <table className="w-full min-w-[650px] border-collapse text-left text-xs">
-          <thead className="text-[11px] uppercase tracking-wider text-dim">
+        <table className="w-full min-w-[650px] border-collapse text-left text-sm">
+          <thead className="text-[13px] uppercase tracking-wider text-dim">
             <tr>
               <th className="px-4 py-3 font-medium">Component</th>
               <th className="px-4 py-3 text-right font-medium">Raw evidence</th>
@@ -174,7 +174,7 @@ function ScoreBreakdown({ view }: { view: OpportunityDetailView }) {
         </table>
       </div>
       {view.pendingReason ? (
-        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-xs leading-5 text-ink-soft">
+        <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-sm leading-5 text-ink-soft">
           Score pending: {view.pendingReason}.
         </p>
       ) : null}
@@ -198,8 +198,8 @@ function MarketFacts({ view }: { view: OpportunityDetailView }) {
       <dl className="grid grid-cols-1 border-t border-line-soft sm:grid-cols-2">
         {facts.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-4 border-b border-line-soft px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0">
-            <dt className="text-xs text-dim">{label}</dt>
-            <dd className="text-xs font-medium text-ink">{value}</dd>
+            <dt className="text-sm text-dim">{label}</dt>
+            <dd className="text-sm font-medium text-ink">{value}</dd>
           </div>
         ))}
       </dl>
@@ -217,14 +217,14 @@ function Comparables({ view }: { view: OpportunityDetailView }) {
           {view.comparables.map((game) => (
             <li key={game.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <Link href={`/games/${game.id}`} className="text-sm font-medium underline-offset-2 hover:underline">
+                <Link href={`/games/${game.id}`} className="text-base font-medium underline-offset-2 hover:underline">
                   {game.title}
                 </Link>
-                <p className="mt-0.5 text-[11px] text-dim">
+                <p className="mt-0.5 text-[13px] text-dim">
                   {game.releaseDate ? `Released ${formatDate(game.releaseDate)}` : "Release date unavailable"}
                 </p>
               </div>
-              <div className="flex gap-5 text-right text-xs">
+              <div className="flex gap-5 text-right text-sm">
                 <div><p className="text-dim">Trend Score</p><p className="mt-0.5 font-medium">{game.trendScore === null ? "—" : Math.round(game.trendScore)}</p></div>
                 <div><p className="text-dim">Rating</p><p className="mt-0.5 font-medium">{game.rating === null ? "—" : game.rating.toFixed(1)}</p></div>
                 <div><p className="text-dim">Ratings</p><p className="mt-0.5 font-medium">{formatCount(game.ratingCount)}</p></div>
@@ -243,23 +243,23 @@ function DecisionPanel({ view }: { view: OpportunityDetailView }) {
     <Panel
       title="Team decision"
       description="Market evidence informs the decision; it does not predict commercial success"
-      action={current ? <span className={cn("rounded-full border px-2 py-1 text-[11px] font-medium", decisionTone[current.status])}>{opportunityDecisionLabels[current.status]}</span> : null}
+      action={current ? <span className={cn("rounded-full border px-2 py-1 text-[13px] font-medium", decisionTone[current.status])}>{opportunityDecisionLabels[current.status]}</span> : null}
     >
       {current ? (
-        <div className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-ink-soft">
+        <div className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-ink-soft">
           Latest decision by {current.actor}{current.owner ? ` · owner: ${current.owner}` : ""} · {formatDate(current.createdAt)}
           {current.note ? <p className="mt-1 text-ink">{current.note}</p> : null}
         </div>
       ) : (
-        <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">No team decision has been recorded.</p>
+        <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">No team decision has been recorded.</p>
       )}
       <DecisionForm opportunityId={view.id} />
       {view.decisions.length > 0 ? (
         <div className="border-t border-line-soft px-4 py-3">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-dim">Decision history</p>
+          <p className="mb-2 text-[13px] font-medium uppercase tracking-wider text-dim">Decision history</p>
           <ol className="flex flex-col gap-2">
             {view.decisions.map((decision) => (
-              <li key={decision.id} className="rounded-md border border-line-soft bg-surface-alt px-3 py-2 text-xs">
+              <li key={decision.id} className="rounded-md border border-line-soft bg-surface-alt px-3 py-2 text-sm">
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="font-medium">{opportunityDecisionLabels[decision.status]}</span>
                   <span className="text-dim">{formatDate(decision.createdAt)}</span>
@@ -279,7 +279,7 @@ function CitationLinks({ ids }: { ids: string[] }) {
   return (
     <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
       {ids.map((id) => (
-        <a key={id} href={`#evidence-${id}`} className="rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
+        <a key={id} href={`#evidence-${id}`} className="rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[11.5px] text-accent">
           {id}
         </a>
       ))}
@@ -302,20 +302,20 @@ function ResearchBriefPanel({ brief, score }: { brief: ResearchBriefView | null;
   return (
     <Panel title="AI Research Brief" description={`${brief.promptVersion} · ${brief.model} · generated ${formatDate(brief.createdAt)} UTC`}>
       <div className="border-t border-line-soft p-4">
-        <p className="text-sm leading-6 text-ink">{brief.summary.text}<CitationLinks ids={brief.summary.evidenceIds} /></p>
+        <p className="text-base leading-6 text-ink">{brief.summary.text}<CitationLinks ids={brief.summary.evidenceIds} /></p>
         <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-up">Opportunity signals</p>
-            <ul className="mt-2 flex flex-col gap-2 text-xs leading-5 text-ink-soft">
+            <p className="text-[13px] font-medium uppercase tracking-wider text-up">Opportunity signals</p>
+            <ul className="mt-2 flex flex-col gap-2 text-sm leading-5 text-ink-soft">
               {brief.opportunitySignals.map((item) => (
                 <li key={`${item.text}:${item.evidenceIds.join()}`} className="border-l border-up/40 pl-3">{item.text}<CitationLinks ids={item.evidenceIds} /></li>
               ))}
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-down">Counter-signals</p>
-            {brief.counterSignals.length === 0 ? <p className="mt-2 text-xs text-dim">No additional counter-signal was drafted.</p> : (
-              <ul className="mt-2 flex flex-col gap-2 text-xs leading-5 text-ink-soft">
+            <p className="text-[13px] font-medium uppercase tracking-wider text-down">Counter-signals</p>
+            {brief.counterSignals.length === 0 ? <p className="mt-2 text-sm text-dim">No additional counter-signal was drafted.</p> : (
+              <ul className="mt-2 flex flex-col gap-2 text-sm leading-5 text-ink-soft">
                 {brief.counterSignals.map((item) => (
                   <li key={`${item.text}:${item.evidenceIds.join()}`} className="border-l border-down/40 pl-3">{item.text}<CitationLinks ids={item.evidenceIds} /></li>
                 ))}
@@ -325,28 +325,28 @@ function ResearchBriefPanel({ brief, score }: { brief: ResearchBriefView | null;
         </div>
       </div>
       <div className="border-t border-line-soft p-4">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Validation questions</p>
+        <p className="text-[13px] font-medium uppercase tracking-wider text-dim">Validation questions</p>
         <ol className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-2">
           {brief.validationQuestions.map((item, index) => (
             <li key={`${item.question}:${item.evidenceIds.join()}`} className="rounded-md border border-line-soft bg-surface-alt p-3">
-              <p className="text-xs font-medium text-ink">{index + 1}. {item.question}</p>
-              <p className="mt-1 text-xs leading-5 text-dim">{item.why}<CitationLinks ids={item.evidenceIds} /></p>
+              <p className="text-sm font-medium text-ink">{index + 1}. {item.question}</p>
+              <p className="mt-1 text-sm leading-5 text-dim">{item.why}<CitationLinks ids={item.evidenceIds} /></p>
             </li>
           ))}
         </ol>
       </div>
       <details className="border-t border-line-soft p-4">
-        <summary className="cursor-pointer text-xs font-medium text-accent">View supplied evidence registry</summary>
+        <summary className="cursor-pointer text-sm font-medium text-accent">View supplied evidence registry</summary>
         <dl className="mt-3 grid grid-cols-1 gap-2 xl:grid-cols-2">
           {brief.evidence.map((item) => (
-            <div id={`evidence-${item.id}`} key={item.id} className="rounded-md border border-line-soft bg-surface-alt p-3 text-xs">
+            <div id={`evidence-${item.id}`} key={item.id} className="rounded-md border border-line-soft bg-surface-alt p-3 text-sm">
               <dt className="font-medium text-ink">{item.label} <span className="font-normal text-accent">{item.id}</span></dt>
               <dd className="mt-1 leading-5 text-dim">{item.value}</dd>
             </div>
           ))}
         </dl>
       </details>
-      <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-[11px] leading-5 text-ink-soft">AI summarizes supplied evidence; it does not alter the score or the team decision and is not a forecast of commercial success.</p>
+      <p className="border-t border-star/30 bg-star/5 px-4 py-3 text-[13px] leading-5 text-ink-soft">AI summarizes supplied evidence; it does not alter the score or the team decision and is not a forecast of commercial success.</p>
     </Panel>
   );
 }
@@ -378,32 +378,32 @@ function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
       <div className="grid grid-cols-1 border-t border-line-soft md:grid-cols-3">
         {history.windows.map((window) => (
           <div key={window.windowDays} className="border-b border-line-soft p-4 md:border-b-0 md:border-r">
-            <p className="text-[11px] uppercase tracking-wider text-dim">{window.windowDays}-day durability</p>
-            <p className="mt-2 text-2xl font-semibold">
+            <p className="text-[13px] uppercase tracking-wider text-dim">{window.windowDays}-day durability</p>
+            <p className="mt-2 text-3xl font-semibold">
               {window.durableShare === null ? "Pending" : `${Math.round(window.durableShare * 100)}%`}
             </p>
-            <p className="mt-1 text-xs text-dim">
+            <p className="mt-1 text-sm text-dim">
               {durabilityStatus(window)} · {window.sampleCount} scored snapshots · {window.observedDays.toFixed(1)}d observed
             </p>
             {window.averageScore !== null ? (
-              <p className="mt-2 text-[11px] text-ink-soft">
+              <p className="mt-2 text-[13px] text-ink-soft">
                 Average {window.averageScore.toFixed(1)} · change {formatSigned(window.scoreChange, 1)} pts
               </p>
             ) : null}
           </div>
         ))}
         <div className="p-4">
-          <p className="text-[11px] uppercase tracking-wider text-dim">7-day acceleration</p>
-          <p className="mt-2 text-2xl font-semibold capitalize">
+          <p className="text-[13px] uppercase tracking-wider text-dim">7-day acceleration</p>
+          <p className="mt-2 text-3xl font-semibold capitalize">
             {acceleration.direction ?? (acceleration.status === "collecting" ? "Collecting" : "Pending")}
           </p>
-          <p className="mt-1 text-xs text-dim">
+          <p className="mt-1 text-sm text-dim">
             {acceleration.status === "ready"
               ? `${formatSigned(acceleration.value, 1)} pts versus the preceding 7-day change`
               : `Requires ${acceleration.requiredHistoryDays} days of comparable score history`}
           </p>
           {acceleration.status === "ready" ? (
-            <p className="mt-2 text-[11px] text-ink-soft">
+            <p className="mt-2 text-[13px] text-ink-soft">
               Latest 7d {formatSigned(acceleration.recentChange, 1)} · prior 7d {formatSigned(acceleration.previousChange, 1)}
             </p>
           ) : null}
@@ -412,13 +412,13 @@ function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
 
       {history.alerts.length > 0 ? (
         <div className="border-t border-line-soft p-4">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-dim">Latest material changes</p>
+          <p className="text-[13px] font-medium uppercase tracking-wider text-dim">Latest material changes</p>
           <ul className="mt-3 grid grid-cols-1 gap-2 xl:grid-cols-2">
             {history.alerts.map((alert) => (
               <li
                 key={alert.key}
                 className={cn(
-                  "rounded-md border px-3 py-2 text-xs leading-5",
+                  "rounded-md border px-3 py-2 text-sm leading-5",
                   alert.severity === "high" ? "border-down/40 bg-down/10" : "border-star/40 bg-star/10",
                 )}
               >
@@ -429,7 +429,7 @@ function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
           </ul>
         </div>
       ) : (
-        <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+        <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">
           {history.points.length < 2
             ? "Collecting a second comparable research snapshot before change detection starts."
             : "No material change was detected in the latest comparable research run."}
@@ -442,7 +442,7 @@ function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
             <div className="flex h-28 items-end gap-1" aria-hidden="true">
               {recent.map((point) => (
                 <div key={point.id} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
-                  <span className="text-[9px] text-dim">{point.score === null ? "—" : Math.round(point.score)}</span>
+                  <span className="text-[10px] text-dim">{point.score === null ? "—" : Math.round(point.score)}</span>
                   <div
                     className={cn("w-full max-w-8 rounded-t-sm", point.score === null ? "h-1 bg-line-strong" : "bg-accent/70")}
                     style={point.score === null ? undefined : { height: `${Math.max(4, point.score)}%` }}
@@ -452,10 +452,10 @@ function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
             </div>
           ) : null}
           <details className={recent.length >= 2 ? "mt-3" : undefined}>
-            <summary className="cursor-pointer text-xs font-medium text-accent">View accessible snapshot timeline</summary>
+            <summary className="cursor-pointer text-sm font-medium text-accent">View accessible snapshot timeline</summary>
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[560px] border-collapse text-left text-xs">
-                <thead className="text-[11px] uppercase tracking-wider text-dim">
+              <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+                <thead className="text-[13px] uppercase tracking-wider text-dim">
                   <tr><th className="py-2 font-medium">Calculated</th><th className="py-2 text-right font-medium">Score</th><th className="py-2 text-right font-medium">Change</th><th className="py-2 text-right font-medium">Confidence</th></tr>
                 </thead>
                 <tbody>
@@ -471,10 +471,10 @@ function HistoryPanel({ history }: { history: OpportunityHistoryView | null }) {
               </table>
             </div>
           </details>
-          {history.skipped > 0 ? <p className="mt-2 text-[11px] text-down">{history.skipped} malformed historical snapshot(s) were hidden.</p> : null}
+          {history.skipped > 0 ? <p className="mt-2 text-[13px] text-down">{history.skipped} malformed historical snapshot(s) were hidden.</p> : null}
         </div>
       ) : null}
-      <p className="border-t border-line-soft px-4 py-3 text-[11px] leading-5 text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-[13px] leading-5 text-dim">
         Durability is the share of measurable snapshots at or above a 60 Opportunity Score. It is an internal research signal, not a probability of commercial success.
       </p>
     </Panel>
@@ -500,13 +500,13 @@ export function OpportunityDetail({
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <Link href={`/?country=${view.country}&platform=${view.store}`} className="text-xs text-dim underline-offset-2 hover:underline">← Back to Overview</Link>
-          <h1 className="text-[22px] font-semibold tracking-tight">{view.title}</h1>
-          <p className="text-[13px] text-dim">
+          <Link href={`/?country=${view.country}&platform=${view.store}`} className="text-sm text-dim underline-offset-2 hover:underline">← Back to Overview</Link>
+          <h1 className="text-[26px] font-semibold tracking-tight">{view.title}</h1>
+          <p className="text-[15px] text-dim">
             {platformLabel(view.store)} · {countryLabel(view.country)}{view.insight ? ` · ${view.insight}` : " · Candidate awaiting score"}
           </p>
         </div>
-        <div className="text-right text-xs leading-5 text-dim">
+        <div className="text-right text-sm leading-5 text-dim">
           <p>Calculated {formatRelative(view.asOf, now)}</p>
           <p>{formatDate(view.asOf)} UTC · source {view.freshness}</p>
         </div>

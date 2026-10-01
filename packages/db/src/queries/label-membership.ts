@@ -8,6 +8,8 @@ import { notSupersededByAi } from "./rule-superseded";
 export interface LabelMembershipQuery {
   stores: ReadonlyArray<StoreId>;
   country: string;
+  /** Several storefronts at once, for market views; overrides `country` when given. */
+  countries?: readonly string[];
   taxonomyVersion: string;
   types: readonly LabelType[];
   /** Labels below this confidence are treated as not assigned. Manual labels always count. */
@@ -53,7 +55,7 @@ export async function loadLabelMembership(
     .where(
       and(
         inArray(storeApps.store, [...query.stores]),
-        eq(storeApps.country, query.country),
+        inArray(storeApps.country, [...(query.countries ?? [query.country])]),
         eq(appLabels.taxonomyVersion, query.taxonomyVersion),
         eq(taxonomyLabels.isActive, true),
         inArray(taxonomyLabels.type, [...query.types]),

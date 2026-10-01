@@ -28,7 +28,7 @@ export function GameIcon({ title, iconUrl, size, className }: GameIconProps) {
     <span
       aria-hidden
       style={{ width: size, height: size }}
-      className={cn(shape, "flex items-center justify-center bg-accent/80 font-mono text-[11px] font-medium text-canvas")}
+      className={cn(shape, "flex items-center justify-center bg-accent/80 font-mono text-[13px] font-medium text-canvas")}
     >
       {initials(title)}
     </span>

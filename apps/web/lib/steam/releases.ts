@@ -1,4 +1,4 @@
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import { steamCountrySchema } from "./query";
 import type { SteamGameListRow, SteamLabelMembershipRow } from "@analytic-dashboard/db";
 import { z } from "zod";
 
@@ -22,7 +22,7 @@ export const steamReleaseSortLabels: Record<SteamReleaseSort, string> = {
 export const STEAM_RELEASES_PAGE_SIZE = 20;
 
 const queryShape = z.object({
-  country: countryCodeSchema.catch("id"),
+  country: steamCountrySchema.catch("id"),
   days: z.coerce
     .number()
     .refine((value): value is SteamReleaseWindow => (steamWindowValues as readonly number[]).includes(value))

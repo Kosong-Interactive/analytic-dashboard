@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const supportedCountryCodes = ["id", "us"] as const;
+/**
+ * Every storefront this system can collect, grouped into markets in `markets.ts`. A code listed here
+ * is only collected once it is also enabled in `config/countries/enabled.json`.
+ */
+export const supportedCountryCodes = ["id", "us", "sg", "th", "vn", "ph", "my", "jp", "kr", "gb", "de", "br", "in"] as const;
 export const storeValues = ["app_store", "google_play"] as const;
 
 export const countryCodeSchema = z.enum(supportedCountryCodes);

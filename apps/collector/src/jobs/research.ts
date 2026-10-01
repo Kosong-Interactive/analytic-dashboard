@@ -19,8 +19,8 @@ import type {
 } from "@analytic-dashboard/db";
 
 const DAY_MS = 86_400_000;
-/** Same freshness rule as the dashboard: no successful collection within 12 hours is stale. */
-const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
+/** Same freshness rule as the dashboard: no successful collection within 36 hours (collection runs daily) is stale. */
+const STALE_AFTER_MS = 36 * 60 * 60 * 1000;
 const RANK_CHART = "TOP_FREE";
 const WINDOW_DAYS = 7;
 

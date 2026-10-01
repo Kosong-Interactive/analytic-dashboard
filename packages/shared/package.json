@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "tsx --test src/contracts.test.ts src/platforms.test.ts src/steam.test.ts",
+    "test": "tsx --test src/contracts.test.ts src/platforms.test.ts src/steam.test.ts src/markets.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

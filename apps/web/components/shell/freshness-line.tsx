@@ -16,7 +16,7 @@ export function FreshnessLine({ freshness, asOf }: { freshness: StoreFreshness[]
   const degraded = freshness.filter((store) => store.state !== "fresh");
   return (
     <div className="flex flex-col gap-2">
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim" aria-label="Data freshness">
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dim" aria-label="Data freshness">
         {freshness.map((store) => (
           <li key={store.store} className="flex items-center gap-1.5">
             <span aria-hidden className={cn("size-1.5 rounded-full", STATE[store.state].dot)} />
@@ -26,7 +26,7 @@ export function FreshnessLine({ freshness, asOf }: { freshness: StoreFreshness[]
         ))}
       </ul>
       {degraded.length > 0 ? (
-        <p role="status" className="rounded-md border border-star/40 bg-star/10 px-3 py-2 text-xs text-ink-soft">
+        <p role="status" className="rounded-md border border-star/40 bg-star/10 px-3 py-2 text-sm text-ink-soft">
           {degraded.map((store) => platformLabels[store.store]).join(" and ")}{" "}
           {degraded.length === 1 ? "data is" : "data are"} not fresh. Results below may be partial or out of date; other
           stores are shown as collected.

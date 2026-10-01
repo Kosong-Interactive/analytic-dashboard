@@ -7,7 +7,7 @@ import { signIn, type LoginState } from "@/app/login/actions";
 
 const initialState: LoginState = { error: null, email: "" };
 const inputClass =
-  "h-10 w-full rounded-md border border-line-strong bg-canvas px-3 text-sm text-ink placeholder:text-dim focus-visible:outline-2 focus-visible:outline-accent";
+  "h-10 w-full rounded-md border border-line-strong bg-canvas px-3 text-base text-ink placeholder:text-dim focus-visible:outline-2 focus-visible:outline-accent";
 
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signIn, initialState);
@@ -16,7 +16,7 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       <input type="hidden" name="next" value={next} />
-      <label className="flex flex-col gap-1.5 text-[13px] text-ink-soft">
+      <label className="flex flex-col gap-1.5 text-[15px] text-ink-soft">
         Email
         <input
           name="email"
@@ -31,7 +31,7 @@ export function LoginForm({ next }: { next: string }) {
           aria-describedby={state.error ? "login-error" : undefined}
         />
       </label>
-      <div className="flex flex-col gap-1.5 text-[13px] text-ink-soft">
+      <div className="flex flex-col gap-1.5 text-[15px] text-ink-soft">
         <label htmlFor="login-password">Password</label>
         <div className="relative">
           <input
@@ -57,14 +57,14 @@ export function LoginForm({ next }: { next: string }) {
         </div>
       </div>
       {state.error ? (
-        <p id="login-error" role="alert" className="text-[13px] text-down">
+        <p id="login-error" role="alert" className="text-[15px] text-down">
           {state.error}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={pending}
-        className="h-10 rounded-md bg-accent text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+        className="h-10 rounded-md bg-accent text-base font-medium text-canvas hover:opacity-90 disabled:opacity-60"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

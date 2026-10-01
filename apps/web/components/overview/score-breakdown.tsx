@@ -40,7 +40,7 @@ function describeRaw(component: TrendComponent, raw: number | null): string {
 export function ScoreBreakdown({ row }: { row: TrendingRow }) {
   if (row.score === null || row.tier === null) {
     return (
-      <span className="text-[11.5px] text-dim" title={row.scoreNote ?? "Not enough history yet"}>
+      <span className="text-[13.5px] text-dim" title={row.scoreNote ?? "Not enough history yet"}>
         Not scored yet
       </span>
     );
@@ -53,7 +53,7 @@ export function ScoreBreakdown({ row }: { row: TrendingRow }) {
         className="flex cursor-pointer list-none items-center gap-1.5 rounded-sm focus-visible:outline-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
         aria-label={`Trend score ${Math.round(row.score)}, ${style.label}. Show score breakdown`}
       >
-        <span className="w-[22px] text-right font-mono text-[12.5px] font-medium">
+        <span className="w-[22px] text-right font-mono text-[14.5px] font-medium">
           {Math.round(row.score)}
         </span>
         <span className="h-1 w-11 shrink-0 rounded-sm bg-[#22262c]" aria-hidden>
@@ -62,17 +62,17 @@ export function ScoreBreakdown({ row }: { row: TrendingRow }) {
             style={{ width: `${Math.min(100, Math.max(0, row.score))}%` }}
           />
         </span>
-        <span className={cn("text-[11px]", style.text)}>{style.label}</span>
+        <span className={cn("text-[13px]", style.text)}>{style.label}</span>
       </summary>
       <div className="absolute right-0 z-10 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-lg border border-line-strong bg-surface-alt p-3 text-left shadow-xl">
-        <p className="text-xs font-medium">How this score was built</p>
-        <p className="mt-1 text-[11px] leading-4 text-dim">
+        <p className="text-sm font-medium">How this score was built</p>
+        <p className="mt-1 text-[13px] leading-4 text-dim">
           trend_score_v1 · based on {Math.round(row.weightCoverage * 100)}% of the score weight.
           Unmeasurable components are left out, not counted as zero.
         </p>
         <ScoreComponentsTable components={row.components} score={row.score} />
         {row.latestObservationAt ? (
-          <p className="mt-2 text-[11px] text-dim">
+          <p className="mt-2 text-[13px] text-dim">
             Newest observation: {row.latestObservationAt.toISOString().slice(0, 16).replace("T", " ")} UTC
             {" · "}
             {formatCount(row.ratingCount)} ratings
@@ -91,7 +91,7 @@ export function ScoreComponentsTable({
   score: number | null;
 }) {
   return (
-    <table className="mt-2 w-full text-[11px]">
+    <table className="mt-2 w-full text-[13px]">
       <caption className="sr-only">Trend score components</caption>
       <thead className="text-dim">
         <tr>

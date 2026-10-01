@@ -24,9 +24,9 @@ export function ObservationsTable({ view }: { view: GameDetailView }) {
       ) : (
         <>
           <div className="max-h-96 overflow-auto">
-            <table className="w-full border-collapse text-xs">
+            <table className="w-full border-collapse text-sm">
               <caption className="sr-only">Stored observations for {listing.title}, newest first</caption>
-              <thead className="sticky top-0 bg-surface-alt text-[11px] text-dim">
+              <thead className="sticky top-0 bg-surface-alt text-[13px] text-dim">
                 <tr className="h-8 border-y border-line">
                   <th scope="col" className="px-4 text-left font-medium">Captured at</th>
                   <th scope="col" className="px-2 text-right font-medium">Rating</th>
@@ -50,7 +50,7 @@ export function ObservationsTable({ view }: { view: GameDetailView }) {
               </tbody>
             </table>
           </div>
-          <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+          <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">
             {observations.length} snapshots over {historyDays === null ? "0" : historyDays.toFixed(1)} days. A new
             snapshot is stored only when a value changes, plus a daily heartbeat. “—” means the store did not report
             the value.

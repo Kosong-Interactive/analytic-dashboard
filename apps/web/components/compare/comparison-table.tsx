@@ -30,7 +30,7 @@ function Labels({ labels }: { labels: CompareLabel[] }) {
         <span
           key={label.slug}
           className={cn(
-            "rounded border px-1.5 py-px text-[11px]",
+            "rounded border px-1.5 py-px text-[13px]",
             label.shared ? "border-accent/60 text-accent" : "border-line-strong/70 text-ink-soft",
           )}
         >
@@ -108,7 +108,7 @@ function GameHeading({ game, removeHref }: { game: CompareGame; removeHref: stri
     <div className="flex items-start justify-between gap-2">
       <Link href={`/games/${game.row.id}`} className="flex min-w-0 items-center gap-2 hover:underline">
         <GameIcon title={game.row.title} iconUrl={game.row.iconUrl} size={32} />
-        <span className="truncate text-[13px] font-medium">{game.row.title}</span>
+        <span className="truncate text-[15px] font-medium">{game.row.title}</span>
       </Link>
       <Link
         href={removeHref}
@@ -134,11 +134,11 @@ export function ComparisonTable({
   return (
     <>
       <div className="hidden lg:block">
-        <table className="w-full table-fixed border-collapse text-[13px]">
+        <table className="w-full table-fixed border-collapse text-[15px]">
           <caption className="sr-only">Comparison of {comparison.games.length} games</caption>
           <thead>
             <tr className="border-y border-line bg-surface-alt">
-              <th scope="col" className="w-44 px-4 py-2 text-left text-[11px] font-medium text-dim">
+              <th scope="col" className="w-44 px-4 py-2 text-left text-[13px] font-medium text-dim">
                 Metric
               </th>
               {comparison.games.map((game) => (
@@ -151,12 +151,12 @@ export function ComparisonTable({
           <tbody>
             {rows.map((metric) => (
               <tr key={metric.label} className="border-b border-line-soft align-top">
-                <th scope="row" className="px-4 py-2.5 text-left text-xs font-medium text-ink-soft">
+                <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-ink-soft">
                   {metric.label}
-                  {metric.caution ? <span className="mt-0.5 block text-[11px] font-normal text-star">{metric.caution}</span> : null}
+                  {metric.caution ? <span className="mt-0.5 block text-[13px] font-normal text-star">{metric.caution}</span> : null}
                 </th>
                 {comparison.games.map((game) => (
-                  <td key={game.row.id} className="px-3 py-2.5 text-xs text-ink-soft">
+                  <td key={game.row.id} className="px-3 py-2.5 text-sm text-ink-soft">
                     {metric.render(game)}
                   </td>
                 ))}
@@ -170,10 +170,10 @@ export function ComparisonTable({
         {comparison.games.map((game) => (
           <li key={game.row.id} className="flex flex-col gap-3 border-t border-line-soft px-4 py-3">
             <GameHeading game={game} removeHref={removeHref(game.row.id)} />
-            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
               {rows.map((metric) => (
                 <div key={metric.label} className={cn(metric.label === "Trend Score" && "col-span-2")}>
-                  <dt className="text-[11px] text-dim">{metric.label}</dt>
+                  <dt className="text-[13px] text-dim">{metric.label}</dt>
                   <dd className="text-ink-soft">{metric.render(game)}</dd>
                 </div>
               ))}

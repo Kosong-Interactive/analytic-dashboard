@@ -1,5 +1,6 @@
 "use client";
 
+import type { MarketHomeCountry } from "@analytic-dashboard/shared";
 import { useActionState } from "react";
 
 import {
@@ -30,7 +31,7 @@ export function DesktopDecisionForm({
   labelType,
   labelSlug,
 }: {
-  country: "id" | "us";
+  country: MarketHomeCountry;
   labelType: CompareType;
   labelSlug: string;
 }) {
@@ -40,23 +41,23 @@ export function DesktopDecisionForm({
       <input type="hidden" name="country" value={country} />
       <input type="hidden" name="labelType" value={labelType} />
       <input type="hidden" name="labelSlug" value={labelSlug} />
-      <label className="flex flex-col gap-1 text-xs text-dim">
+      <label className="flex flex-col gap-1 text-sm text-dim">
         Owner (optional)
         <input
           name="owner"
           maxLength={DESKTOP_OPPORTUNITY_OWNER_MAX}
           placeholder="Team or person responsible"
-          className="h-9 rounded-md border border-line-strong bg-surface-alt px-3 text-sm text-ink focus-visible:outline-2 focus-visible:outline-accent"
+          className="h-9 rounded-md border border-line-strong bg-surface-alt px-3 text-base text-ink focus-visible:outline-2 focus-visible:outline-accent"
         />
       </label>
-      <label className="flex flex-col gap-1 text-xs text-dim">
+      <label className="flex flex-col gap-1 text-sm text-dim">
         Decision note
         <textarea
           name="note"
           maxLength={DESKTOP_OPPORTUNITY_NOTE_MAX}
           rows={4}
           placeholder="Why should the team shortlist, reject, or prototype this direction?"
-          className="min-h-24 rounded-md border border-line-strong bg-surface-alt px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-accent"
+          className="min-h-24 rounded-md border border-line-strong bg-surface-alt px-3 py-2 text-base text-ink focus-visible:outline-2 focus-visible:outline-accent"
         />
       </label>
       <div className="flex flex-wrap items-end gap-2">
@@ -68,7 +69,7 @@ export function DesktopDecisionForm({
             value={status}
             disabled={pending}
             className={cn(
-              "h-9 rounded-md border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50",
+              "h-9 rounded-md border px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50",
               buttonTone[status],
             )}
           >
@@ -76,7 +77,7 @@ export function DesktopDecisionForm({
           </button>
         ))}
       </div>
-      <div aria-live="polite" className="min-h-5 text-xs">
+      <div aria-live="polite" className="min-h-5 text-sm">
         {pending ? <span className="text-dim">Saving decision…</span> : null}
         {state.ok === true ? <span className="text-up">Decision saved to the history.</span> : null}
         {state.ok === false ? <span className="text-down">{state.error}</span> : null}

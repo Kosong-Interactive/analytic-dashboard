@@ -26,10 +26,10 @@ export function SteamLabelTable({
   const maxShare = Math.max(0, ...labels.map((label) => label.share));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] border-collapse text-[13px]">
+      <table className="w-full min-w-[900px] border-collapse text-[15px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
+          <tr className="h-[34px] border-y border-line bg-surface-alt text-[13px] font-medium text-dim">
             {HEADERS.map((label, index) => (
               <th
                 key={label}
@@ -63,15 +63,15 @@ export function SteamLabelTable({
                       style={{ width: `${maxShare === 0 ? 0 : (label.share / maxShare) * 100}%` }}
                     />
                   </span>
-                  <span className="font-mono text-xs text-ink-soft">{percent(label.share)}</span>
+                  <span className="font-mono text-sm text-ink-soft">{percent(label.share)}</span>
                 </span>
               </td>
-              <td className="text-right font-mono text-xs">{label.games}</td>
-              <td className="text-right font-mono text-xs">{formatCount(label.currentPlayers)}</td>
-              <td className="text-right font-mono text-xs">{formatRatio(label.averagePositive)}</td>
-              <td className="text-right font-mono text-xs text-ink-soft">{label.onMostPlayed}</td>
+              <td className="text-right font-mono text-sm">{label.games}</td>
+              <td className="text-right font-mono text-sm">{formatCount(label.currentPlayers)}</td>
+              <td className="text-right font-mono text-sm">{formatRatio(label.averagePositive)}</td>
+              <td className="text-right font-mono text-sm text-ink-soft">{label.onMostPlayed}</td>
               <td className="pr-4">
-                <span className="flex max-w-[22rem] flex-wrap gap-x-3 gap-y-0.5 text-xs">
+                <span className="flex max-w-[22rem] flex-wrap gap-x-3 gap-y-0.5 text-sm">
                   {label.topGames.map((game) => (
                     <Link key={game.externalId} href={`/steam/games/${game.externalId}`} className="truncate text-ink-soft hover:underline">
                       {game.title}

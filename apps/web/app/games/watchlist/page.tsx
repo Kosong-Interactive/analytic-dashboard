@@ -8,7 +8,7 @@ import { SegmentedLinks } from "@/components/shell/segmented-links";
 import { WatchlistList } from "@/components/watchlist/watchlist-list";
 import { requireUser } from "@/lib/auth/session";
 import { MAX_COMPARED } from "@/lib/compare/comparison";
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 import { getWatchlist } from "@/lib/watchlist/get-watchlist";
 import {
   parseWatchlistQuery,
@@ -31,9 +31,9 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
   return (
     <AppShell filters={query} active="games" buildHref={(change) => watchlistHref(query, change)}>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Watchlist</h1>
-        <p className="text-[13px] text-dim">
-          Games the team is following · {countryLabels[query.country]} · {platformLabels[query.platform]}
+        <h1 className="text-[26px] font-semibold tracking-tight">Watchlist</h1>
+        <p className="text-[15px] text-dim">
+          Games the team is following · {scopeLabel(query)} · {platformLabels[query.platform]}
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
         {view.rows.length > 1 ? (
           <Link
             href={`/games/compare?ids=${view.rows.slice(0, MAX_COMPARED).map((row) => row.entry.storeAppId).join(",")}`}
-            className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt"
+            className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[15px] text-ink-soft hover:bg-surface-alt"
           >
             Compare the first {Math.min(view.rows.length, MAX_COMPARED)}
           </Link>
@@ -80,7 +80,7 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
         )}
       </Panel>
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         “Since added” compares the latest observation with the one stored when the game was added. Snapshots are stored
         on change, so the baseline may be older than the date it was added. A dash means a value is missing, never zero.
       </p>

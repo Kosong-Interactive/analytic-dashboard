@@ -24,8 +24,8 @@ function EvidenceList({ title, lines, tone }: { title: string; lines: string[]; 
   if (lines.length === 0) return null;
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-dim">{title}</p>
-      <ul className={cn("flex flex-col gap-1 text-xs leading-5", tone ?? "text-ink-soft")}>
+      <p className="text-[13px] font-medium uppercase tracking-wider text-dim">{title}</p>
+      <ul className={cn("flex flex-col gap-1 text-sm leading-5", tone ?? "text-ink-soft")}>
         {lines.map((line) => (
           <li key={line}>{line}</li>
         ))}
@@ -40,19 +40,19 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
     <li className="flex flex-col gap-3 rounded-[10px] border border-line bg-surface-alt/40 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <h3 className="text-sm font-semibold">{card.title}</h3>
-          <p className="text-[11.5px] text-dim">
+          <h3 className="text-base font-semibold">{card.title}</h3>
+          <p className="text-[13.5px] text-dim">
             {platformLabel(card.store)} · {market(card.country)}
             {card.insight ? ` · ${card.insight}` : ""}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end">
-          <span className="text-[22px] font-semibold leading-none tracking-tight">{Math.round(card.score)}</span>
-          <span className="text-[11px] text-dim">Opportunity Score</span>
+          <span className="text-[26px] font-semibold leading-none tracking-tight">{Math.round(card.score)}</span>
+          <span className="text-[13px] text-dim">Opportunity Score</span>
         </div>
       </div>
 
-      <p className="text-xs">
+      <p className="text-sm">
         <span className={band.text}>
           {band.label} ({Math.round(card.confidence * 100)}%)
         </span>
@@ -65,17 +65,17 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
 
       {card.changeAlert ? (
         <div className={cn(
-          "rounded-md border px-3 py-2 text-xs leading-5",
+          "rounded-md border px-3 py-2 text-sm leading-5",
           card.changeAlert.severity === "high"
             ? "border-down/40 bg-down/10 text-down"
             : "border-star/40 bg-star/10 text-ink-soft",
         )}>
           <p className="font-medium">Material change · {card.changeAlert.title}</p>
-          <p className="mt-0.5 text-[11px] opacity-80">{card.changeAlert.detail}</p>
+          <p className="mt-0.5 text-[13px] opacity-80">{card.changeAlert.detail}</p>
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-1 text-xs">
+      <div className="flex flex-col gap-1 text-sm">
         <p className="text-dim">
           Observed competition: {card.memberCount} tracked games, {Math.round(card.catalogueShare * 100)}% of the sampled
           catalogue
@@ -95,7 +95,7 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
         ) : null}
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[13px] text-dim">
         <span>Calculated {formatRelative(card.asOf, asOf)}</span>
         <span className="flex flex-wrap items-center justify-end gap-2">
           {card.browseHref ? (
@@ -117,24 +117,24 @@ function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Dat
     <li className="flex flex-col gap-3 rounded-[10px] border border-star/40 bg-star/5 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-star">Candidate preview · awaiting score</p>
-          <h3 className="text-sm font-semibold">{preview.title}</h3>
-          <p className="text-[11.5px] text-dim">
+          <p className="text-[13px] font-medium uppercase tracking-wider text-star">Candidate preview · awaiting score</p>
+          <h3 className="text-base font-semibold">{preview.title}</h3>
+          <p className="text-[13.5px] text-dim">
             {platformLabel(preview.store)} · {market(preview.country)}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end text-right">
-          <span className="text-sm font-semibold text-dim">Pending</span>
-          <span className="text-[11px] text-dim">Opportunity Score</span>
+          <span className="text-base font-semibold text-dim">Pending</span>
+          <span className="text-[13px] text-dim">Opportunity Score</span>
         </div>
       </div>
 
-      <p className="text-xs leading-5 text-ink-soft">
+      <p className="text-sm leading-5 text-ink-soft">
         This is a real tracked market cohort, shown as an early research preview. It is not a development recommendation
         until enough demand history is available.
       </p>
 
-      <div className="flex flex-col gap-1 text-xs">
+      <div className="flex flex-col gap-1 text-sm">
         <p className="text-dim">
           Observed competition: {preview.memberCount} tracked games, {Math.round(preview.catalogueShare * 100)}% of the
           sampled catalogue
@@ -154,10 +154,10 @@ function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Dat
         ) : null}
       </div>
 
-      {preview.reason ? <p className="text-xs text-dim">Why pending: {preview.reason}</p> : null}
+      {preview.reason ? <p className="text-sm text-dim">Why pending: {preview.reason}</p> : null}
       <EvidenceList title="Caveats" lines={preview.caveats.slice(0, 2)} />
 
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[13px] text-dim">
         <span>Evaluated {formatRelative(preview.asOf, asOf)}</span>
         <span className="flex flex-wrap items-center justify-end gap-2">
           {preview.browseHref ? (
@@ -208,7 +208,7 @@ export function OpportunitiesPanel({ view, asOf }: { view: OpportunitiesView; as
       description="Research directions from observed signals · opportunity_score_v1 · not a forecast of commercial success"
     >
       {failedRuns.length > 0 && view.cards.length > 0 ? (
-        <p role="status" className="mx-4 mb-3 rounded-md border border-star/40 bg-star/10 px-3 py-2 text-xs text-ink-soft">
+        <p role="status" className="mx-4 mb-3 rounded-md border border-star/40 bg-star/10 px-3 py-2 text-sm text-ink-soft">
           The latest research run failed for {failedRuns.map((run) => platformLabel(run.store)).join(" and ")}; showing the
           last successful results.
         </p>
@@ -216,7 +216,7 @@ export function OpportunitiesPanel({ view, asOf }: { view: OpportunitiesView; as
       {view.cards.length === 0 && view.preview ? (
         <>
           <div className="border-t border-line-soft px-4 pt-4">
-            <p className="text-xs leading-5 text-dim">{empty.body}</p>
+            <p className="text-sm leading-5 text-dim">{empty.body}</p>
           </div>
           <ul className="grid grid-cols-1 gap-3 p-4" aria-label="Game opportunity candidate preview">
             <PreviewCard preview={view.preview} asOf={asOf} />
@@ -231,7 +231,7 @@ export function OpportunitiesPanel({ view, asOf }: { view: OpportunitiesView; as
           ))}
         </ul>
       )}
-      <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-dim">
         Opportunity Score combines demand momentum, new-entrant performance, observed competition, cross-store
         confirmation, and ratings within each storefront; Research Confidence is reported separately. Competition is
         measured in the sampled catalogue only. Material-change alerts compare like-for-like formula and taxonomy

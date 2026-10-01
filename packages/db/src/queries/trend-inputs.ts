@@ -14,6 +14,11 @@ const DAY_MS = 86_400_000;
 export interface TrendInputsQuery {
   store: StoreId;
   country: string;
+  /**
+   * Several storefronts in one pass, for market views; overrides `country` when given. Each returned
+   * candidate keeps its own `country`, so callers split the result back into storefront cohorts.
+   */
+  countries?: readonly string[];
   asOf: Date;
   /** Analysis window; history is loaded for twice this so a baseline reading exists. */
   windowDays: number;
@@ -77,7 +82,7 @@ export async function loadTrendCandidates(
 
   const inStorefront = and(
     eq(storeApps.store, query.store),
-    eq(storeApps.country, query.country),
+    inArray(storeApps.country, [...(query.countries ?? [query.country])]),
     lte(storeApps.firstSeenAt, query.asOf),
   );
   // Listing ids of this storefront as a subquery, so large storefronts do not send thousands of

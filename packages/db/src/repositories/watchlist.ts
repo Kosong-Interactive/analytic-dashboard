@@ -91,7 +91,7 @@ export async function removeWatchlistEntry(db: DatabaseExecutor, storeAppId: str
 /** Watchlist entries of the selected storefronts with listing context, most recently changed first. */
 export async function loadWatchlist(
   db: DatabaseExecutor,
-  query: { stores: ReadonlyArray<StoreId>; country: string },
+  query: { stores: ReadonlyArray<StoreId>; country: string; countries?: readonly string[] },
 ): Promise<WatchlistEntryRow[]> {
   if (query.stores.length === 0) return [];
   const rows = await db
@@ -115,7 +115,7 @@ export async function loadWatchlist(
     })
     .from(watchlistEntries)
     .innerJoin(storeApps, eq(storeApps.id, watchlistEntries.storeAppId))
-    .where(and(inArray(storeApps.store, [...query.stores]), eq(storeApps.country, query.country)))
+    .where(and(inArray(storeApps.store, [...query.stores]), inArray(storeApps.country, [...(query.countries ?? [query.country])])))
     .orderBy(desc(watchlistEntries.updatedAt));
   return rows.map((row) => ({ ...row, baselineRating: toNumber(row.baselineRating) }));
 }

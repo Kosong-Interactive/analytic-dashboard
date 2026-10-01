@@ -15,7 +15,7 @@ export function ScorePanel({ view }: { view: GameDetailView }) {
           {score.note ?? "There is not enough history to score this game."}
         </EmptyState>
       ) : (
-        <div className="border-t border-line-soft px-4 pb-4 text-xs">
+        <div className="border-t border-line-soft px-4 pb-4 text-sm">
           <p className="pt-3 text-dim">
             Compared with {score.cohortSize ?? "?"} games in the same store and country. Based on{" "}
             {Math.round(score.weightCoverage * 100)}% of the score weight; unmeasurable components are left out, not

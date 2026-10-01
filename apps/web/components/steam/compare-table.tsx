@@ -19,7 +19,7 @@ function Cell({ signal, available }: { signal: PlatformLabelSignal | undefined; 
   if (!signal) return <span className="text-dim" title="No tracked game of this platform carries the label">No games</span>;
   return (
     <span className="flex flex-col gap-0.5">
-      <span className="font-mono text-xs">
+      <span className="font-mono text-sm">
         {signal.momentumPercentile === null ? (
           <span className="text-dim" title={`Needs ${3} scored games and at least 5 labels to rank`}>Not ranked yet</span>
         ) : (
@@ -29,7 +29,7 @@ function Cell({ signal, available }: { signal: PlatformLabelSignal | undefined; 
           </>
         )}
       </span>
-      <span className="text-[11px] text-dim">
+      <span className="text-[13px] text-dim">
         {signal.members} game{signal.members === 1 ? "" : "s"} · {signal.scoredMembers} scored
         {signal.newEntrants > 0 ? ` · ${signal.newEntrants} new` : ""}
       </span>
@@ -54,10 +54,10 @@ export function PlatformCompareTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[820px] border-collapse text-[13px]">
+      <table className="w-full min-w-[820px] border-collapse text-[15px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
+          <tr className="h-[34px] border-y border-line bg-surface-alt text-[13px] font-medium text-dim">
             <th scope="col" className="pl-4 text-left font-medium">Label</th>
             {COMPARED_PLATFORMS.map((platform) => (
               <th key={platform} scope="col" className="text-left font-medium">
@@ -84,13 +84,13 @@ export function PlatformCompareTable({
               ))}
               <td className="py-3">
                 <details>
-                  <summary className="cursor-pointer list-none text-xs [&::-webkit-details-marker]:hidden">
+                  <summary className="cursor-pointer list-none text-sm [&::-webkit-details-marker]:hidden">
                     <span className="rounded border border-line-strong/70 px-1.5 py-px text-ink-soft" title={modeHints[row.opportunity.mode]}>
                       {modeLabels[row.opportunity.mode]}
                     </span>
-                    <span className="ml-1.5 text-[11px] text-dim">{row.opportunity.confidence} confidence</span>
+                    <span className="ml-1.5 text-[13px] text-dim">{row.opportunity.confidence} confidence</span>
                   </summary>
-                  <ul className="mt-1.5 flex max-w-[16rem] flex-col gap-0.5 text-[11.5px] text-ink-soft">
+                  <ul className="mt-1.5 flex max-w-[16rem] flex-col gap-0.5 text-[13.5px] text-ink-soft">
                     <li>{modeHints[row.opportunity.mode]}</li>
                     {row.opportunity.reasons.map((reason) => (
                       <li key={reason} className="text-dim">{reason}</li>
@@ -98,7 +98,7 @@ export function PlatformCompareTable({
                   </ul>
                 </details>
               </td>
-              <td className="py-3 pr-4 text-right font-mono text-xs text-ink-soft">
+              <td className="py-3 pr-4 text-right font-mono text-sm text-ink-soft">
                 {row.measured} of {row.total}
               </td>
             </tr>

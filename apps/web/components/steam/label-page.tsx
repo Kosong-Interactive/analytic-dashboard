@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { MIN_LABEL_CONFIDENCE } from "@/lib/labels/constants";
 import { getSteamLabelOverview } from "@/lib/steam/get-label-overview";
+import { toSteamCountry } from "@/lib/steam/query";
 import {
   steamLabelHref,
   steamLabelSortLabels,
@@ -34,16 +35,16 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active={active}
-      buildHref={(change) => steamLabelHref(config, query, { country: change.country })}
+      buildHref={(change) => steamLabelHref(config, query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) })}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
-        <p className="text-[13px] text-dim">{intro} · Steam Global</p>
+        <h1 className="text-[26px] font-semibold tracking-tight">{title}</h1>
+        <p className="text-[15px] text-dim">{intro} · Steam Global</p>
       </div>
 
       <SteamFreshness source={view.source} capturedAt={null} asOf={view.asOf} />
 
-      <p className="text-xs text-dim">
+      <p className="text-sm text-dim">
         <Link
           href={`/steam/compare?type=${query.type}${query.country === "id" ? "" : `&country=${query.country}`}`}
           className="text-ink-soft underline-offset-2 hover:underline"
@@ -62,7 +63,7 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
             active: query.type === type,
           }))}
         />
-        <div className="flex items-center gap-2 text-xs text-dim">
+        <div className="flex items-center gap-2 text-sm text-dim">
           <span>Sort by</span>
           <SegmentedLinks
             label="Sort by"
@@ -98,7 +99,7 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
         )}
       </Panel>
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         Steam labels come from Steam user tags and keyword rules (taxonomy v1, 75% confidence because user tags are
         community-voted and noisy), replaced by an AI classification once a game has one; the AI must quote the game&apos;s
         title, tags, or description as evidence. Labels below {Math.round(MIN_LABEL_CONFIDENCE * 100)}% are not

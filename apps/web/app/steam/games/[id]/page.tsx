@@ -16,7 +16,7 @@ import { buildSteamMetrics, buildSteamSeries } from "@/lib/steam/detail-view";
 import { formatPrice, formatRatio, positiveRatio } from "@/lib/steam/format";
 import { getSteamGame } from "@/lib/steam/get-steam";
 import { listSteamTaxonomyOptions } from "@/lib/steam/manual-labels";
-import { parseSteamQuery, steamChartLabels, steamHref } from "@/lib/steam/query";
+import { parseSteamQuery, steamChartLabels, steamHref, toSteamCountry } from "@/lib/steam/query";
 
 interface SteamGamePageProps {
   params: Promise<{ id: string }>;
@@ -62,10 +62,10 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-games"
-      buildHref={(change) => steamHref(query, { country: change.country }, `/steam/games/${id}`)}
+      buildHref={(change) => steamHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) }, `/steam/games/${id}`)}
     >
       <div className="flex flex-col gap-4">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-dim">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-dim">
           <Link href={gamesHref} className="hover:text-ink">Games</Link>
           <ChevronRight aria-hidden className="size-3" />
           <span aria-current="page" className="truncate text-ink-soft">{game.title}</span>
@@ -74,12 +74,12 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
           <SteamThumb imageUrl={game.headerImageUrl} width={184} />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-[22px] font-semibold tracking-tight">{game.title}</h1>
-              <span className="text-[13px] text-dim">
+              <h1 className="text-[26px] font-semibold tracking-tight">{game.title}</h1>
+              <span className="text-[15px] text-dim">
                 by <span className="text-ink-soft">{game.developerNames.join(", ") || "unknown developer"}</span>
               </span>
             </div>
-            <ul className="flex flex-wrap items-center gap-2 text-xs text-ink-soft">
+            <ul className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
               <li className="rounded-md border border-line-strong px-2 py-0.5">Steam</li>
               <li className="rounded-md border border-line-strong px-2 py-0.5">Global</li>
               {platforms.map((name) => (
@@ -95,7 +95,7 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
             href={game.storeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 self-start rounded-md border border-line-strong px-3 text-xs text-ink hover:bg-surface"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 self-start rounded-md border border-line-strong px-3 text-sm text-ink hover:bg-surface"
           >
             Open in Steam
             <ExternalLink aria-hidden className="size-3" />
@@ -149,15 +149,15 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
         <div className="xl:col-span-5">
           <Panel title="Regional prices" description="Upfront price per storefront · Steam sets a price per country">
             {game.isFree ? (
-              <p className="border-t border-line-soft px-4 py-3 text-[13px] text-ink-soft">Free to play.</p>
+              <p className="border-t border-line-soft px-4 py-3 text-[15px] text-ink-soft">Free to play.</p>
             ) : (
-              <ul className="flex flex-col border-t border-line-soft text-[13px]">
+              <ul className="flex flex-col border-t border-line-soft text-[15px]">
                 {(["id", "us"] as const).map((country) => {
                   const price = game.prices[country];
                   return (
                     <li key={country} className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-2.5 last:border-b-0">
                       <span>{country === "id" ? "Indonesia" : "Global (US)"}</span>
-                      <span className="font-mono text-xs">
+                      <span className="font-mono text-sm">
                         {formatPrice(price, false)}
                         {price ? <span className="ml-2 text-dim">observed {day(price.capturedAt)}</span> : null}
                       </span>
@@ -174,10 +174,10 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
               <EmptyState title="No observations in the last 30 days">Steam returned no review or player reading in this window.</EmptyState>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[13px]">
+                <table className="w-full border-collapse text-[15px]">
                   <caption className="sr-only">Observations for {game.title}</caption>
                   <thead>
-                    <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
+                    <tr className="h-[34px] border-y border-line bg-surface-alt text-[13px] font-medium text-dim">
                       <th scope="col" className="pl-4 text-left font-medium">Captured (UTC)</th>
                       <th scope="col" className="text-right font-medium">Players</th>
                       <th scope="col" className="text-right font-medium">Positive</th>
@@ -188,11 +188,11 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
                   <tbody>
                     {[...game.snapshots].reverse().slice(0, 30).map((row) => (
                       <tr key={row.capturedAt.toISOString()} className="h-9 border-b border-line-soft">
-                        <td className="pl-4 font-mono text-xs text-ink-soft">{stamp(row.capturedAt)}</td>
-                        <td className="text-right font-mono text-xs">{formatCount(row.currentPlayers)}</td>
-                        <td className="text-right font-mono text-xs">{formatCount(row.reviewPositive)}</td>
-                        <td className="text-right font-mono text-xs">{formatCount(row.reviewNegative)}</td>
-                        <td className="pr-4 text-right font-mono text-xs">{formatRatio(positiveRatio(row))}</td>
+                        <td className="pl-4 font-mono text-sm text-ink-soft">{stamp(row.capturedAt)}</td>
+                        <td className="text-right font-mono text-sm">{formatCount(row.currentPlayers)}</td>
+                        <td className="text-right font-mono text-sm">{formatCount(row.reviewPositive)}</td>
+                        <td className="text-right font-mono text-sm">{formatCount(row.reviewNegative)}</td>
+                        <td className="pr-4 text-right font-mono text-sm">{formatRatio(positiveRatio(row))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -210,7 +210,7 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
       />
 
       <Panel title="Steam tags and categories" description="As listed by Steam; these are store labels, not this system's classification.">
-        <div className="flex flex-col gap-3 border-t border-line-soft px-4 py-3 text-xs">
+        <div className="flex flex-col gap-3 border-t border-line-soft px-4 py-3 text-sm">
           {(
             [
               ["Genres", game.genres],
@@ -236,10 +236,10 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
 
       {game.ranks.length > 0 ? (
         <Panel title="Chart history" description="Last 30 days, newest first · Steam Global">
-          <table className="w-full border-collapse text-[13px]">
+          <table className="w-full border-collapse text-[15px]">
             <caption className="sr-only">Chart positions for {game.title}</caption>
             <thead>
-              <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
+              <tr className="h-[34px] border-y border-line bg-surface-alt text-[13px] font-medium text-dim">
                 <th scope="col" className="pl-4 text-left font-medium">Captured (UTC)</th>
                 <th scope="col" className="text-left font-medium">Chart</th>
                 <th scope="col" className="pr-4 text-right font-medium">Rank</th>
@@ -248,9 +248,9 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
             <tbody>
               {[...game.ranks].reverse().slice(0, 30).map((entry) => (
                 <tr key={`${entry.chart}-${entry.capturedAt.toISOString()}`} className="h-9 border-b border-line-soft">
-                  <td className="pl-4 font-mono text-xs text-ink-soft">{stamp(entry.capturedAt)}</td>
+                  <td className="pl-4 font-mono text-sm text-ink-soft">{stamp(entry.capturedAt)}</td>
                   <td className="text-ink-soft">{steamChartLabels[entry.chart as keyof typeof steamChartLabels] ?? entry.chart}</td>
-                  <td className="pr-4 text-right font-mono text-xs">#{entry.rank}</td>
+                  <td className="pr-4 text-right font-mono text-sm">#{entry.rank}</td>
                 </tr>
               ))}
             </tbody>

@@ -8,3 +8,4 @@ export * from "./opportunity-history.js";
 export * from "./steam-trend-score.js";
 export * from "./platform-labels.js";
 export * from "./platform-opportunity.js";
+export * from "./market-aggregate.js";

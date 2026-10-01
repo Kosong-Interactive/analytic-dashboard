@@ -141,7 +141,11 @@ describe("toSteamSourceStatus", () => {
 
   it("classifies Steam freshness like the mobile sources", () => {
     assert.equal(toSteamSourceStatus(row, asOf).state, "fresh");
-    assert.equal(toSteamSourceStatus({ ...row, lastCollectedAt: hoursAgo(20) }, asOf).state, "stale");
+    assert.equal(toSteamSourceStatus({ ...row, lastCollectedAt: hoursAgo(40) }, asOf).state, "stale"
+    );
+    assert.equal(
+      toSteamSourceStatus({ ...row, lastCollectedAt: hoursAgo(20) }, asOf).state,
+      "fresh");
     assert.equal(toSteamSourceStatus({ ...row, latestStatus: "failed" }, asOf).state, "failed");
   });
 

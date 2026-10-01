@@ -1,4 +1,4 @@
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 import type { OverviewFilters } from "@/lib/overview/filters";
 import type { OverviewData } from "@/lib/overview/view-model";
 
@@ -18,7 +18,7 @@ export function TrendingTable({
   filters: OverviewFilters;
 }) {
   const { trending, kpis } = data;
-  const description = `Ranked by Trend Score · ${countryLabels[filters.country]} · ${platformLabels[filters.platform]} · last 7 days · scored within each store`;
+  const description = `Ranked by Trend Score · ${scopeLabel(filters)} · ${platformLabels[filters.platform]} · last 7 days · scored within each store`;
 
   return (
     <Panel title="Trending Games" description={description}>
@@ -30,7 +30,7 @@ export function TrendingTable({
           caption={`Top ${trending.length} of ${kpis.scoredCount} scored games by Trend Score`}
         />
       )}
-      <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">
         {kpis.scoredCount > 0
           ? `Showing ${trending.length} of ${kpis.scoredCount} scored games (${kpis.tracked - kpis.scoredCount} tracked games lack enough history to score).`
           : `${kpis.tracked} tracked games, none scored yet.`}

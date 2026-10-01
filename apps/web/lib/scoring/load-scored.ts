@@ -10,6 +10,7 @@ import {
 
 import { getDatabase } from "../database";
 import type { OverviewFilters } from "../overview/filters";
+import { loadMarketSelection } from "./load-market";
 
 const WINDOW_DAYS = 7;
 const RANK_CHART = "TOP_FREE";
@@ -21,11 +22,15 @@ export interface ScoredSelection {
   health: SourceHealthRow[];
 }
 
-/** Reads stored observations only; it never triggers collection. */
+/**
+ * Reads stored observations only; it never triggers collection. A SEA or World market (set by
+ * `parseOverviewFilters`) is combined from its storefronts; anything else is one storefront.
+ */
 export async function loadScoredSelection(
   filters: OverviewFilters,
   asOf: Date = new Date(),
 ): Promise<ScoredSelection> {
+  if (filters.market && filters.market !== "id") return loadMarketSelection(filters, filters.market, asOf);
   const db = getDatabase();
   const stores =
     filters.platform === "all"

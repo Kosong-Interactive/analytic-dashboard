@@ -1,31 +1,19 @@
-import { supportedCountryCodes } from "@analytic-dashboard/shared";
+import { marketHomeCountry, marketLabels, marketOf, marketValues } from "@analytic-dashboard/shared";
 
-import {
-  countryLabels,
-  platformLabels,
-  platformValues,
-  type OverviewFilters,
-} from "@/lib/overview/filters";
+import { platformLabels, platformValues, type OverviewFilters } from "@/lib/overview/filters";
+import { platformModeOf, platformSwitchHref } from "@/lib/shell/navigation";
 
 import { CommandPalette } from "../search/command-palette";
 import { MobileNavDrawer } from "./mobile-nav-drawer";
 import { SegmentedLinks } from "./segmented-links";
-import { platformModeOf, platformSwitchHref } from "@/lib/shell/navigation";
-
 import type { NavKey } from "./sidebar";
 import { UserMenu } from "./user-menu";
 
-/** Phones get a shorter storefront name; it still says "US store" so it is never read as worldwide. */
-const shortCountryLabels: Record<(typeof supportedCountryCodes)[number], string> = {
-  id: "Indonesia",
-  us: "US store",
-};
-
 /** Steam has one global chart; the country only picks which regional price is shown. */
-const desktopCountryLabels: Record<(typeof supportedCountryCodes)[number], string> = {
-  id: "Indonesia",
-  us: "Global",
-};
+const desktopCountries = [
+  { code: "id", label: "Indonesia" },
+  { code: "us", label: "Global" },
+] as const;
 
 /**
  * Two rows on phones (menu, brand, search, account; then storefront filters) and one row from `sm` up.
@@ -52,7 +40,7 @@ export function Topbar({
     <header className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-canvas px-4 py-2 sm:flex-nowrap sm:px-7">
       <div className="order-1 flex shrink-0 items-center gap-1.5 lg:hidden">
         <MobileNavDrawer active={active} />
-        <p className="text-[13px] font-semibold">Game Analytic</p>
+        <p className="text-[15px] font-semibold">Game Analytic</p>
       </div>
       <div className="order-2 min-w-0 flex-1 sm:max-w-56">
         <CommandPalette />
@@ -67,28 +55,31 @@ export function Topbar({
             { key: "desktop", label: "Desktop", href: switchHref("desktop"), active: mode === "desktop" },
           ]}
         />
-        <SegmentedLinks
-          label="Country"
-          compact
-          className="shrink-0 flex-nowrap"
-          items={supportedCountryCodes.map((code) => ({
-            key: code,
-            label: (
-              <>
-                {mode === "desktop" ? (
-                  desktopCountryLabels[code]
-                ) : (
-                  <>
-                    <span className="sm:hidden">{shortCountryLabels[code]}</span>
-                    <span className="hidden sm:inline">{countryLabels[code]}</span>
-                  </>
-                )}
-              </>
-            ),
-            href: buildHref({ country: code }),
-            active: filters.country === code,
-          }))}
-        />
+        {mode === "desktop" ? (
+          <SegmentedLinks
+            label="Country"
+            compact
+            className="shrink-0 flex-nowrap"
+            items={desktopCountries.map(({ code, label }) => ({
+              key: code,
+              label,
+              href: buildHref({ country: code }),
+              active: filters.country === code,
+            }))}
+          />
+        ) : (
+          <SegmentedLinks
+            label="Market"
+            compact
+            className="shrink-0 flex-nowrap"
+            items={marketValues.map((market) => ({
+              key: market,
+              label: marketLabels[market],
+              href: buildHref({ country: marketHomeCountry[market] }),
+              active: marketOf(filters.country) === market,
+            }))}
+          />
+        )}
         {mode === "mobile" ? (
           <SegmentedLinks
             label="Store"

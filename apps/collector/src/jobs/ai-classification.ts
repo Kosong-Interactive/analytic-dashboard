@@ -10,6 +10,8 @@ import {
 } from "@analytic-dashboard/classifier";
 import type { AutomatedLabelRow, TaxonomyLabelInput } from "@analytic-dashboard/db";
 
+import { forEachConcurrent } from "../runtime/concurrency.js";
+
 export interface AiClassificationStore {
   syncTaxonomy(taxonomyVersion: string, labels: TaxonomyLabelInput[]): Promise<Map<string, string>>;
   loadInputs(): Promise<ClassificationInput[]>;
@@ -55,6 +57,9 @@ export interface AiClassificationSummary {
 }
 
 const ERROR_SAMPLE_MAX_LENGTH = 300;
+
+/** Matches the default connection pool, so overlapping writes never wait for a connection. */
+const WRITE_CONCURRENCY = 3;
 
 /**
  * AI labels for apps whose input changed since their last AI run. Stops cleanly when every model
@@ -114,9 +119,10 @@ export async function runAiClassification(
     summary.inputTokens += result.inputTokens;
     summary.outputTokens += result.outputTokens;
 
-    for (const [index, appResult] of result.results.entries()) {
+    // Each app is its own transaction; overlap them so write latency does not dominate the run.
+    await forEachConcurrent([...result.results.entries()], WRITE_CONCURRENCY, async ([index, appResult]) => {
       const item = batch[index];
-      if (!item) continue;
+      if (!item) return;
       summary.labelsRejected += appResult.rejected;
       const labels = appResult.labels.flatMap((label) => {
         const labelId = labelIds.get(`${label.type}:${label.slug}`);
@@ -137,7 +143,7 @@ export async function runAiClassification(
       } catch (error) {
         errors.push(`${item.input.appId}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
-    }
+    });
   }
 
   summary.remaining = pending.length - summary.classified;

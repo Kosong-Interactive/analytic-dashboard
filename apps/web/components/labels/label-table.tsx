@@ -17,10 +17,10 @@ function Momentum({ label }: { label: LabelStats }) {
   }
   const style = tierStyles[trendTier(label.momentum)];
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-xs">
+    <span className="inline-flex items-center gap-1.5 font-mono text-sm">
       {Math.round(label.momentum)}
-      <span className={cn("font-sans text-[11px]", style.text)}>{style.label}</span>
-      <span className="font-sans text-[11px] text-dim">({label.scoredGames} scored)</span>
+      <span className={cn("font-sans text-[13px]", style.text)}>{style.label}</span>
+      <span className="font-sans text-[13px] text-dim">({label.scoredGames} scored)</span>
     </span>
   );
 }
@@ -32,7 +32,7 @@ function ShareBar({ label, max }: { label: LabelStats; max: number }) {
       <span aria-hidden className="h-2 w-24 shrink-0 rounded-sm bg-[#1a1d22] sm:w-32">
         <span className="block h-2 rounded-sm bg-accent" style={{ width: `${width}%` }} />
       </span>
-      <span className="font-mono text-xs text-ink-soft">{percent(label.share)}</span>
+      <span className="font-mono text-sm text-ink-soft">{percent(label.share)}</span>
     </span>
   );
 }
@@ -65,10 +65,10 @@ export function LabelTable({
   return (
     <>
       <div className="hidden overflow-x-auto md:block">
-        <table className="w-full border-collapse text-[13px]">
+        <table className="w-full border-collapse text-[15px]">
           <caption className="sr-only">{caption}</caption>
           <thead>
-            <tr className="h-[34px] border-y border-line bg-surface-alt text-left text-[11px] text-dim">
+            <tr className="h-[34px] border-y border-line bg-surface-alt text-left text-[13px] text-dim">
               <th scope="col" className="pl-4 font-medium">Label</th>
               <th scope="col" className="px-2 text-right font-medium">Games</th>
               <th scope="col" className="px-2 font-medium">Share of tracked</th>
@@ -86,10 +86,10 @@ export function LabelTable({
                     {label.displayName}
                   </Link>
                 </th>
-                <td className="px-2 text-right font-mono text-xs">{label.games}</td>
+                <td className="px-2 text-right font-mono text-sm">{label.games}</td>
                 <td className="px-2"><ShareBar label={label} max={max} /></td>
-                <td className="px-2 text-right font-mono text-xs text-ink-soft">{label.newlyDiscovered7d}</td>
-                <td className="px-2 text-right font-mono text-xs">{label.averageRating === null ? "—" : label.averageRating.toFixed(2)}</td>
+                <td className="px-2 text-right font-mono text-sm text-ink-soft">{label.newlyDiscovered7d}</td>
+                <td className="px-2 text-right font-mono text-sm">{label.averageRating === null ? "—" : label.averageRating.toFixed(2)}</td>
                 <td className="px-2"><Momentum label={label} /></td>
                 <td className="pr-4"><TopGames label={label} /></td>
               </tr>
@@ -108,10 +108,10 @@ export function LabelTable({
               <TopGames label={label} />
             </div>
             <ShareBar label={label} max={max} />
-            <dl className="grid grid-cols-3 gap-2 text-xs">
-              <div><dt className="text-[11px] text-dim">Games</dt><dd className="font-mono">{label.games}</dd></div>
-              <div><dt className="text-[11px] text-dim">New (7d)</dt><dd className="font-mono">{label.newlyDiscovered7d}</dd></div>
-              <div><dt className="text-[11px] text-dim">Avg rating</dt><dd className="font-mono">{label.averageRating === null ? "—" : label.averageRating.toFixed(2)}</dd></div>
+            <dl className="grid grid-cols-3 gap-2 text-sm">
+              <div><dt className="text-[13px] text-dim">Games</dt><dd className="font-mono">{label.games}</dd></div>
+              <div><dt className="text-[13px] text-dim">New (7d)</dt><dd className="font-mono">{label.newlyDiscovered7d}</dd></div>
+              <div><dt className="text-[13px] text-dim">Avg rating</dt><dd className="font-mono">{label.averageRating === null ? "—" : label.averageRating.toFixed(2)}</dd></div>
             </dl>
             <Momentum label={label} />
           </li>

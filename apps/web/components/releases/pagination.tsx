@@ -15,12 +15,12 @@ export function Pager({ page, pageCount, pageSize, total, hrefFor }: PagerProps)
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(total, page * pageSize);
   const linkClass =
-    "flex h-8 items-center gap-1 rounded-md border border-line-strong px-2.5 text-[13px] text-ink-soft hover:bg-surface-alt";
+    "flex h-8 items-center gap-1 rounded-md border border-line-strong px-2.5 text-[15px] text-ink-soft hover:bg-surface-alt";
   const disabled = "pointer-events-none opacity-40";
 
   return (
     <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-line-soft px-4 py-3">
-      <p className="text-xs text-dim">
+      <p className="text-sm text-dim">
         Showing {first}–{last} of {total} · page {page} of {pageCount}
       </p>
       <div className="flex gap-2">

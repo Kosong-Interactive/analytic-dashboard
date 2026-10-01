@@ -2,8 +2,9 @@ name: Scheduled collection
 
 on:
   schedule:
-    # Non-round minutes; GitHub Actions schedules are best-effort and may run late.
-    - cron: "17 */6 * * *"
+    # Once a day at 22:17 UTC (05:17 WIB), so the data is fresh before the team starts and the daily
+    # research job (01:43 UTC) runs after it. Non-round minute; schedules are best-effort and may run late.
+    - cron: "17 22 * * *"
   workflow_dispatch:
     inputs:
       source:
@@ -14,7 +15,7 @@ on:
       country:
         description: Limit to one country
         type: choice
-        options: ["", id, us]
+        options: ["", id, us, sg, th, vn, ph, my, jp, kr, gb, de, br, in]
         default: ""
 
 permissions:
@@ -29,7 +30,8 @@ jobs:
   discover:
     name: Discover games
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Thirteen storefronts take about 30 minutes of discovery, then classification and Steam.
+    timeout-minutes: 90
 
     steps:
       - name: Check out repository

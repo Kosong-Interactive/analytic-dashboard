@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { overviewHref, type OverviewFilters } from "@/lib/overview/filters";
 
+import { platformModeOf } from "@/lib/shell/navigation";
+
+import { MarketNotice } from "./market-notice";
 import { Sidebar, type NavKey } from "./sidebar";
 import { Topbar } from "./topbar";
 
@@ -22,7 +25,7 @@ export async function AppShell({ filters, active, buildHref, noCounterpart, chil
     <div className="flex min-h-screen">
       <a
         href="#main"
-        className="sr-only z-50 rounded-md bg-accent text-[13px] font-medium text-canvas focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:px-3 focus:py-2"
+        className="sr-only z-50 rounded-md bg-accent text-[15px] font-medium text-canvas focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:px-3 focus:py-2"
       >
         Skip to content
       </a>
@@ -35,6 +38,7 @@ export async function AppShell({ filters, active, buildHref, noCounterpart, chil
           userEmail={user?.email ?? null}
           noCounterpart={noCounterpart}
         />
+        {platformModeOf(active) === "mobile" ? <MarketNotice filters={filters} /> : null}
         <main id="main" tabIndex={-1} className="flex flex-col gap-5 px-4 py-6 outline-none sm:px-7 sm:pb-8">
           {children}
         </main>

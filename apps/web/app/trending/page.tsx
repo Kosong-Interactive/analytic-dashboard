@@ -4,7 +4,7 @@ import { EmptyState, Panel } from "@/components/overview/panel";
 import { AppShell } from "@/components/shell/app-shell";
 import { Pagination } from "@/components/trending/pagination";
 import { TrendingControls } from "@/components/trending/trending-controls";
-import { countryLabels, platformLabels } from "@/lib/overview/filters";
+import { platformLabels, scopeLabel } from "@/lib/overview/filters";
 import { loadScoredSelection } from "@/lib/scoring/load-scored";
 import { buildTrendingList } from "@/lib/trending/list";
 import { parseTrendingQuery, sortLabels, trendingHref } from "@/lib/trending/query";
@@ -33,9 +33,9 @@ export default async function TrendingPage({ searchParams }: TrendingPageProps) 
       buildHref={(change) => trendingHref(query, change)}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Trending Games</h1>
-        <p className="text-[13px] text-dim">
-          Ranked by {sortLabels[query.sort]} · {countryLabels[query.country]} ·{" "}
+        <h1 className="text-[26px] font-semibold tracking-tight">Trending Games</h1>
+        <p className="text-[15px] text-dim">
+          Ranked by {sortLabels[query.sort]} · {scopeLabel(query)} ·{" "}
           {platformLabels[query.platform]} · {list.scoredCount} of {list.tracked} tracked games scored
         </p>
       </div>

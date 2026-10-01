@@ -7,6 +7,7 @@ import { SteamGamesTable } from "@/components/steam/games-table";
 import { requireUser } from "@/lib/auth/session";
 import { getSteamGameCatalog } from "@/lib/steam/get-steam";
 import { parseSteamGamesQuery } from "@/lib/steam/games-query";
+import { toSteamCountry } from "@/lib/steam/query";
 import {
   buildSteamReleasesList,
   parseSteamReleasesQuery,
@@ -40,11 +41,11 @@ export default async function SteamReleasesPage({ searchParams }: SteamReleasesP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-releases"
-      buildHref={(change) => steamReleasesHref(query, { country: change.country })}
+      buildHref={(change) => steamReleasesHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) })}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">New Releases</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">New Releases</h1>
+        <p className="text-[15px] text-dim">
           Games whose Steam release date falls in the last {query.days} days · Steam Global · prices in {priceLabel}
         </p>
       </div>
@@ -61,7 +62,7 @@ export default async function SteamReleasesPage({ searchParams }: SteamReleasesP
             active: query.days === days,
           }))}
         />
-        <div className="flex items-center gap-2 text-xs text-dim">
+        <div className="flex items-center gap-2 text-sm text-dim">
           <span>Sort by</span>
           <SegmentedLinks
             label="Sort by"
@@ -102,7 +103,7 @@ export default async function SteamReleasesPage({ searchParams }: SteamReleasesP
         />
       </Panel>
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         Coverage is limited to games seen in the Steam Most Played or Top Sellers charts, not every new release. Release
         dates come from Steam. {list.withoutReleaseDate} tracked{" "}
         {list.withoutReleaseDate === 1 ? "game has" : "games have"} no release date and cannot appear here. “Newly

@@ -1,3 +1,4 @@
+import type { MarketHomeCountry } from "@analytic-dashboard/shared";
 import "server-only";
 
 import {
@@ -66,7 +67,7 @@ export async function applyDesktopOpportunityDecision(raw: unknown): Promise<Des
 }
 
 export async function getDesktopOpportunityDecisions(input: {
-  country: "id" | "us";
+  country: MarketHomeCountry;
   labelType: DesktopOpportunityDecisionRow["labelType"];
   labelSlug: string;
 }): Promise<DesktopOpportunityDecisionRow[]> {

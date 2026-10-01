@@ -8,6 +8,7 @@ describe("parseTrendingQuery", () => {
     assert.deepEqual(parseTrendingQuery({}), {
       country: "id",
       platform: "all",
+      market: "id",
       sort: "score",
       minRating: 0,
       minScore: 0,

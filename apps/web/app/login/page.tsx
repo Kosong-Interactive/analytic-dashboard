@@ -19,11 +19,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mb-6 flex items-center gap-3">
           <Image src="/kosong-interactive.png" alt="" width={40} height={40} priority />
           <div className="flex flex-col gap-1">
-            <h1 className="text-[15px] font-semibold leading-none">Game Analytic</h1>
-            <p className="text-xs leading-none text-dim">by Kosong Interactive</p>
+            <h1 className="text-[17px] font-semibold leading-none">Game Analytic</h1>
+            <p className="text-sm leading-none text-dim">by Kosong Interactive</p>
           </div>
         </div>
-        <p className="mb-5 text-[13px] text-dim">Sign in to view the game market dashboard.</p>
+        <p className="mb-5 text-[15px] text-dim">Sign in to view the game market dashboard.</p>
         <LoginForm next={next} />
       </div>
     </main>

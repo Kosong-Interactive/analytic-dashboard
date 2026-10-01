@@ -1,3 +1,5 @@
+import { marketHomeCountry, marketHomeOf, marketLabels, marketValues } from "@analytic-dashboard/shared";
+
 import { EmptyState, Panel } from "@/components/overview/panel";
 import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedLinks } from "@/components/shell/segmented-links";
@@ -27,31 +29,48 @@ interface ComparePageProps {
 export default async function SteamComparePage({ searchParams }: ComparePageProps) {
   await requireUser("/steam/compare");
   const query = parseCompareQuery(await searchParams);
-  const { comparison } = await getPlatformComparison(query);
+  const { comparison, market, mobileCoverage } = await getPlatformComparison(query);
   const missing = COMPARED_PLATFORMS.filter((platform) => !comparison.available.includes(platform));
-  const mobileCountry = query.country === "id" ? "Indonesia" : "US store";
+  const mobileLabel = marketLabels[market];
 
   return (
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-genres"
       noCounterpart
-      buildHref={(change) => compareHref(query, { country: change.country })}
+      buildHref={(change) => compareHref(query, change.country ? { country: marketHomeOf(change.country) } : {})}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Platform Comparison</h1>
-        <p className="text-[13px] text-dim">
-          How each {compareTypeLabels[query.type].toLowerCase()} label ranks inside Steam (Global), Google Play, and App Store (
-          {mobileCountry})
+        <h1 className="text-[26px] font-semibold tracking-tight">Platform Comparison</h1>
+        <p className="text-[15px] text-dim">
+          How each {compareTypeLabels[query.type].toLowerCase()} label ranks inside Steam (Global), Google Play, and App Store
+          ({mobileLabel})
         </p>
       </div>
 
       {missing.length > 0 ? (
-        <p role="status" className="rounded-md border border-star/40 bg-star/10 px-3 py-2 text-xs text-ink-soft">
+        <p role="status" className="rounded-md border border-star/40 bg-star/10 px-3 py-2 text-sm text-ink-soft">
           {missing.map((platform) => platformColumnLabels[platform]).join(" and ")} could not be loaded and{" "}
           {missing.length === 1 ? "is" : "are"} left out of the coverage count; the rest is shown as collected.
         </p>
       ) : null}
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-dim">
+        <span>Mobile market</span>
+        <SegmentedLinks
+          label="Mobile market"
+          items={marketValues.map((value) => ({
+            key: value,
+            label: marketLabels[value],
+            href: compareHref(query, { country: marketHomeCountry[value] }),
+            active: market === value,
+          }))}
+        />
+        <span>
+          {mobileLabel}: {mobileCoverage.collected.length} of {mobileCoverage.total} storefront
+          {mobileCoverage.total === 1 ? "" : "s"} collected
+        </span>
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SegmentedLinks
@@ -63,7 +82,7 @@ export default async function SteamComparePage({ searchParams }: ComparePageProp
             active: query.type === type,
           }))}
         />
-        <div className="flex items-center gap-2 text-xs text-dim">
+        <div className="flex items-center gap-2 text-sm text-dim">
           <span>Sort by</span>
           <SegmentedLinks
             label="Sort by"
@@ -77,7 +96,7 @@ export default async function SteamComparePage({ searchParams }: ComparePageProp
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-dim">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-dim">
         <span>Signal</span>
         <SegmentedLinks
           label="Signal"
@@ -115,7 +134,7 @@ export default async function SteamComparePage({ searchParams }: ComparePageProp
             }}
           />
         )}
-        <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+        <p className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-dim">
           Each cell ranks a label by the <em>median</em> trend score of its games, against the other labels of the same
           platform only: the Steam, Google Play, and App Store scores come from different formulas and are never put on one
           scale. A label needs three scored games to be ranked and a platform needs five ranked labels, otherwise the cell

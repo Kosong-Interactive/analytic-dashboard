@@ -7,6 +7,7 @@ import { summarizeFreshness, type StoreFreshness } from "../freshness/summary";
 import { loadScoredSelection } from "../scoring/load-scored";
 import type { WatchlistStatus } from "./status";
 import { buildWatchlistView, type WatchlistQuery, type WatchlistView } from "./view-model";
+import { storefrontsOf } from "../overview/filters";
 
 /** Reads stored entries and observations only; it never triggers collection. */
 export async function getWatchlist(
@@ -15,7 +16,7 @@ export async function getWatchlist(
   const stores =
     query.platform === "all" ? (["google_play", "app_store"] as const) : ([query.platform] as const);
   const [entries, selection] = await Promise.all([
-    loadWatchlist(getDatabase(), { stores, country: query.country }),
+    loadWatchlist(getDatabase(), { stores, country: query.country, countries: storefrontsOf(query) }),
     loadScoredSelection(query),
   ]);
   return {

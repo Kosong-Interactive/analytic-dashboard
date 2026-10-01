@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/auth/session";
 import { MIN_LABEL_CONFIDENCE } from "@/lib/labels/constants";
 import { getSteamGameCatalog } from "@/lib/steam/get-steam";
 import { buildSteamGamesList } from "@/lib/steam/games-list";
+import { toSteamCountry } from "@/lib/steam/query";
 import {
   clearedSteamGameFilters,
   parseSteamGamesQuery,
@@ -39,11 +40,11 @@ export default async function SteamGamesPage({ searchParams }: SteamGamesPagePro
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-games"
-      buildHref={(change) => steamGamesHref(query, { country: change.country })}
+      buildHref={(change) => steamGamesHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) })}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Games</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">Games</h1>
+        <p className="text-[15px] text-dim">
           Every tracked Steam game · Steam Global · prices in {priceLabel} · {list.tracked} tracked
         </p>
       </div>
@@ -84,7 +85,7 @@ export default async function SteamGamesPage({ searchParams }: SteamGamesPagePro
         />
       </Panel>
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         Tracked games are a sample from the Steam Most Played and Top Sellers charts, not the Steam catalog. Players,
         reviews, and chart positions are Steam&apos;s own global figures; only the price follows the country you pick.
         “First seen” is when this system first observed a game, not its release date. Genre and mechanic labels are

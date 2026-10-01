@@ -20,7 +20,7 @@ export function MobileDisclosure({ label, children }: { label: string; children:
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((current) => !current)}
-        className="flex h-9 items-center justify-between rounded-[10px] border border-line bg-surface px-3 text-[13px] text-ink-soft lg:hidden"
+        className="flex h-9 items-center justify-between rounded-[10px] border border-line bg-surface px-3 text-[15px] text-ink-soft lg:hidden"
       >
         {label}
         <ChevronDown aria-hidden className={cn("size-4 transition-transform", open && "rotate-180")} />

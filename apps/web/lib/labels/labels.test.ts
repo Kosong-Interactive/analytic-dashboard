@@ -81,7 +81,7 @@ describe("buildLabelOverview", () => {
 
 describe("label page query", () => {
   it("defaults to the first type and falls back on unknown values", () => {
-    assert.deepEqual(parseLabelQuery(genresPage, {}), { country: "id", platform: "all", type: "genre", sort: "games" });
+    assert.deepEqual(parseLabelQuery(genresPage, {}), { country: "id", platform: "all", market: "id", type: "genre", sort: "games" });
     const query = parseLabelQuery(mechanicsPage, { type: "genre", sort: "x" });
     assert.equal(query.type, "core_mechanic");
     assert.equal(query.sort, "games");

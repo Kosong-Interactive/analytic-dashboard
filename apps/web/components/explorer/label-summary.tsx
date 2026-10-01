@@ -66,10 +66,10 @@ export function LabelSummary({
     <section aria-label={`${displayName} summary`} className="flex flex-col gap-3 rounded-[10px] border border-line bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-col gap-0.5">
-          <p className="text-[11px] uppercase tracking-wider text-dim">{typeNames[filter.type]}</p>
-          <h2 className="text-lg font-semibold tracking-tight">{displayName}</h2>
+          <p className="text-[13px] uppercase tracking-wider text-dim">{typeNames[filter.type]}</p>
+          <h2 className="text-xl font-semibold tracking-tight">{displayName}</h2>
         </div>
-        <Link href={backHref} className="inline-flex items-center gap-1 text-xs text-ink-soft underline-offset-2 hover:underline">
+        <Link href={backHref} className="inline-flex items-center gap-1 text-sm text-ink-soft underline-offset-2 hover:underline">
           <ChevronLeft aria-hidden className="size-3.5" />
           Back to {filter.type === "genre" || filter.type === "subgenre" ? "Genres" : "Mechanics"}
         </Link>
@@ -77,9 +77,9 @@ export function LabelSummary({
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {items.map((item) => (
           <div key={item.label} className="flex flex-col gap-0.5">
-            <dt className="text-[11px] text-dim">{item.label}</dt>
-            <dd className="text-lg font-semibold leading-tight">{item.value}</dd>
-            <dd className="text-[11px] text-dim">{item.note}</dd>
+            <dt className="text-[13px] text-dim">{item.label}</dt>
+            <dd className="text-xl font-semibold leading-tight">{item.value}</dd>
+            <dd className="text-[13px] text-dim">{item.note}</dd>
           </div>
         ))}
       </dl>

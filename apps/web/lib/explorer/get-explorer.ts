@@ -10,6 +10,7 @@ import { loadScoredSelection } from "../scoring/load-scored";
 import type { WatchlistStatus } from "../watchlist/status";
 import { buildExplorerList, type ExplorerList } from "./list";
 import type { ExplorerQuery, LabelFilter } from "./query";
+import { storefrontsOf } from "../overview/filters";
 
 export interface ExplorerView {
   asOf: Date;
@@ -43,11 +44,12 @@ export async function getExplorer(query: ExplorerQuery): Promise<ExplorerView> {
     loadLabelMembership(db, {
       stores,
       country: effective.country,
+      countries: storefrontsOf(effective),
       taxonomyVersion: TAXONOMY_VERSION,
       types,
       minConfidence: MIN_LABEL_CONFIDENCE,
     }),
-    loadWatchlist(db, { stores, country: effective.country }),
+    loadWatchlist(db, { stores, country: effective.country, countries: storefrontsOf(effective) }),
   ]);
   const byId = new Map(selection.candidates.map((candidate) => [candidate.storeAppId, candidate]));
   const filter = effective.label;

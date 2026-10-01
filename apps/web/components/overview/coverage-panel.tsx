@@ -43,7 +43,7 @@ export function CoveragePanel({ data, steam }: { data: OverviewData; steam: Stea
               >
                 <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", state.dot)} />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-[13px]">
+                  <span className="text-[15px]">
                     {platformLabel(source.source)}
                     <span className="text-dim">
                       {" "}
@@ -51,21 +51,21 @@ export function CoveragePanel({ data, steam }: { data: OverviewData; steam: Stea
                       {countryLabels[source.country as keyof typeof countryLabels] ?? source.country}
                     </span>
                   </span>
-                  <span className="text-[11.5px] text-dim">
+                  <span className="text-[13.5px] text-dim">
                     Last collected {formatRelative(source.lastCollectedAt, asOf)}
                     {source.latestErrorCount > 0
                       ? ` · latest run had ${source.latestErrorCount} error${source.latestErrorCount === 1 ? "" : "s"}`
                       : ""}
                   </span>
                 </div>
-                <span className={cn("text-xs", state.text)}>{state.label}</span>
+                <span className={cn("text-sm", state.text)}>{state.label}</span>
               </li>
             );
           })}
         </ul>
       )}
       <SteamCoverage steam={steam} asOf={asOf} />
-      <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-dim">
         Coverage is sampled from discovery seeds, known IDs, and store charts. It is a research
         signal, not a complete catalogue, and install figures are ranges.
       </p>
@@ -81,15 +81,15 @@ function SteamCoverage({ steam, asOf }: { steam: SteamSourceStatus; asOf: Date }
   const state = STATE[steam.state];
   return (
     <div className="border-t border-line-soft">
-      <p className="px-4 pt-3 text-[11px] font-medium uppercase tracking-wide text-dim">Desktop</p>
+      <p className="px-4 pt-3 text-[13px] font-medium uppercase tracking-wide text-dim">Desktop</p>
       <div className="flex items-center gap-3 px-4 py-3">
         <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", state.dot)} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-[13px]">
+          <span className="text-[15px]">
             Steam
             <span className="text-dim"> · chart discovery · Global</span>
           </span>
-          <span className="text-[11.5px] text-dim">
+          <span className="text-[13.5px] text-dim">
             {steam.lastCollectedAt
               ? `Last collected ${formatRelative(steam.lastCollectedAt, asOf)} · ${steam.trackedGames.toLocaleString("en-US")} games tracked`
               : "Not collected yet"}
@@ -98,7 +98,7 @@ function SteamCoverage({ steam, asOf }: { steam: SteamSourceStatus; asOf: Date }
               : ""}
           </span>
         </div>
-        <span className={cn("text-xs", state.text)}>{state.label}</span>
+        <span className={cn("text-sm", state.text)}>{state.label}</span>
       </div>
     </div>
   );
