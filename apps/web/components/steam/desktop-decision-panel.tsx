@@ -1,3 +1,4 @@
+import type { MarketHomeCountry } from "@analytic-dashboard/shared";
 import type { DesktopOpportunityDecisionRow } from "@analytic-dashboard/db";
 
 import { opportunityDecisionLabels } from "@/lib/research/detail-view-model";
@@ -24,11 +25,14 @@ function formatDecisionDate(value: Date): string {
 export function DesktopDecisionPanel({
   decisions,
   country,
+  marketLabel,
   labelType,
   labelSlug,
 }: {
   decisions: DesktopOpportunityDecisionRow[];
-  country: "id" | "us";
+  country: MarketHomeCountry;
+  /** Name of the mobile market the decision applies to, such as World. */
+  marketLabel: string;
   labelType: CompareType;
   labelSlug: string;
 }) {
@@ -36,7 +40,7 @@ export function DesktopDecisionPanel({
   return (
     <Panel
       title="Team decision"
-      description="The latest decision applies to this label and mobile market; every change remains in history"
+      description={`The latest decision applies to this label and the ${marketLabel} mobile market; every change remains in history`}
       action={
         current ? (
           <span className={cn("rounded-full border px-2 py-1 text-[13px] font-medium", desktopDecisionTone[current.status])}>

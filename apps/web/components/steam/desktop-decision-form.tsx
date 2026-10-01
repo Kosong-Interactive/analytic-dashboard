@@ -1,5 +1,6 @@
 "use client";
 
+import type { MarketHomeCountry } from "@analytic-dashboard/shared";
 import { useActionState } from "react";
 
 import {
@@ -30,7 +31,7 @@ export function DesktopDecisionForm({
   labelType,
   labelSlug,
 }: {
-  country: "id" | "us";
+  country: MarketHomeCountry;
   labelType: CompareType;
   labelSlug: string;
 }) {

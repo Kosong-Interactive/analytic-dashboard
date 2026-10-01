@@ -133,10 +133,16 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   storefront (game detail, research). Label membership and the watchlist read all storefronts of
   the market (`storefrontsOf`). Headings use `scopeLabel`, and `MarketNotice` states how many
   storefronts are collected. Combined selections are cached 5 minutes per instance
-  (`createTtlCache`) because loading World takes about 3 s locally (SEA 2.5 s). The Mobile Overview
-  Game Opportunities panel, Research, and the Steam views still use the market's first storefront
-  (stage 4). Stage 4 (not started): cross-platform comparison and opportunities per
-  market. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
+  (`createTtlCache`), and `loadTrendCandidates` takes `countries` so a market loads once per store
+  (5 queries) instead of once per storefront (World 2.3 s, SEA 1.8 s locally over one connection).
+  Stage 4 (done in code): `/steam/compare`, the Desktop Game Opportunities panel, the evidence
+  page, and Desktop decisions work per mobile market. The mobile side of a comparison is Indonesia,
+  SEA, or World (a `Mobile market` switch on `/steam/compare`; any storefront in `?country=` picks
+  its market, `MarketHomeCountry` = `id` | `sg` | `us` identifies it). Steam stays Global. The
+  Desktop header still offers Indonesia | Global, which maps to the Indonesia and World mobile
+  markets. Decisions are stored with the market's identifying storefront in `country` (`us` rows
+  recorded before markets existed now read as World). The Mobile Overview Game Opportunities panel
+  and Research still use the market's first storefront. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
   at 200 apps per run, so the backlog from the new storefronts takes days.
 - `.github/workflows/collect.yml` runs **once a day at 22:17 UTC (05:17 WIB)** on `main` (job
   timeout 90 minutes; the daily research job at 01:43 UTC runs after it; sources count as stale

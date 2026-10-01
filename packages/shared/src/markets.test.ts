@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 
 import {
   countryNames,
+  marketHomeCountrySchema,
+  marketHomeOf,
   marketCountries,
   marketHomeCountry,
   marketLabels,
@@ -43,5 +45,13 @@ describe("markets", () => {
   it("names every market and storefront", () => {
     assert.deepEqual(marketValues.map((market) => marketLabels[market]), ["Indonesia", "SEA", "World"]);
     for (const country of supportedCountryCodes) assert.ok(countryNames[country].length > 0);
+  });
+
+  it("identifies each market by one storefront code", () => {
+    assert.deepEqual(marketHomeCountrySchema.options, ["id", "sg", "us"]);
+    assert.equal(marketHomeOf("jp"), "us");
+    assert.equal(marketHomeOf("th"), "sg");
+    assert.equal(marketHomeOf("id"), "id");
+    for (const market of marketValues) assert.ok(marketHomeCountrySchema.safeParse(marketHomeCountry[market]).success);
   });
 });

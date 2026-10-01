@@ -1,3 +1,4 @@
+import { marketLabels, type MarketHomeCountry } from "@analytic-dashboard/shared";
 import type { PlatformLabelSignal } from "@analytic-dashboard/analytics";
 import { loadLatestDesktopOpportunityDecisions, type DesktopOpportunityDecisionRow } from "@analytic-dashboard/db";
 
@@ -32,7 +33,7 @@ export function signalLine(platform: ComparedPlatform, signal: PlatformLabelSign
   return `${name}: ${rank} · ${signal.members} game${signal.members === 1 ? "" : "s"}${signal.newEntrants > 0 ? ` · ${signal.newEntrants} new` : ""}`;
 }
 
-export function evidenceHref(card: Pick<SteamOpportunityCard, "type" | "slug">, country: "id" | "us"): string {
+export function evidenceHref(card: Pick<SteamOpportunityCard, "type" | "slug">, country: MarketHomeCountry): string {
   const base = `/steam/opportunities/${card.type}/${card.slug}`;
   return country === "id" ? base : `${base}?country=${country}`;
 }
@@ -45,7 +46,7 @@ function Card({
 }: {
   card: SteamOpportunityCard;
   available: readonly ComparedPlatform[];
-  country: "id" | "us";
+  country: MarketHomeCountry;
   decision: DesktopOpportunityDecisionRow | null;
 }) {
   return (
@@ -97,8 +98,8 @@ function Card({
 }
 
 /** Loaded behind Suspense on the Desktop Overview, so the rest of the page never waits for the three platforms. */
-export async function SteamOpportunitiesSection({ country }: { country: "id" | "us" }) {
-  const { datasets, asOf, steamSource } = await getPlatformDatasets(country);
+export async function SteamOpportunitiesSection({ country }: { country: MarketHomeCountry }) {
+  const { datasets, asOf, steamSource, market } = await getPlatformDatasets(country);
   const list = selectOpportunities({ datasets, asOf });
   const decisions = await loadLatestDesktopOpportunityDecisions(getDatabase(), {
     country,
@@ -108,7 +109,7 @@ export async function SteamOpportunitiesSection({ country }: { country: "id" | "
   return (
     <Panel
       title="Game Opportunities"
-      description="Research directions from labels that stand out on Steam and mobile · platform_opportunity_v1"
+      description={`Research directions from labels that stand out on Steam and mobile (${marketLabels[market]}) · platform_opportunity_v1`}
       action={
         <LinkButton href="/steam/compare" variant="secondary">
           Platform comparison

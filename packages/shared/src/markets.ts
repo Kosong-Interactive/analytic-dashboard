@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type { CountryCode } from "./store.js";
 
 /**
@@ -21,8 +23,15 @@ export const marketCountries: Record<Market, readonly CountryCode[]> = {
   world: ["us", "jp", "kr", "gb", "de", "br", "in"],
 };
 
+/**
+ * The storefront that identifies a market where one storefront code is needed (a URL, a stored
+ * decision): Indonesia is `id`, SEA is `sg`, World is `us`.
+ */
+export const marketHomeCountrySchema = z.enum(["id", "sg", "us"]);
+export type MarketHomeCountry = z.infer<typeof marketHomeCountrySchema>;
+
 /** The storefront a market shows until its aggregate view exists (the first one listed). */
-export const marketHomeCountry: Record<Market, CountryCode> = {
+export const marketHomeCountry: Record<Market, MarketHomeCountry> = {
   id: "id",
   sea: "sg",
   world: "us",
@@ -50,4 +59,9 @@ export function marketOf(country: CountryCode): Market {
     if (marketCountries[market].includes(country)) return market;
   }
   throw new RangeError(`Storefront ${country} is not part of any market`);
+}
+
+/** The identifying storefront of the market a storefront belongs to. */
+export function marketHomeOf(country: CountryCode): MarketHomeCountry {
+  return marketHomeCountry[marketOf(country)];
 }

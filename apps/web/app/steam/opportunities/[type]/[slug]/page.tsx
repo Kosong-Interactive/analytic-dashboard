@@ -1,3 +1,4 @@
+import { marketLabels } from "@analytic-dashboard/shared";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,7 +20,8 @@ import {
   platformColumnLabels,
   type CompareType,
 } from "@/lib/steam/platform-compare";
-import { parseSteamQuery } from "@/lib/steam/query";
+import { parseCompareQuery } from "@/lib/steam/compare-query";
+import { toSteamCountry } from "@/lib/steam/query";
 
 interface EvidencePageProps {
   params: Promise<{ type: string; slug: string }>;
@@ -38,8 +40,10 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
   const { type, slug } = await params;
   await requireUser(`/steam/opportunities/${type}/${slug}`);
   if (!isCompareType(type) || !slugPattern.test(slug)) notFound();
-  const { country } = parseSteamQuery({ country: (await searchParams).country });
-  const { datasets, asOf, steamSource } = await getPlatformDatasets(country);
+  // Any storefront in the URL selects its mobile market (Indonesia, SEA, or World).
+  const { country } = parseCompareQuery({ country: (await searchParams).country });
+  const { datasets, asOf, steamSource, market, mobileCoverage } = await getPlatformDatasets(country);
+  const steamCountry = toSteamCountry(country);
   const evidence = buildLabelEvidence({ datasets, type, slug, asOf });
   if (!evidence) notFound();
   const decisions = await getDesktopOpportunityDecisions({ country, labelType: type, labelSlug: slug });
@@ -50,7 +54,7 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
     <AppShell filters={{ country, platform: "all" }} active="steam-overview" noCounterpart>
       <div className="flex flex-col gap-4">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-dim">
-          <Link href={country === "id" ? "/steam" : `/steam?country=${country}`} className="hover:text-ink">Overview</Link>
+          <Link href={steamCountry === "id" ? "/steam" : `/steam?country=${steamCountry}`} className="hover:text-ink">Overview</Link>
           <ChevronRight aria-hidden className="size-3" />
           <Link href={`/steam/compare?type=${type}${countryQuery}`} className="hover:text-ink">Platform comparison</Link>
           <ChevronRight aria-hidden className="size-3" />
@@ -64,6 +68,10 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
             <span className="text-dim">{row.opportunity.confidence} confidence · {row.measured} of {row.total} platforms measured</span>
           </p>
           <p className="text-[15px] text-dim">{modeHints[row.opportunity.mode]}.</p>
+          <p className="text-sm text-dim">
+            Mobile market: {marketLabels[market]} ({mobileCoverage.collected.length} of {mobileCoverage.total} storefront
+            {mobileCoverage.total === 1 ? "" : "s"} collected) · Steam: Global
+          </p>
         </div>
       </div>
 
@@ -79,6 +87,7 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
         <DesktopDecisionPanel
           decisions={decisions}
           country={country}
+          marketLabel={marketLabels[market]}
           labelType={type}
           labelSlug={slug}
         />
@@ -157,7 +166,7 @@ export default async function OpportunityEvidencePage({ params, searchParams }: 
           Steam collected {formatRelative(steamSource?.lastCollectedAt ?? null, asOf)}; mobile ranks as of{" "}
           {asOf.toISOString().slice(0, 16).replace("T", " ")} UTC. Labels are inferences from titles, tags, and
           descriptions, and a label&apos;s rank is a research signal, not a market fact or a prediction.{" "}
-          <Link href={`/steam/games?label=${type}:${slug}${countryQuery}`} className="text-ink-soft underline-offset-2 hover:underline">
+          <Link href={`/steam/games?label=${type}:${slug}${steamCountry === "id" ? "" : `&country=${steamCountry}`}`} className="text-ink-soft underline-offset-2 hover:underline">
             Browse the Steam games with this label
           </Link>
           .

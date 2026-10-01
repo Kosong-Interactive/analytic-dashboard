@@ -1,4 +1,4 @@
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import { countryCodeSchema, marketHomeOf, marketOf } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 import { PLATFORM_OPPORTUNITY_MODES, type PlatformOpportunityMode } from "@analytic-dashboard/analytics";
@@ -19,13 +19,17 @@ export const compareModeValues = ["all", ...PLATFORM_OPPORTUNITY_MODES] as const
 export type CompareModeFilter = "all" | PlatformOpportunityMode;
 
 const queryShape = z.object({
-  country: countryCodeSchema.catch("id"),
+  // Any storefront selects its market; the query keeps the market's identifying storefront.
+  country: countryCodeSchema.catch("id").transform(marketHomeOf),
   type: z.enum(compareTypeValues).catch("genre"),
   sort: z.enum(sortValues).catch("coverage"),
   mode: z.enum(compareModeValues).catch("all"),
 });
 
 export type CompareQuery = z.infer<typeof queryShape>;
+
+/** The mobile market a comparison reads: Indonesia, SEA, or World. */
+export const compareMarket = (query: Pick<CompareQuery, "country">) => marketOf(query.country);
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 

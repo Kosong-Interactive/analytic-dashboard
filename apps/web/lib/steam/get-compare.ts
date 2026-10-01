@@ -2,7 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 
-import { loadLabelMembership } from "@analytic-dashboard/db";
+import { loadLabelMembership, loadTrackedStorefronts } from "@analytic-dashboard/db";
+import { marketCountries, marketOf } from "@analytic-dashboard/shared";
 
 import { getDatabase } from "../database";
 import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "../labels/constants";
@@ -20,14 +21,18 @@ const emptyDataset: PlatformDataset = { games: [], membership: [], available: fa
 export const getPlatformDatasets = cache(async (country: CompareQuery["country"]) => {
   const db = getDatabase();
   const asOf = new Date();
+  // The mobile side is a whole market: Indonesia, or SEA / World combined across their storefronts.
+  const market = marketOf(country);
+  const storefronts = marketCountries[market];
 
   async function mobile(store: "google_play" | "app_store"): Promise<PlatformDataset> {
     try {
       const [selection, membership] = await Promise.all([
-        loadScoredSelection({ country, platform: store }, asOf),
+        loadScoredSelection({ country, platform: store, market }, asOf),
         loadLabelMembership(db, {
           stores: [store],
           country,
+          countries: storefronts,
           taxonomyVersion: TAXONOMY_VERSION,
           types: compareTypeValues,
           minConfidence: MIN_LABEL_CONFIDENCE,
@@ -74,9 +79,17 @@ export const getPlatformDatasets = cache(async (country: CompareQuery["country"]
     }
   }
 
-  const [steamResult, googlePlay, appStore] = await Promise.all([steam(), mobile("google_play"), mobile("app_store")]);
+  const [steamResult, googlePlay, appStore, collected] = await Promise.all([
+    steam(),
+    mobile("google_play"),
+    mobile("app_store"),
+    loadTrackedStorefronts(db, storefronts).catch(() => [] as string[]),
+  ]);
   return {
     asOf,
+    market,
+    /** How many of the market's storefronts have tracked games; never claimed as complete. */
+    mobileCoverage: { collected: storefronts.filter((code) => collected.includes(code)), total: storefronts.length },
     steamSource: steamResult.source,
     datasets: { steam: steamResult.dataset, google_play: googlePlay, app_store: appStore } satisfies Record<ComparedPlatform, PlatformDataset>,
   };
@@ -84,9 +97,11 @@ export const getPlatformDatasets = cache(async (country: CompareQuery["country"]
 
 /** Labels across Steam, Google Play, and App Store for one label type. */
 export async function getPlatformComparison(query: CompareQuery) {
-  const { datasets, asOf } = await getPlatformDatasets(query.country);
+  const { datasets, asOf, market, mobileCoverage } = await getPlatformDatasets(query.country);
   return {
     asOf,
+    market,
+    mobileCoverage,
     comparison: buildPlatformComparison({ datasets, type: query.type, sort: query.sort, asOf, mode: query.mode }),
   };
 }

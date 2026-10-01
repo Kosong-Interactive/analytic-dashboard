@@ -57,25 +57,30 @@ async function computeMarketSelection(
       ? (["google_play", "app_store"] as const)
       : ([filters.platform] as const);
 
-  const [loaded, health] = await Promise.all([
+  // One pass per store covers every storefront of the market (5 queries per store, not per storefront).
+  const [perStore, health] = await Promise.all([
     Promise.all(
-      countries.flatMap((country) =>
-        stores.map(async (store) => ({
-          country,
-          candidates: await loadTrendCandidates(db, { store, country, asOf, windowDays: WINDOW_DAYS, chartType: RANK_CHART }),
-        })),
+      stores.map((store) =>
+        loadTrendCandidates(db, {
+          store,
+          country: countries[0] ?? "id",
+          countries,
+          asOf,
+          windowDays: WINDOW_DAYS,
+          chartType: RANK_CHART,
+        }),
       ),
     ),
     loadSourceHealth(db, [...countries]),
   ]);
 
   // A cohort is one store in one storefront, so scoring everything at once keeps cohorts separate.
-  const everything: TrendCandidateRow[] = loaded.flatMap((entry) => entry.candidates);
+  const everything: TrendCandidateRow[] = perStore.flat();
   const scores = scoreTrending(everything, { asOf, rankChartType: RANK_CHART });
   const scoreById = new Map(scores.map((score) => [score.id, score]));
 
   const storefronts = countries.map((country) => {
-    const candidates = loaded.filter((entry) => entry.country === country).flatMap((entry) => entry.candidates);
+    const candidates = everything.filter((candidate) => candidate.country === country);
     return {
       country: country as CountryCode,
       candidates,
