@@ -24,6 +24,7 @@ const expectedTables = [
   "chart_entries",
   "classification_runs",
   "collector_runs",
+  "desktop_opportunity_decisions",
   "jobs",
   "market_opportunities",
   "opportunity_decisions",

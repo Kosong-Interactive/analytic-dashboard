@@ -482,6 +482,50 @@ export const opportunityDecisions = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * Append-only decisions for computed cross-platform opportunities. Unlike mobile research
+ * opportunities, these signals do not have a persisted parent row, so each decision retains the
+ * exact evidence and version metadata that the team reviewed.
+ */
+export const desktopOpportunityDecisions = pgTable(
+  "desktop_opportunity_decisions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    country: varchar("country", { length: 2 }).notNull(),
+    labelType: labelTypeEnum("label_type").notNull(),
+    labelSlug: text("label_slug").notNull(),
+    labelDisplayName: text("label_display_name").notNull(),
+    formulaVersion: text("formula_version").notNull(),
+    steamTaxonomyVersion: text("steam_taxonomy_version").notNull(),
+    mobileTaxonomyVersion: text("mobile_taxonomy_version").notNull(),
+    status: opportunityDecisionStatusEnum("status").notNull(),
+    note: text("note"),
+    owner: text("owner"),
+    actor: text("actor").notNull(),
+    evidence: jsonb("evidence").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("desktop_opportunity_decisions_identity_created_idx").on(
+      table.country,
+      table.labelType,
+      table.labelSlug,
+      table.createdAt,
+    ),
+    check("desktop_opportunity_decisions_country_lowercase_chk", sql`${table.country} = lower(${table.country})`),
+    check(
+      "desktop_opportunity_decisions_note_length_chk",
+      sql`${table.note} is null or char_length(${table.note}) <= 2000`,
+    ),
+    check(
+      "desktop_opportunity_decisions_owner_length_chk",
+      sql`${table.owner} is null or char_length(${table.owner}) <= 200`,
+    ),
+  ],
+).enableRLS();
+
 /** Append-only, versioned studio capability profile used by deterministic Studio Fit scoring. */
 export const studioProfiles = pgTable(
   "studio_profiles",

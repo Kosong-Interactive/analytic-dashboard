@@ -78,13 +78,12 @@ approves sending opportunity evidence to Gemini.
 
 ## Current state
 
-Branch state (2026-10-01): PR #9 (`development` → `main`) was merged as `fe5a85e`; `main` contains
-mobile upfront price, Steam rule/AI classification (migration `0008`), Steam Desktop pages and the
-Mobile|Desktop header, Desktop parity with Mobile, Apple game charts, the serverless pool change,
-the session-pooler docs, and Steam stage 6 (`4aefb50`, `68d269e`). `development` remains at
-`68d269e`; the one-commit difference is the merge commit on `main`, not missing feature work. No
-post-merge `collect.yml` run had started when this was checked at 03:26 UTC, so the new scheduled
-path still needs one green run on `main`.
+Branch state (2026-10-01): PR #10 (`development` → `main`) was merged as `50fca81`; `main` contains
+the Steam `taxonomy-v2` / `steam-rules-v2` feature and button-style Game Opportunities CTAs on top
+of the earlier Steam stage 6 work. `development` and `origin/development` are at `ffddc8b`; the
+one-commit difference from `main` is the merge commit, not missing feature work. The user reported
+that the post-merge schedule, taxonomy activation, and stage 6 re-check are done. The current
+uncommitted feature is Desktop opportunity decisions. Migration `0009` is applied to Supabase.
 
 **Production is deployed by hand with the Vercel CLI from the user's laptop** (deployments carry
 no git metadata), not from `main`; check `vercel ls analytic-dashboard` for what is live. The
@@ -124,8 +123,8 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 ### Database
 
-- Migrations `0000`–`0008` are all applied to Supabase; `npm run db:verify` last reported 21 tables,
-  RLS on every table, 9 migrations, no public policies.
+- Migrations `0000`–`0009` are all applied to Supabase; `npm run db:verify` last reported 22 tables,
+  RLS on every table, 10 migrations, no public policies.
 - Mobile: `apps`, `store_apps`, `app_snapshots` (change-only + 24 h heartbeat), `chart_entries`,
   `collector_runs`. Classification: `taxonomy_labels`, `app_labels`, `classification_runs`
   (input-hash cache). Team: `watchlist_entries`, `studio_profiles`. Research: `research_runs`,
@@ -177,10 +176,14 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   (`lib/steam/opportunities.ts`) keeps only confirmed, Steam → mobile, and mobile → Steam labels,
   ranked by mode, confidence, strength, and backing games, up to 5 cards, each with caveats
   (unmeasured platforms, one-sided signal, small cohort, sampled catalogue). Cards from a single
-  measured platform are marked "Early signal". Nothing is persisted: there is no Shortlist,
-  Reject, or Prototype for Desktop signals yet (those tables are keyed to mobile). Loading all
-  platforms takes about 2–3 s locally. Steam stage 6 is complete; the next product step is
-  persisting Desktop decisions if the team wants them.
+  measured platform are marked "Early signal". Loading all platforms takes about 2–3 s locally.
+- Desktop opportunity decisions are implemented in the current working tree. Migration `0009`
+  adds append-only `desktop_opportunity_decisions` with RLS and no browser policy. Identity is
+  country + label type + slug; each event stores Shortlist/Reject/Prototype, actor, optional owner
+  and note, formula/taxonomy versions, and the evidence snapshot reviewed at that time. The
+  evidence page exposes the write action and complete history; opportunity cards show the latest
+  status. The Server Action recomputes evidence and refuses to save a label that no longer reaches
+  an opportunity mode. Migration `0009` is applied.
 - Automated Game Research stages 1–5 are done: `opportunity_score_v1` with separate Research
   Confidence, `/research/[id]` with Shortlist/Reject/Prototype history, `studio_fit_v1` and
   `/settings/studio-fit`, cited AI research briefs (gated), and `opportunity_history_v1`
@@ -279,10 +282,13 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   today, so every Desktop opportunity is a low-confidence "Early signal" (1 of 3 platforms).
 - The user reported on 2026-10-01 that the deploy and the visual check are fine; the agent only
   ever verified response times and data, never screenshots of the Desktop pages.
-- The working-tree `taxonomy-v2` and Game Opportunities button CTA changes passed `npm run check`
-  on Node 22.23.3 (lint, all workspace typechecks/tests, and production build). A local browser
-  reached the login page but had no authenticated session, so the new CTA styling was not visually
-  checked on the protected Overview pages.
+- The merged `taxonomy-v2` and Game Opportunities button CTA changes passed `npm run check` on
+  Node 22.23.3. A local browser reached the login page but had no authenticated session, so the CTA
+  styling was not visually checked by the agent on the protected Overview pages.
+- Desktop decision code passes `npm run check` and the DB migration metadata check on Node
+  22.23.3. Migration `0009` is live and the focused repository integration test passed against
+  Supabase inside a rolled-back transaction (append, evidence, history, and latest status). An
+  authenticated visual/save check remains before merge.
 - Durability needs 30/90 days of daily research results.
 - Manual checks not yet done: a real Shortlist/Reject/Prototype save, a real Studio Fit profile
   version (enter only the team's real capabilities), the Watchlist note save, login and Overview
@@ -297,24 +303,14 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
 
 Decisions that wait on the user are marked **(ask)**.
 
-1. Confirm the first post-merge scheduled `collect.yml` run on `main` is green, including Apple
-   charts, `Classify Steam games with rules`, and `... with AI`.
-2. **Publish and activate `taxonomy-v2`.** The user approved the gameplay labels and the code is
-   complete in the working tree. Commit/push when requested, then run rule classification so v2
-   labels exist before judging the Steam UI. Gemini v2 reclassification is still a separate live
-   action (about 100k tokens) and has not run.
-3. **Re-check Steam stage 6 with real mobile scores** (about 2026-10-02/03): thresholds (strong
-   0.6, weak 0.4, thin share ratio 0.5, minimum 3 games, 5 labels) and weights are the agent's
-   proposals in versioned config; a change after the team relies on them needs a new version.
-4. **Persist Desktop opportunity decisions** (Shortlist, Reject, Prototype). The existing tables
-   are keyed to mobile (`market_opportunities`, `opportunity_decisions`), so this needs a new
-   migration. **(ask)** before writing it.
-5. **Manual Confirm/Reject for Steam labels** (`steam_app_labels` already has the `manual`
+1. Finish the authenticated visual/save check for **Desktop opportunity decisions** on both
+   Indonesia and US market views, then merge through a pull request when requested.
+2. **Manual Confirm/Reject for Steam labels** (`steam_app_labels` already has the `manual`
    source; needs a write path and the detail-page actions, `LabelsPanel` is currently
    `readOnly`).
-6. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
+3. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
    Play's worldwide metrics when aggregating.
-7. Smaller: faster classification input loading (it transfers every description, ~75 s from a
+4. Smaller: faster classification input loading (it transfers every description, ~75 s from a
    laptop), a dedicated new-release discovery path; `/games` is the heaviest page (about 530 KB
    of HTML, 1.2 s in production).
 
