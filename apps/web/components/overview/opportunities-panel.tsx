@@ -7,6 +7,7 @@ import { countryLabels } from "@/lib/overview/filters";
 import type { ConfidenceBand, OpportunitiesView, OpportunityCard, OpportunityPreview } from "@/lib/research/view-model";
 import { cn } from "@/lib/utils";
 
+import { LinkButton } from "../common/link-button";
 import { EmptyState, Panel } from "./panel";
 
 const bandStyles: Record<ConfidenceBand, { label: string; text: string }> = {
@@ -96,15 +97,15 @@ function Card({ card, asOf }: { card: OpportunityCard; asOf: Date }) {
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
         <span>Calculated {formatRelative(card.asOf, asOf)}</span>
-        <span className="flex items-center gap-3">
+        <span className="flex flex-wrap items-center justify-end gap-2">
           {card.browseHref ? (
-            <Link href={card.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
+            <LinkButton href={card.browseHref} variant="secondary">
               Browse games
-            </Link>
+            </LinkButton>
           ) : null}
-          <Link href={`/research/${card.id}`} className="text-accent underline-offset-2 hover:underline">
+          <LinkButton href={`/research/${card.id}`}>
             View evidence
-          </Link>
+          </LinkButton>
         </span>
       </div>
     </li>
@@ -158,15 +159,15 @@ function PreviewCard({ preview, asOf }: { preview: OpportunityPreview; asOf: Dat
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-line-soft pt-3 text-[11px] text-dim">
         <span>Evaluated {formatRelative(preview.asOf, asOf)}</span>
-        <span className="flex items-center gap-3">
+        <span className="flex flex-wrap items-center justify-end gap-2">
           {preview.browseHref ? (
-            <Link href={preview.browseHref} className="text-ink-soft underline-offset-2 hover:underline">
+            <LinkButton href={preview.browseHref} variant="secondary">
               Browse cohort
-            </Link>
+            </LinkButton>
           ) : null}
-          <Link href={`/research/${preview.id}`} className="text-accent underline-offset-2 hover:underline">
+          <LinkButton href={`/research/${preview.id}`}>
             View evidence
-          </Link>
+          </LinkButton>
         </span>
       </div>
     </li>
