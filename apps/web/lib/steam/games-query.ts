@@ -1,4 +1,4 @@
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import { steamCountrySchema } from "./query";
 import { z } from "zod";
 
 import { releasedValues } from "../explorer/query";
@@ -58,7 +58,7 @@ const labelFilterSchema = z
   .catch(undefined);
 
 const queryShape = z.object({
-  country: countryCodeSchema.catch("id"),
+  country: steamCountrySchema.catch("id"),
   q: text(80),
   tag: text(80),
   genre: slug,

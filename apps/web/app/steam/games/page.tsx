@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/auth/session";
 import { MIN_LABEL_CONFIDENCE } from "@/lib/labels/constants";
 import { getSteamGameCatalog } from "@/lib/steam/get-steam";
 import { buildSteamGamesList } from "@/lib/steam/games-list";
+import { toSteamCountry } from "@/lib/steam/query";
 import {
   clearedSteamGameFilters,
   parseSteamGamesQuery,
@@ -39,7 +40,7 @@ export default async function SteamGamesPage({ searchParams }: SteamGamesPagePro
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-games"
-      buildHref={(change) => steamGamesHref(query, { country: change.country })}
+      buildHref={(change) => steamGamesHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) })}
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">Games</h1>

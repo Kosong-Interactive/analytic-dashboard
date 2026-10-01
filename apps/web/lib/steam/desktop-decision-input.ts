@@ -1,4 +1,4 @@
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import { steamCountrySchema } from "./query";
 import { z } from "zod";
 
 import { opportunityDecisionValues } from "../research/detail-view-model";
@@ -8,7 +8,7 @@ export const DESKTOP_OPPORTUNITY_NOTE_MAX = 2000;
 export const DESKTOP_OPPORTUNITY_OWNER_MAX = 200;
 
 export const desktopOpportunityDecisionSchema = z.object({
-  country: countryCodeSchema,
+  country: steamCountrySchema,
   labelType: z.enum(compareTypeValues),
   labelSlug: z.string().regex(/^[a-z][a-z0-9_]{0,63}$/),
   status: z.enum(opportunityDecisionValues),

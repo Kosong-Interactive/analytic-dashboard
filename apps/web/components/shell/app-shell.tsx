@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/auth/session";
 import { overviewHref, type OverviewFilters } from "@/lib/overview/filters";
 
+import { platformModeOf } from "@/lib/shell/navigation";
+
+import { MarketNotice } from "./market-notice";
 import { Sidebar, type NavKey } from "./sidebar";
 import { Topbar } from "./topbar";
 
@@ -35,6 +38,7 @@ export async function AppShell({ filters, active, buildHref, noCounterpart, chil
           userEmail={user?.email ?? null}
           noCounterpart={noCounterpart}
         />
+        {platformModeOf(active) === "mobile" ? <MarketNotice country={filters.country} /> : null}
         <main id="main" tabIndex={-1} className="flex flex-col gap-5 px-4 py-6 outline-none sm:px-7 sm:pb-8">
           {children}
         </main>

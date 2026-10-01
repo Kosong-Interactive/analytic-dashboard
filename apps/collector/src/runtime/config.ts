@@ -7,7 +7,8 @@ import { z } from "zod";
 
 export const enabledCountriesSchema = z.object({
   version: z.number().int().positive(),
-  countries: z.record(countryCodeSchema, z.object({ locale: localeSchema })),
+  // Only the storefronts listed here are collected; the others stay supported but dormant.
+  countries: z.partialRecord(countryCodeSchema, z.object({ locale: localeSchema })),
 });
 
 export const discoverySeedsSchema = z.object({

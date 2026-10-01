@@ -1,5 +1,14 @@
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import type { CountryCode } from "@analytic-dashboard/shared";
 import { z } from "zod";
+
+/** Steam prices are published in IDR for Indonesia and USD otherwise, so Desktop knows two markets. */
+export const steamCountrySchema = z.enum(["id", "us"]);
+export type SteamCountry = z.infer<typeof steamCountrySchema>;
+
+/** The Steam price market that applies to a mobile storefront. */
+export function toSteamCountry(country: CountryCode): SteamCountry {
+  return country === "id" ? "id" : "us";
+}
 
 export const steamChartValues = ["most_played", "top_sellers"] as const;
 
@@ -9,7 +18,7 @@ export const steamChartLabels = {
 } as const;
 
 const steamQuerySchema = z.object({
-  country: countryCodeSchema.catch("id"),
+  country: steamCountrySchema.catch("id"),
   chart: z.enum(steamChartValues).catch("most_played"),
 });
 

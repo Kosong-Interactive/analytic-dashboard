@@ -16,7 +16,7 @@ import { buildSteamMetrics, buildSteamSeries } from "@/lib/steam/detail-view";
 import { formatPrice, formatRatio, positiveRatio } from "@/lib/steam/format";
 import { getSteamGame } from "@/lib/steam/get-steam";
 import { listSteamTaxonomyOptions } from "@/lib/steam/manual-labels";
-import { parseSteamQuery, steamChartLabels, steamHref } from "@/lib/steam/query";
+import { parseSteamQuery, steamChartLabels, steamHref, toSteamCountry } from "@/lib/steam/query";
 
 interface SteamGamePageProps {
   params: Promise<{ id: string }>;
@@ -62,7 +62,7 @@ export default async function SteamGamePage({ params, searchParams }: SteamGameP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-games"
-      buildHref={(change) => steamHref(query, { country: change.country }, `/steam/games/${id}`)}
+      buildHref={(change) => steamHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) }, `/steam/games/${id}`)}
     >
       <div className="flex flex-col gap-4">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-dim">

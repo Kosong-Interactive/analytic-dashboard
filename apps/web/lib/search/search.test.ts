@@ -33,7 +33,7 @@ describe("buildSearchGroups", () => {
     const groups = buildSearchGroups("merg", result);
     assert.deepEqual(groups.map((g) => g.kind), ["game", "developer", "label"]);
     assert.equal(groups[0]?.items[0]?.href, "/games/11111111-1111-4111-8111-111111111111");
-    assert.equal(groups[0]?.items[0]?.detail, "Unknown developer · Google Play · Global (US store)");
+    assert.equal(groups[0]?.items[0]?.detail, "Unknown developer · Google Play · United States");
     assert.equal(groups[1]?.items[0]?.href, "/games?q=Merge%20Studio");
     assert.deepEqual(groups[2]?.items.map((i) => i.href), ["/games?genre=puzzle", "/games?mechanic=merging"]);
     assert.ok(searchResponseSchema.safeParse({ query: "merg", groups }).success);

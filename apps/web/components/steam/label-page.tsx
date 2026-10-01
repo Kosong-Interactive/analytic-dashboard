@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { MIN_LABEL_CONFIDENCE } from "@/lib/labels/constants";
 import { getSteamLabelOverview } from "@/lib/steam/get-label-overview";
+import { toSteamCountry } from "@/lib/steam/query";
 import {
   steamLabelHref,
   steamLabelSortLabels,
@@ -34,7 +35,7 @@ export async function SteamLabelPage<T extends LabelType>({ config, query, activ
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active={active}
-      buildHref={(change) => steamLabelHref(config, query, { country: change.country })}
+      buildHref={(change) => steamLabelHref(config, query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) })}
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">{title}</h1>

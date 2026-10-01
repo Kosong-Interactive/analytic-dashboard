@@ -1,4 +1,4 @@
-import { countryCodeSchema, platformRegistry, type CountryCode } from "@analytic-dashboard/shared";
+import { countryCodeSchema, countryNames, platformRegistry, type CountryCode } from "@analytic-dashboard/shared";
 import { z } from "zod";
 
 export const platformValues = ["all", "google_play", "app_store"] as const;
@@ -37,13 +37,10 @@ export function overviewHref(
 }
 
 /**
- * Stores publish data per country, never globally. The US storefront is shown as a proxy for the
- * global market, and the label keeps "US store" so it is never mistaken for worldwide data.
+ * Stores publish data per country, never globally. Each storefront is named for what it is; SEA and
+ * World are aggregates of several storefronts and carry their own coverage notice.
  */
-export const countryLabels: Record<CountryCode, string> = {
-  id: "Indonesia",
-  us: "Global (US store)",
-};
+export const countryLabels: Record<CountryCode, string> = countryNames;
 
 export const platformLabels: Record<Platform, string> = {
   all: "All",

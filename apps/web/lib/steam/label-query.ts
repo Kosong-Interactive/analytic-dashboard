@@ -1,4 +1,4 @@
-import { countryCodeSchema } from "@analytic-dashboard/shared";
+import { steamCountrySchema } from "./query";
 import { z } from "zod";
 
 import type { SteamLabelSort } from "./label-overview";
@@ -51,7 +51,7 @@ export function parseSteamLabelQuery<T extends string>(
   if (!defaultType) throw new Error("A label page needs at least one type");
   const parsed = z
     .object({
-      country: countryCodeSchema.catch("id"),
+      country: steamCountrySchema.catch("id"),
       type: z.enum(config.types as unknown as [T, ...T[]]).catch(defaultType),
       sort: z.enum(steamLabelSortValues).catch("games"),
     })

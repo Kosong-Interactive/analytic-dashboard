@@ -7,6 +7,7 @@ import { SteamGamesTable } from "@/components/steam/games-table";
 import { requireUser } from "@/lib/auth/session";
 import { getSteamGameCatalog } from "@/lib/steam/get-steam";
 import { parseSteamGamesQuery } from "@/lib/steam/games-query";
+import { toSteamCountry } from "@/lib/steam/query";
 import {
   buildSteamReleasesList,
   parseSteamReleasesQuery,
@@ -40,7 +41,7 @@ export default async function SteamReleasesPage({ searchParams }: SteamReleasesP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-releases"
-      buildHref={(change) => steamReleasesHref(query, { country: change.country })}
+      buildHref={(change) => steamReleasesHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) })}
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">New Releases</h1>

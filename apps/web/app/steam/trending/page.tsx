@@ -10,7 +10,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getSteamTrendInputs } from "@/lib/steam/get-steam";
 import { buildRankMovers } from "@/lib/steam/rank-movers";
 import { buildSteamTrendList } from "@/lib/steam/trend";
-import { parseSteamQuery, steamChartLabels, steamChartValues, steamHref } from "@/lib/steam/query";
+import { parseSteamQuery, steamChartLabels, steamChartValues, steamHref, toSteamCountry } from "@/lib/steam/query";
 
 export const metadata = { title: "Steam Trending · Game Analytic" };
 
@@ -31,7 +31,7 @@ export default async function SteamTrendingPage({ searchParams }: SteamTrendingP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-trending"
-      buildHref={(change) => steamHref(query, { country: change.country }, base)}
+      buildHref={(change) => steamHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) }, base)}
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">Trending Games</h1>

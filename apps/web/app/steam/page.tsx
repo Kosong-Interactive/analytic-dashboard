@@ -15,7 +15,7 @@ import { getSteamChart, getSteamTrendInputs } from "@/lib/steam/get-steam";
 import { parseSteamGamesQuery } from "@/lib/steam/games-query";
 import { buildSteamReleasesList, parseSteamReleasesQuery } from "@/lib/steam/releases";
 import { buildSteamTrendList } from "@/lib/steam/trend";
-import { parseSteamQuery, steamHref } from "@/lib/steam/query";
+import { parseSteamQuery, steamHref, toSteamCountry } from "@/lib/steam/query";
 
 export const metadata = { title: "Steam Overview · Game Analytic" };
 
@@ -80,7 +80,7 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
     <AppShell
       filters={{ country: query.country, platform: "all" }}
       active="steam-overview"
-      buildHref={(change) => steamHref(query, { country: change.country }, "/steam")}
+      buildHref={(change) => steamHref(query, { country: change.country === undefined ? undefined : toSteamCountry(change.country) }, "/steam")}
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold tracking-tight">Steam Market Overview</h1>

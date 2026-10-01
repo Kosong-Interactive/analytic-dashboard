@@ -1,22 +1,24 @@
 import {
   countryCodeSchema,
   storeSchema,
-  supportedCountryCodes,
   storeValues,
   type CountryCode,
   type Store,
 } from "@analytic-dashboard/shared";
+
+import { loadEnabledCountries } from "./runtime/config.js";
 
 export interface CollectorDescriptor {
   countries: CountryCode[];
   sources: Store[];
 }
 
-export function createCollectorDescriptor(): CollectorDescriptor {
+/** The storefronts enabled in `config/countries/enabled.json`, not every storefront the code supports. */
+export function createCollectorDescriptor(
+  enabledCountries: readonly string[] = Object.keys(loadEnabledCountries().countries),
+): CollectorDescriptor {
   return {
-    countries: supportedCountryCodes.map((country) =>
-      countryCodeSchema.parse(country),
-    ),
+    countries: enabledCountries.map((country) => countryCodeSchema.parse(country)),
     sources: storeValues.map((store) => storeSchema.parse(store)),
   };
 }

@@ -8,6 +8,7 @@ import { getDatabase } from "../database";
 import { MIN_LABEL_CONFIDENCE, TAXONOMY_VERSION } from "../labels/constants";
 import { loadScoredSelection } from "../scoring/load-scored";
 import { getSteamTrendInputs } from "./get-steam";
+import { toSteamCountry } from "./query";
 import type { CompareQuery } from "./compare-query";
 import type { SteamSourceStatus } from "../overview/view-model";
 import { buildPlatformComparison, compareTypeValues, type ComparedPlatform, type PlatformDataset } from "./platform-compare";
@@ -51,7 +52,7 @@ export const getPlatformDatasets = cache(async (country: CompareQuery["country"]
 
   async function steam(): Promise<{ dataset: PlatformDataset; source: SteamSourceStatus | null }> {
     try {
-      const { catalog, history } = await getSteamTrendInputs(country);
+      const { catalog, history } = await getSteamTrendInputs(toSteamCountry(country));
       const trend = buildSteamTrendList({ games: catalog.games, history, asOf });
       const scoreById = new Map(trend.rows.map((row) => [row.game.steamAppId, row.score.score]));
       return {
