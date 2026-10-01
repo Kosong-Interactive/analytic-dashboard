@@ -1,7 +1,8 @@
 "use client";
 
 import { Menu } from "@base-ui/react/menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, SlidersHorizontal, User } from "lucide-react";
+import Link from "next/link";
 import { useTransition } from "react";
 
 import { signOut } from "@/app/login/actions";
@@ -29,6 +30,13 @@ export function UserMenu({ email }: { email: string }) {
               </Menu.GroupLabel>
             </Menu.Group>
             <Menu.Separator className="my-1 h-px bg-line" />
+            <Menu.LinkItem
+              render={<Link href="/settings/studio-fit" />}
+              className="flex h-8 cursor-default items-center gap-2 rounded-md px-2.5 text-ink-soft outline-none data-[highlighted]:bg-line data-[highlighted]:text-ink"
+            >
+              <SlidersHorizontal aria-hidden className="size-3.5" />
+              Studio Fit
+            </Menu.LinkItem>
             <Menu.Item
               disabled={pending}
               closeOnClick={false}
