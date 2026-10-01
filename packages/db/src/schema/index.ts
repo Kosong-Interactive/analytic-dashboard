@@ -786,6 +786,71 @@ export const steamCollectorRuns = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * Labels for Steam games, kept apart from `app_labels` because Steam games have no canonical
+ * `apps` row yet. Same provenance columns and controlled `taxonomy_labels` vocabulary.
+ */
+export const steamAppLabels = pgTable(
+  "steam_app_labels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    steamAppId: uuid("steam_app_id")
+      .notNull()
+      .references(() => steamApps.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => taxonomyLabels.id, { onDelete: "restrict" }),
+    source: labelSourceEnum("source").notNull(),
+    confidence: numeric("confidence", { precision: 4, scale: 3 }).notNull(),
+    evidence: jsonb("evidence").default([]).notNull(),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    promptVersion: text("prompt_version").default("none").notNull(),
+    model: text("model"),
+    inputHash: text("input_hash").default("manual").notNull(),
+    isManualOverride: boolean("is_manual_override").default(false).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("steam_app_labels_provenance_uidx").on(
+      table.steamAppId,
+      table.labelId,
+      table.source,
+      table.taxonomyVersion,
+      table.promptVersion,
+      table.inputHash,
+    ),
+    index("steam_app_labels_app_idx").on(table.steamAppId),
+    check("steam_app_labels_confidence_range_chk", sql`${table.confidence} >= 0 and ${table.confidence} <= 1`),
+  ],
+).enableRLS();
+
+/** Input-hash cache for automated Steam classification, one row per game, source, and taxonomy version. */
+export const steamClassificationRuns = pgTable(
+  "steam_classification_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    steamAppId: uuid("steam_app_id")
+      .notNull()
+      .references(() => steamApps.id, { onDelete: "cascade" }),
+    source: labelSourceEnum("source").notNull(),
+    taxonomyVersion: text("taxonomy_version").notNull(),
+    classifierVersion: text("classifier_version").notNull(),
+    model: text("model"),
+    inputHash: text("input_hash").notNull(),
+    labelCount: integer("label_count").notNull(),
+    classifiedAt: timestamp("classified_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("steam_classification_runs_app_source_version_uidx").on(
+      table.steamAppId,
+      table.source,
+      table.taxonomyVersion,
+    ),
+    check("steam_classification_runs_automated_source_chk", sql`${table.source} <> 'manual'`),
+    check("steam_classification_runs_label_count_nonnegative_chk", sql`${table.labelCount} >= 0`),
+  ],
+).enableRLS();
+
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
 export type StoreApp = typeof storeApps.$inferSelect;

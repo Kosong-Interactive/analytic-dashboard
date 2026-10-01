@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { priceFilterValues } from "../format/price";
 import { parseOverviewFilters, type OverviewFilters } from "../overview/filters";
 
 export const sortValues = [
@@ -35,6 +36,7 @@ const queryShape = z.object({
   sort: z.enum(sortValues).catch("score"),
   minRating: fromOptions(ratingOptions),
   minScore: fromOptions(scoreOptions),
+  price: z.enum(priceFilterValues).catch("all"),
   includeUnscored: z.enum(["1"]).optional().catch(undefined).transform((value) => value === "1"),
   page: z.coerce.number().int().min(1).max(10_000).catch(1),
 });
@@ -51,6 +53,7 @@ export function parseTrendingQuery(params: RawSearchParams): TrendingQuery {
     sort: first(params.sort),
     minRating: first(params.minRating),
     minScore: first(params.minScore),
+    price: first(params.price),
     includeUnscored: first(params.includeUnscored),
     page: first(params.page),
   });
@@ -73,6 +76,7 @@ export function trendingHref(
   if (next.sort !== "score") query.set("sort", next.sort);
   if (next.minRating !== 0) query.set("minRating", String(next.minRating));
   if (next.minScore !== 0) query.set("minScore", String(next.minScore));
+  if (next.price !== "all") query.set("price", next.price);
   if (next.includeUnscored) query.set("includeUnscored", "1");
   if (next.page !== 1) query.set("page", String(next.page));
   const text = query.toString();

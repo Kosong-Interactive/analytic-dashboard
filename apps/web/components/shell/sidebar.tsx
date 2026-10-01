@@ -2,6 +2,7 @@ import {
   Gamepad2,
   Layers,
   LayoutDashboard,
+  Monitor,
   SlidersHorizontal,
   TrendingUp,
   Zap,
@@ -10,25 +11,27 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { MODE_TITLES, navItemsFor, platformModeOf, type NavKey } from "@/lib/shell/navigation";
 import { cn } from "@/lib/utils";
 
-export type NavKey = "overview" | "trending" | "releases" | "genres" | "mechanics" | "games";
+export type { NavKey, PlatformMode } from "@/lib/shell/navigation";
+export { platformModeOf } from "@/lib/shell/navigation";
 
-interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  key: NavKey;
-  href: string;
-}
-
-const NAV: NavItem[] = [
-  { label: "Overview", icon: LayoutDashboard, key: "overview", href: "/" },
-  { label: "Trending Games", icon: TrendingUp, key: "trending", href: "/trending" },
-  { label: "New Releases", icon: Zap, key: "releases", href: "/new-releases" },
-  { label: "Genres", icon: Layers, key: "genres", href: "/genres" },
-  { label: "Mechanics", icon: SlidersHorizontal, key: "mechanics", href: "/mechanics" },
-  { label: "Games", icon: Gamepad2, key: "games", href: "/games" },
-];
+const ICONS: Record<NavKey, LucideIcon> = {
+  overview: LayoutDashboard,
+  trending: TrendingUp,
+  releases: Zap,
+  genres: Layers,
+  mechanics: SlidersHorizontal,
+  games: Gamepad2,
+  "steam-overview": LayoutDashboard,
+  "steam-trending": TrendingUp,
+  "steam-releases": Zap,
+  "steam-genres": Layers,
+  "steam-mechanics": SlidersHorizontal,
+  "steam-games": Gamepad2,
+  "steam-charts": Monitor,
+};
 
 export function Brand() {
   return (
@@ -49,25 +52,36 @@ export function Brand() {
   );
 }
 
-/** The primary links, shared by the desktop sidebar and the mobile drawer. */
+/**
+ * The primary links of the active mode only, shared by the desktop sidebar and the mobile drawer.
+ * The group title marks the mode; the Mobile|Desktop switch in the top bar is the only way to change it.
+ */
 export function NavList({ active, onNavigate }: { active: NavKey; onNavigate?: () => void }) {
+  const mode = platformModeOf(active);
+  const title = MODE_TITLES[mode];
   return (
-    <nav aria-label="Primary" className="flex flex-col gap-0.5 px-2.5 py-3.5">
-      {NAV.map(({ label, icon: Icon, key, href }) => (
-        <Link
-          key={key}
-          href={href}
-          onClick={onNavigate}
-          aria-current={key === active ? "page" : undefined}
-          className={cn(
-            "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] hover:bg-[#14171b] lg:h-8",
-            key === active ? "bg-[#181b20] text-ink" : "text-ink-soft",
-          )}
-        >
-          <Icon aria-hidden className={cn("size-4", key === active ? "text-accent" : "text-dim")} strokeWidth={1.7} />
-          {label}
-        </Link>
-      ))}
+    <nav aria-label="Primary" className="flex flex-col gap-4 px-2.5 py-3.5">
+      <div role="group" aria-label={title} className="flex flex-col gap-0.5">
+        <p className="px-2.5 pb-1 text-[10.5px] font-medium uppercase tracking-wider text-dim">{title}</p>
+        {navItemsFor(mode).map(({ label, key, href }) => {
+          const Icon = ICONS[key];
+          return (
+            <Link
+              key={key}
+              href={href}
+              onClick={onNavigate}
+              aria-current={key === active ? "page" : undefined}
+              className={cn(
+                "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] hover:bg-[#14171b] lg:h-8",
+                key === active ? "bg-[#181b20] text-ink" : "text-ink-soft",
+              )}
+            >
+              <Icon aria-hidden className={cn("size-4", key === active ? "text-accent" : "text-dim")} strokeWidth={1.7} />
+              {label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

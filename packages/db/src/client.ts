@@ -5,6 +5,14 @@ import * as schema from "./schema/index";
 
 export interface DatabaseConnectionOptions {
   maxConnections?: number;
+  /**
+   * Close a connection that has been idle this long. Serverless instances keep their pool while
+   * frozen, and every held connection counts against the pooler's small pool, so idle ones must be
+   * given back quickly. Unset keeps connections open, which suits the long-running collector.
+   */
+  idleTimeoutSeconds?: number;
+  /** Replace a connection after this long, so none outlives the pooler's own limits. */
+  maxLifetimeSeconds?: number;
 }
 
 export function createDatabaseConnection(
@@ -24,6 +32,8 @@ export function createDatabaseConnection(
     prepare: false,
     // Fail fast instead of waiting forever when the pooler cannot be reached.
     connect_timeout: 30,
+    ...(options.idleTimeoutSeconds ? { idle_timeout: options.idleTimeoutSeconds } : {}),
+    ...(options.maxLifetimeSeconds ? { max_lifetime: options.maxLifetimeSeconds } : {}),
   });
 
   return {

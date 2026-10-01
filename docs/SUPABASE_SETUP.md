@@ -47,7 +47,7 @@ For a new project, use Supabase's current `sb_publishable_...` and `sb_secret_..
 3. Copy **Project URL** to `NEXT_PUBLIC_SUPABASE_URL`.
 4. Copy **Publishable key** to `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 5. In the same **Connect** dialog, open the database connection section:
-   - use the transaction pooler for short-lived serverless application connections;
+   - use the session pooler (port 5432) for the dashboard's `DATABASE_URL`; the transaction pooler (port 6543) stalls concurrent queries with this driver;
    - use direct connection for migrations when the machine supports IPv6;
    - otherwise use the session pooler for migrations or other IPv4-only environments.
 6. Replace `[YOUR-PASSWORD]` locally with the database password. Percent-encode reserved characters in the password.
@@ -74,7 +74,7 @@ The publishable key is intentionally safe to ship to a browser only when Row Lev
 1. At the repository root, copy `.env.example` to `.env.local`.
 2. In the Supabase project, click **Connect** and copy a database connection URI.
 3. Replace the password placeholder locally. Do not paste the completed URI into chat.
-4. Set `DATABASE_URL` to the transaction-pooler URI for future serverless queries.
+4. Set `DATABASE_URL` to the session-pooler URI (port 5432); the transaction pooler (port 6543) stalls concurrent queries.
 5. Set `DIRECT_URL` to a direct URI when IPv6 is available, or a session-pooler URI when it is not. If only one connection is available, leave `DIRECT_URL` empty and migrations will use `DATABASE_URL`.
 6. Generate and verify the checked-in SQL migration:
 

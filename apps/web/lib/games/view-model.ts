@@ -5,6 +5,7 @@ import {
 } from "@analytic-dashboard/analytics";
 import type { GameHistory } from "@analytic-dashboard/db";
 
+import { detectPriceChanges, type PriceChange } from "../format/price";
 import type { ScoreComponentView } from "../overview/view-model";
 
 const DAY_MS = 86_400_000;
@@ -59,6 +60,13 @@ export interface GameDetailView {
     rank: SeriesPoint[];
     rankChartType: string | null;
   };
+  /** Upfront store price only; in-app purchases are not collected. */
+  price: {
+    /** Latest reading; `price` is null when the store gave none, which is not the same as free. */
+    current: { price: number | null; currency: string | null; capturedAt: Date } | null;
+    /** Oldest first, within the stored history window. */
+    changes: PriceChange[];
+  };
   /** Newest first, for the provenance table. */
   observations: ObservationRow[];
   /** Days covered by stored observations; tells the reader how much history exists. */
@@ -110,6 +118,12 @@ export function buildGameDetail(input: {
       rating: toSeries(snapshots, "rating"),
       rank: ranks.map((row) => ({ at: row.capturedAt.toISOString(), value: row.rank })),
       rankChartType: ranks.length > 0 ? rankChartType : null,
+    },
+    price: {
+      current: latestSnapshot
+        ? { price: latestSnapshot.price, currency: latestSnapshot.currency, capturedAt: latestSnapshot.capturedAt }
+        : null,
+      changes: detectPriceChanges(snapshots),
     },
     observations: [...snapshots].reverse().map((row) => ({
       capturedAt: row.capturedAt,

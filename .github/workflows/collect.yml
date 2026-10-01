@@ -86,3 +86,20 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           STEAM_WEB_API_KEY: ${{ secrets.STEAM_WEB_API_KEY }}
+
+      - name: Classify Steam games with rules
+        if: ${{ !cancelled() && !inputs.source }}
+        timeout-minutes: 10
+        run: npm run classify-steam --workspace @analytic-dashboard/collector
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # At most 200 changed Steam games per run; the input-hash cache carries the rest to later runs.
+      # Only public Steam store text is sent. Exits 0 when every model is out of quota or no key is set.
+      - name: Classify Steam games with AI
+        if: ${{ !cancelled() && !inputs.source }}
+        timeout-minutes: 15
+        run: npm run classify-steam-ai --workspace @analytic-dashboard/collector -- --limit 200
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

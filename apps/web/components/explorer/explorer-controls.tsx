@@ -16,68 +16,11 @@ import {
   releasedValues,
   type ExplorerQuery,
 } from "@/lib/explorer/query";
+import { priceFilterLabels, priceFilterValues } from "@/lib/format/price";
 
+import { EnumSelect, fieldClass, OptionSelect } from "../filters/fields";
 import { MobileDisclosure } from "../shell/mobile-disclosure";
 import { SegmentedLinks } from "../shell/segmented-links";
-
-const fieldClass =
-  "h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-accent";
-
-function OptionSelect({
-  label,
-  name,
-  value,
-  options,
-}: {
-  label: string;
-  name: string;
-  value: string;
-  options: FilterOption[];
-}) {
-  // Keep a selected value that no longer has members visible, so the form never silently drops it.
-  const withSelected =
-    value && !options.some((option) => option.value === value) ? [{ value, label: value, count: 0 }, ...options] : options;
-  return (
-    <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
-      {label}
-      <select name={name} defaultValue={value} className={fieldClass}>
-        <option value="">Any</option>
-        {withSelected.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label} ({option.count})
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function EnumSelect<T extends string>({
-  label,
-  name,
-  value,
-  values,
-  labels,
-}: {
-  label: string;
-  name: string;
-  value: T;
-  values: readonly T[];
-  labels: Record<T, string>;
-}) {
-  return (
-    <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
-      {label}
-      <select name={name} defaultValue={value} className={fieldClass}>
-        {values.map((option) => (
-          <option key={option} value={option}>
-            {labels[option]}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
 
 function optionLabel(options: FilterOption[], value: string): string {
   return options.find((option) => option.value === value)?.label ?? value;
@@ -105,6 +48,7 @@ export function ExplorerControls({
   if (query.released !== "any") chips.push({ label: `Released: ${releasedLabels[query.released]}`, remove: { released: "any" } });
   if (query.minRating > 0) chips.push({ label: `Rating ≥ ${query.minRating}`, remove: { minRating: 0 } });
   if (query.momentum !== "any") chips.push({ label: `Momentum: ${momentumLabels[query.momentum]}`, remove: { momentum: "any" } });
+  if (query.price !== "all") chips.push({ label: `Harga: ${priceFilterLabels[query.price]}`, remove: { price: "all" } });
   if (query.labels !== "any") chips.push({ label: `Labels: ${labelStatusLabels[query.labels]}`, remove: { labels: "any" } });
 
   return (
@@ -144,6 +88,7 @@ export function ExplorerControls({
             </select>
           </label>
           <EnumSelect label="Momentum" name="momentum" value={query.momentum} values={momentumValues} labels={momentumLabels} />
+          <EnumSelect label="Harga" name="price" value={query.price} values={priceFilterValues} labels={priceFilterLabels} />
           <EnumSelect label="Classification" name="labels" value={query.labels} values={labelStatusValues} labels={labelStatusLabels} />
           <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
             <button type="submit" className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90">

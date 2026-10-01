@@ -82,11 +82,16 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ### Collection and schedule
 
-- Mobile adapters in `packages/collectors`: Apple (iTunes Search/Lookup; no chart path yet, so
-  Apple has no rank gain) and Google Play (`@mradex77/google-play-scraper`, collector-only).
+- Mobile adapters in `packages/collectors`: Apple (iTunes Search/Lookup plus the classic RSS Games
+  chart feeds `itunes.apple.com/{cc}/rss/top{free,paid,grossing}applications/limit=N/genre=6014/json`,
+  which list ids and order only; details come from one lookup request; the newer
+  `rss.marketingtools.apple.com` host was unreachable when checked, and the classic feed is
+  Apple-deprecated, so watch for it disappearing) and Google Play (`@mradex77/google-play-scraper`, collector-only).
   Markets `id` and `us`; the UI calls `us` "Global (US store)", which is a proxy, not global data.
-- Discovery seeds are versioned; active `config/discovery-seeds/mvp-v2.json` (22 Apple terms × 50,
-  Google TOP_FREE/TOP_PAID/GROSSING × 25). Taxonomy `config/taxonomy/v1.json`.
+- Discovery seeds are versioned; active `config/discovery-seeds/mvp-v3.json` (22 Apple terms × 50, Apple
+  TOP_FREE/TOP_PAID/GROSSING × 100, Google TOP_FREE/TOP_PAID/GROSSING × 25). Apple chart job:
+  `discovery.chart` for `app_store`; Trend Score uses `TOP_FREE` only. Rank gain for Apple needs
+  about 3.5 days of chart history after the first collection. Taxonomy `config/taxonomy/v1.json`.
 - `.github/workflows/collect.yml` runs every 6 hours at minute 17 on `main`: discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
@@ -101,8 +106,8 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ### Database
 
-- Migrations `0000`–`0007` are all applied to Supabase; `npm run db:verify` last reported 21 tables,
-  RLS on every table, 8 migrations, no public policies.
+- Migrations `0000`–`0008` are all applied to Supabase; `npm run db:verify` last reported 21 tables,
+  RLS on every table, 9 migrations, no public policies.
 - Mobile: `apps`, `store_apps`, `app_snapshots` (change-only + 24 h heartbeat), `chart_entries`,
   `collector_runs`. Classification: `taxonomy_labels`, `app_labels`, `classification_runs`
   (input-hash cache). Team: `watchlist_entries`, `studio_profiles`. Research: `research_runs`,
@@ -116,6 +121,47 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - `trend_score_v1` (30% rank gain, 25% review velocity, 15% rating-count velocity, 15% country
   breadth, 10% discovery recency, 5% rating momentum; missing components excluded and weights
   rescaled; withheld below 40% measurable weight).
+- Steam stage 6.1 (done): `steam_trend_v1` in `packages/analytics/src/steam-trend-score.ts`
+  (30% chart rank gain from Steam's own last-week rank, 25% player growth 7d, 20% review velocity
+  7d, 10% chart breadth, 10% discovery recency, 5% sentiment change 7d; percentile within the
+  tracked Steam cohort; missing components excluded and weights rescaled; withheld below 40%
+  measurable weight). Rank gain, breadth and recency exist from the first collection (about 50%
+  coverage); the history components need about 3.5 days. Shown on `/steam/trending` and the
+  `/steam` Overview with a breakdown and an "Early signal" tag below 75% coverage. It is a separate
+  formula from `trend_score_v1` and the two scores are never compared directly.
+- Steam stage 6.2 (done): `platform_label_v1` in `packages/analytics/src/platform-labels.ts`. Per
+  platform (steam, google_play, app_store) and per taxonomy label: members, share, scored members,
+  median trend score (momentum, only with at least 3 scored members), new entrants (first seen
+  within 7 days), and percentiles against that platform's own labels (needs at least 5 labels).
+  Scores of different platforms are never put on one scale; only the within-platform percentiles
+  are shown side by side, and a platform with no data counts as missing in the "measured of total"
+  coverage. Page `/steam/compare` (linked from Steam Genres/Mechanics, not in the sidebar;
+  `noCounterpart`) loads all three platforms (about 1–3 s locally) and keeps partial results if one
+  fails. Mobile columns stay "Not ranked yet" until mobile Trend Scores exist (about 3.5 days of
+  history, first expected 2026-10-02/03).
+- Steam stage 6.3 (done): `platform_opportunity_v1` in `packages/analytics/src/platform-opportunity.ts`.
+  Each label on `/steam/compare` gets a mode from its within-platform momentum percentiles
+  (strong at or above the 60th percentile, weak at or below the 40th), the number of tracked
+  games, and share of the catalogue: confirmed on both, Steam → mobile, mobile → Steam,
+  conflicting, Steam only, mobile only, or no clear signal. "Thin" on a platform means no games,
+  fewer than 3, or a share under half the strong side's share (a small genre is not thin just
+  because other genres are larger). A platform that is unavailable or not yet measurable is
+  missing, never negative evidence; migration modes are not claimed without a measured strong
+  side. Confidence is low/medium/high for 1/2/3 measured platforms. `/steam/compare` has a
+  `mode` filter. Today only Steam has momentum, so labels show Steam → mobile with low
+  confidence (1 of 3) or no clear signal until mobile Trend Scores exist.
+- Steam stage 6.4 (done): Desktop **Game Opportunities** panel on `/steam` (after the KPI cards,
+  inside Suspense so the page does not wait for the three platforms; loaded through
+  `getPlatformDatasets` in `apps/web/lib/steam/get-compare.ts`, shared per request with
+  `getSteamTrendInputs`) and an evidence page `/steam/opportunities/[type]/[slug]` (signals per
+  platform, comparable games with links, risks and caveats, freshness). `selectOpportunities`
+  (`lib/steam/opportunities.ts`) keeps only confirmed, Steam → mobile, and mobile → Steam labels,
+  ranked by mode, confidence, strength, and backing games, up to 5 cards, each with caveats
+  (unmeasured platforms, one-sided signal, small cohort, sampled catalogue). Cards from a single
+  measured platform are marked "Early signal". Nothing is persisted: there is no Shortlist,
+  Reject, or Prototype for Desktop signals yet (those tables are keyed to mobile). Loading all
+  platforms takes about 2–3 s locally. Steam stage 6 is complete; the next product step is
+  persisting Desktop decisions if the team wants them.
 - Automated Game Research stages 1–5 are done: `opportunity_score_v1` with separate Research
   Confidence, `/research/[id]` with Shortlist/Reject/Prototype history, `studio_fit_v1` and
   `/settings/studio-fit`, cited AI research briefs (gated), and `opportunity_history_v1`
@@ -126,7 +172,16 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 - Rules (`rules-v1`) and Gemini (`ai-v2`, model rotation via `models.list`, SDK retries disabled,
   `maxOutputTokens` capped, evidence must quote the input). Resolution manual > AI > rule; once an
   app has an AI run its rule labels are ignored. Roll-ups hide automated labels below 0.6.
-- Steam games are not classified yet.
+- Steam games: rules (`steam-rules-v1`: Steam user tags at 0.75 confidence, keyword rules on
+  title/description, price) and Gemini (`ai-v2`, same prompt and provider as mobile; Steam genres
+  and tags are sent as "store genres", so evidence may quote a tag). Stored in `steam_app_labels` / `steam_classification_runs`; run
+  `npm run classify-steam --workspace @analytic-dashboard/collector` (also a step in `collect.yml`).
+  Resolution and the AI-over-rule rule are the same as mobile. Run
+  `npm run classify-steam-ai --workspace @analytic-dashboard/collector -- --limit 200` (a step in
+  `collect.yml`; `--dry-run` calls the model but writes nothing). Migration `0008` is applied. First
+  runs on 2026-10-01: rules labelled 150 games (1,196 labels); AI labelled all 150 (973 labels, 3
+  rejected by validation, 2 empty, about 100k tokens, no errors). AI still leans on noisy tags
+  (Dota 2 keeps Simulation and Tower defense), so judge quality before trusting Steam labels.
 
 ### Dashboard
 
@@ -134,7 +189,30 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
   Game Detail (`/games/[id]`, with manual label overrides), Genres, Mechanics, Search (⌘K and
   `/search`), Research detail, Settings › Studio Fit, Login (Supabase email/password; sign-up off).
 - Overview Data coverage shows mobile sources plus a separate **Desktop · Steam (Global)** row.
-  There are no Steam filters or pages yet.
+- Header: `[Mobile | Desktop]`, then country (`Indonesia | Global`), then `[All | Google Play | App
+  Store]` on Mobile or `[Steam]` on Desktop. The sidebar and mobile drawer show only the active
+  mode's menu (title Mobile or Desktop); the mode comes from the page (`platformModeOf` in
+  `apps/web/lib/shell/navigation.ts`), never from client state. `platformSwitchHref` maps each
+  menu to its counterpart and carries only `country`. Game detail, Watchlist, and Compare use the
+  Games key, so they lead to the other mode's Games list; pages with no counterpart at all
+  (Research, Studio Fit, Search, Steam Charts) pass `noCounterpart` to `AppShell` and lead to the
+  other mode's Overview.
+- Steam Trending and the Overview Trending panel now show `steam_trend_v1` (see Analytics).
+- Desktop pages mirror Mobile: `/steam` (Overview), `/steam/trending`, `/steam/new-releases`,
+  `/steam/genres`, `/steam/mechanics`, `/steam/games`, `/steam/games/[id]`, plus Desktop-only
+  `/steam/charts`. On Desktop the country only picks the regional price (IDR or USD); charts,
+  players and reviews are global and labelled "Global". Steam review ratio is never shown as
+  stars. Trending shows the Steam Trend Score plus rank movers from `last_week_rank` (labelled as
+  rank change). No Watchlist, Compare, Research, or manual label
+  editing on Steam. Games/detail are built from `loadSteamGameList` and `loadSteamGameDetail`
+  (`packages/db`); tables are `SteamGamesTable`/`SteamChartTable` (Plan A: shared primitives
+  `Panel`, `Pager`, `SegmentedLinks`, `KpiGrid`, `MetricCardGrid`, `ChartPanel`, `LabelsPanel`
+  with `readOnly`, filter fields in `components/filters/fields.tsx`; row bodies are not shared
+  with Mobile tables). Not yet checked in a browser by the agent (needs login).
+- Upfront price (mobile only, no in-app purchases): Game Detail "Upfront price" panel with
+  store, country, snapshot time and price changes; a Price column in Games/Trending/New Releases
+  and a Semua/Gratis/Berbayar `price` URL filter on Games and Trending. `0` shows "Gratis", `null`
+  shows "—" and matches neither filter. Formatter: `apps/web/lib/format/price.ts`.
 - Design reference: `https://claude.ai/artifact/FmXb2bJ9ViYy9S9p5NyGNy` (read with the Artifact
   tool in Claude; it has been intermittently unavailable).
 
@@ -172,17 +250,15 @@ Everything below is merged to `main` (latest `29b1746`, PR #7) unless marked oth
 
 ## Next work (recommended order)
 
-1. **Steam stage 5 — Desktop UI.** Introduce the shared `mobile | desktop` platform type, add the
-   Mobile/Desktop grouping to navigation and filters, and a Steam section: charts (most played, top
-   sellers), game detail (review positive/negative and ratio, current players, regional prices,
-   history), freshness. Get the user to approve the navigation design before building it.
-2. **Steam classification** with the same taxonomy (tags + description; rules then AI), so Genres
-   and Mechanics can offer a Desktop view.
-3. **Apple chart path**, so App Store games get rank gain (30% of Trend Score).
-4. **World market** from several countries for Mobile (team must choose countries; mind Google
+1. **Steam:** review the AI labels on `/steam/genres` and `/steam/games` (tag noise), then Steam
+   stage 6 (normalized cross-platform score; needs a few days of Steam history) and manual
+   Confirm/Reject for Steam labels.
+2. **Verify Apple charts** after the first scheduled run: `chart_entries` for `app_store` and rank
+   gain appearing in Trend Score components after about 3.5 days.
+3. **World market** from several countries for Mobile (team must choose countries; mind Google
    Play's worldwide metrics when aggregating).
-5. **Steam stage 6** — cross-platform normalized scoring and Steam↔mobile opportunities.
-6. Smaller: faster classification input loading (it transfers every description, ~75 s from a
+4. **Steam stage 6 follow-ups** — stage 6 (6.1–6.4) is done; open items are persisting Shortlist/Reject for Desktop opportunities, re-checking the formulas once mobile Trend Scores exist (about 2026-10-02/03), and `taxonomy-v2` for PC concepts.
+5. Smaller: faster classification input loading (it transfers every description, ~75 s from a
    laptop), a dedicated new-release discovery path.
 
 ## Commands

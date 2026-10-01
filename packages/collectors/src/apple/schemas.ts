@@ -35,3 +35,25 @@ export const appleSearchResponseSchema = z.object({
 });
 
 export type AppleSoftwareResult = z.infer<typeof appleSoftwareResultSchema>;
+
+/**
+ * Apple's classic RSS chart feed (`/{country}/rss/top*applications/.../json`). Only the app id and
+ * its position are read; everything else about the app comes from the lookup API. A feed with a
+ * single entry serialises `entry` as an object instead of an array, and an empty feed omits it.
+ */
+const appleChartEntrySchema = z.object({
+  id: z.object({
+    attributes: z.object({ "im:id": z.string().regex(/^\d+$/) }),
+  }),
+});
+
+export const appleChartFeedSchema = z.object({
+  feed: z.object({
+    entry: z
+      .union([z.array(appleChartEntrySchema), appleChartEntrySchema])
+      .optional()
+      .transform((entry) => (entry === undefined ? [] : Array.isArray(entry) ? entry : [entry])),
+  }),
+});
+
+export type AppleChartFeed = z.infer<typeof appleChartFeedSchema>;

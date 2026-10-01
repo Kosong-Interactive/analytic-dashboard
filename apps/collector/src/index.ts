@@ -1,5 +1,7 @@
 import { runClassifyAiCommand } from "./commands/classify-ai.js";
 import { runClassifyCommand } from "./commands/classify.js";
+import { runClassifySteamAiCommand } from "./commands/classify-steam-ai.js";
+import { runClassifySteamCommand } from "./commands/classify-steam.js";
 import { runDiscoverSteamCommand } from "./commands/discover-steam.js";
 import { runDiscoverCommand } from "./commands/discover.js";
 import { runResearchCommand } from "./commands/research.js";
@@ -47,6 +49,30 @@ if (command === "info") {
     console.error(
       JSON.stringify({
         event: "classification.failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+    process.exitCode = 1;
+  }
+} else if (command === "classify-steam") {
+  try {
+    process.exitCode = await runClassifySteamCommand(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "classification.steam.failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+    process.exitCode = 1;
+  }
+} else if (command === "classify-steam-ai") {
+  try {
+    process.exitCode = await runClassifySteamAiCommand(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "classification.steam.ai.failed",
         message: error instanceof Error ? error.message : "Unknown error",
       }),
     );

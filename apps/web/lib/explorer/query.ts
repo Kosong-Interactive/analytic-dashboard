@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { priceFilterValues, type PriceFilter } from "../format/price";
 import { parseCompareIds } from "../compare/comparison";
 import { parseOverviewFilters, type OverviewFilters } from "../overview/filters";
 
@@ -98,6 +99,7 @@ const queryShape = z.object({
     .catch(0),
   momentum: z.enum(momentumValues).catch("any"),
   labels: z.enum(labelStatusValues).catch("any"),
+  price: z.enum(priceFilterValues).catch("all"),
   sort: z.enum(explorerSortValues).catch("most_rated"),
   page: z.coerce.number().int().min(1).max(10_000).catch(1),
 });
@@ -113,6 +115,7 @@ export type ExplorerQuery = OverviewFilters & {
   minRating: number;
   momentum: MomentumFilter;
   labels: LabelStatusFilter;
+  price: PriceFilter;
   sort: ExplorerSort;
   page: number;
   /** Games picked for Compare; kept across filters and pages. */
@@ -133,6 +136,7 @@ export function parseExplorerQuery(params: RawSearchParams): ExplorerQuery {
     minRating: first(params.minRating),
     momentum: first(params.momentum),
     labels: first(params.labels),
+    price: first(params.price),
     sort: first(params.sort),
     page: first(params.page),
   });
@@ -169,6 +173,7 @@ export function explorerHref(current: ExplorerQuery, change: Partial<ExplorerQue
   if (next.minRating !== 0) query.set("minRating", String(next.minRating));
   if (next.momentum !== "any") query.set("momentum", next.momentum);
   if (next.labels !== "any") query.set("labels", next.labels);
+  if (next.price !== "all") query.set("price", next.price);
   if (next.sort !== "most_rated") query.set("sort", next.sort);
   if (next.page !== 1) query.set("page", String(next.page));
   if (next.compare.length > 0) query.set("compare", next.compare.join(","));
@@ -187,4 +192,5 @@ export const clearedExplorerFilters: Partial<ExplorerQuery> = {
   minRating: 0,
   momentum: "any",
   labels: "any",
+  price: "all",
 };

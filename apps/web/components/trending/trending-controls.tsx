@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import Link from "next/link";
 
+import { priceFilterLabels, priceFilterValues } from "@/lib/format/price";
 import {
   ratingOptions,
   scoreOptions,
@@ -19,6 +20,7 @@ export function TrendingControls({ query }: { query: TrendingQuery }) {
   const chips: Array<{ label: string; remove: Partial<TrendingQuery> }> = [];
   if (query.minRating > 0) chips.push({ label: `Rating ≥ ${query.minRating}`, remove: { minRating: 0 } });
   if (query.minScore > 0) chips.push({ label: `Trend Score ≥ ${query.minScore}`, remove: { minScore: 0 } });
+  if (query.price !== "all") chips.push({ label: `Harga: ${priceFilterLabels[query.price]}`, remove: { price: "all" } });
   if (query.includeUnscored) chips.push({ label: "Including unscored", remove: { includeUnscored: false } });
 
   return (
@@ -52,6 +54,16 @@ export function TrendingControls({ query }: { query: TrendingQuery }) {
             ))}
           </select>
         </label>
+        <label className="flex flex-col gap-1 text-[11px] text-dim">
+          Harga
+          <select name="price" defaultValue={query.price} className={selectClass}>
+            {priceFilterValues.map((value) => (
+              <option key={value} value={value}>
+                {priceFilterLabels[value]}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="flex h-8 items-center gap-2 text-[13px] text-ink-soft">
           <input
             type="checkbox"
@@ -73,6 +85,7 @@ export function TrendingControls({ query }: { query: TrendingQuery }) {
             href={trendingHref(query, {
               minRating: 0,
               minScore: 0,
+              price: "all",
               includeUnscored: false,
             })}
             className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt"

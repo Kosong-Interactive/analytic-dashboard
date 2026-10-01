@@ -19,6 +19,8 @@ import {
 const seeds: DiscoverySeeds = {
   version: "test",
   appleLimit: 5,
+  appleChartLimit: 7,
+  appleCharts: [],
   googleLimit: 5,
   appleSearchTerms: ["puzzle", "idle"],
   googleCharts: ["TOP_FREE"],
@@ -96,7 +98,7 @@ function jobWithSteps(
 
 describe("buildDiscoveryJobs", () => {
   const collectors: DiscoveryCollectors = {
-    apple: { searchGames: async () => [] },
+    apple: { searchGames: async () => [], discoverTopGameEntries: async () => [] },
     googlePlay: { discoverTopGameEntries: async () => [] },
   };
 
@@ -118,6 +120,7 @@ describe("buildDiscoveryJobs", () => {
             requested.push(input.limit ?? -1);
             return [];
           },
+          discoverTopGameEntries: async () => [],
         },
         googlePlay: {
           discoverTopGameEntries: async (input) => {
@@ -135,6 +138,49 @@ describe("buildDiscoveryJobs", () => {
 
     assert.deepEqual(requested, [50, 25]);
     assert.equal(jobs[0]?.seedVersion, "test");
+  });
+
+  it("adds an Apple chart job only when the seed file lists Apple charts", () => {
+    assert.deepEqual(
+      buildDiscoveryJobs(collectors, seeds, countries, { country: "us" }).map((job) => `${job.source}:${job.jobType}`),
+      ["app_store:discovery.search", "google_play:discovery.chart"],
+    );
+    const withCharts = buildDiscoveryJobs(collectors, { ...seeds, appleCharts: ["TOP_FREE", "GROSSING"] }, countries, { country: "us" });
+    assert.deepEqual(
+      withCharts.map((job) => `${job.source}:${job.jobType}`),
+      ["app_store:discovery.search", "app_store:discovery.chart", "google_play:discovery.chart"],
+    );
+    assert.deepEqual(withCharts[1]?.steps.map((step) => step.label), ["chart:TOP_FREE", "chart:GROSSING"]);
+  });
+
+  it("keeps chart ranks and the chart limit on the Apple batch", async () => {
+    const requested: Array<{ collection?: string; limit?: number }> = [];
+    const jobs = buildDiscoveryJobs(
+      {
+        ...collectors,
+        apple: {
+          searchGames: async () => [],
+          discoverTopGameEntries: async (input) => {
+            requested.push({ collection: input.collection, limit: input.limit });
+            return [
+              { rank: 1, app: app("a") },
+              { rank: 4, app: app("d") },
+            ];
+          },
+        },
+      },
+      { ...seeds, appleCharts: ["TOP_PAID"] },
+      countries,
+      { source: "app_store", country: "id" },
+    );
+
+    const chartJob = jobs.find((job) => job.jobType === "discovery.chart");
+    const batch = await chartJob?.steps[0]?.collect();
+
+    assert.deepEqual(requested, [{ collection: "TOP_PAID", limit: 7 }]);
+    assert.equal(batch?.chart?.chartType, "TOP_PAID");
+    assert.equal(batch?.chart?.category, "GAME");
+    assert.deepEqual(batch?.chart?.entries.map((entry) => entry.rank), [1, 4]);
   });
 
   it("filters by source and country", () => {

@@ -11,10 +11,12 @@ interface AppShellProps {
   active: NavKey;
   /** Builds the link a country or platform control points to; defaults to the Overview URL. */
   buildHref?: (change: Partial<OverviewFilters>) => string;
+  /** Set on pages with no equivalent in the other mode; the switch then leads to that mode's Overview. */
+  noCounterpart?: boolean;
   children: ReactNode;
 }
 
-export async function AppShell({ filters, active, buildHref, children }: AppShellProps) {
+export async function AppShell({ filters, active, buildHref, noCounterpart, children }: AppShellProps) {
   const user = await getCurrentUser();
   return (
     <div className="flex min-h-screen">
@@ -31,6 +33,7 @@ export async function AppShell({ filters, active, buildHref, children }: AppShel
           filters={filters}
           buildHref={buildHref ?? ((change) => overviewHref(filters, change))}
           userEmail={user?.email ?? null}
+          noCounterpart={noCounterpart}
         />
         <main id="main" tabIndex={-1} className="flex flex-col gap-5 px-4 py-6 outline-none sm:px-7 sm:pb-8">
           {children}

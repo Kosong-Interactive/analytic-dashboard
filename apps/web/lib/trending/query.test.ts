@@ -11,9 +11,17 @@ describe("parseTrendingQuery", () => {
       sort: "score",
       minRating: 0,
       minScore: 0,
+      price: "all",
       includeUnscored: false,
       page: 1,
     });
+  });
+
+  it("accepts the price filter and falls back on unknown values", () => {
+    assert.equal(parseTrendingQuery({ price: "free" }).price, "free");
+    assert.equal(parseTrendingQuery({ price: "paid" }).price, "paid");
+    assert.equal(parseTrendingQuery({ price: "cheap" }).price, "all");
+    assert.equal(trendingHref(parseTrendingQuery({}), { price: "paid" }), "/trending?price=paid");
   });
 
   it("accepts valid values", () => {

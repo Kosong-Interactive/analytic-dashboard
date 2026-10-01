@@ -5,7 +5,7 @@ import { EmptyState, Panel } from "../overview/panel";
 import { HistoryChart } from "./history-chart";
 
 /** Plain-language reading of a series, so the chart is never the only way to get the data. */
-function summarize(points: SeriesPoint[], format: (v: number) => string, lowerIsBetter = false): string {
+export function summarize(points: SeriesPoint[], format: (v: number) => string, lowerIsBetter = false): string {
   const first = points[0];
   const last = points.at(-1);
   if (!first || !last) return "No observations yet.";
@@ -19,7 +19,7 @@ function summarize(points: SeriesPoint[], format: (v: number) => string, lowerIs
   return `${format(first.value)} on ${first.at.slice(0, 10)} → ${format(last.value)} on ${last.at.slice(0, 10)} (${direction}, ${points.length} observations).`;
 }
 
-function ChartPanel({
+export function ChartPanel({
   title,
   description,
   points,
@@ -71,7 +71,7 @@ export function HistoryPanels({ view }: { view: GameDetailView }) {
         description="Top Free games chart · lower is better"
         points={series.rank}
         summary={summarize(series.rank, (v) => `#${v}`, true)}
-        emptyText="This listing has not appeared in a tracked chart. App Store charts are not collected yet."
+        emptyText="This listing has not appeared in a tracked chart."
         invert
         label="Rank"
       />

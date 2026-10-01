@@ -59,6 +59,20 @@ describe("buildTrendingList", () => {
     assert.equal(list.scoredCount, 3);
   });
 
+  it("filters by price and never counts an unknown price as free", () => {
+    const priced = [
+      candidate("free", { snapshots: [{ capturedAt: hoursAgo(1), rating: 4, ratingCount: 1, price: 0, currency: "USD" }] }),
+      candidate("paid", { snapshots: [{ capturedAt: hoursAgo(1), rating: 4, ratingCount: 1, price: 4.99, currency: "USD" }] }),
+      candidate("unknown", { snapshots: [{ capturedAt: hoursAgo(1), rating: 4, ratingCount: 1, price: null, currency: null }] }),
+    ];
+    const pricedScores = [score("free", 50), score("paid", 60), score("unknown", 70)];
+    const ids = (price: string) =>
+      buildTrendingList({ candidates: priced, scores: pricedScores, query: query({ price }) }).rows.map((r) => r.id);
+    assert.deepEqual(ids("free"), ["free"]);
+    assert.deepEqual(ids("paid"), ["paid"]);
+    assert.deepEqual(ids("all"), ["unknown", "paid", "free"]);
+  });
+
   it("includes unscored games last when requested", () => {
     const list = buildTrendingList({ candidates, scores, query: query({ includeUnscored: "1" }) });
     assert.deepEqual(list.rows.map((r) => r.id), ["b", "c", "a", "d"]);

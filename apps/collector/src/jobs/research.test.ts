@@ -25,8 +25,8 @@ function candidate(id: string, overrides: Partial<TrendCandidateRow> = {}): Tren
     firstSeenAt: hoursAgo(200),
     lastSeenAt: hoursAgo(1),
     snapshots: [
-      { capturedAt: hoursAgo(48), rating: 4.1, ratingCount: 100, reviewCount: 10, minInstalls: null, maxInstalls: null },
-      { capturedAt: hoursAgo(2), rating: 4.2, ratingCount: 120, reviewCount: 12, minInstalls: null, maxInstalls: null },
+      { capturedAt: hoursAgo(48), rating: 4.1, ratingCount: 100, reviewCount: 10, minInstalls: null, maxInstalls: null, price: null, currency: null },
+      { capturedAt: hoursAgo(2), rating: 4.2, ratingCount: 120, reviewCount: 12, minInstalls: null, maxInstalls: null, price: null, currency: null },
     ],
     ranks: [],
     countryBreadth: { current: 1, previous: 1 },

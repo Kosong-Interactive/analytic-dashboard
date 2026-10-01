@@ -28,6 +28,9 @@ export interface OverviewCandidate {
     capturedAt: Date;
     rating: number | null;
     ratingCount: number | null;
+    /** Upfront price and its currency; absent or null means the store gave none. */
+    price?: number | null;
+    currency?: string | null;
   }>;
   ranks: ReadonlyArray<{ chartType: string; capturedAt: Date; rank: number }>;
   countryBreadth: { current: number; previous: number };
@@ -61,6 +64,9 @@ export interface TrendingRow {
   storeUrl: string;
   rating: number | null;
   ratingCount: number | null;
+  /** Latest upfront price in the storefront currency; null means unknown, not free. */
+  price: number | null;
+  currency: string | null;
   ratingCountPerDay: number | null;
   rankChange: number | null;
   /** `null` when the game could not be scored yet (not the same as a score of zero). */
@@ -240,6 +246,8 @@ export function toTrendingRow(
     storeUrl: candidate.storeUrl,
     rating: latestRating(candidate),
     ratingCount: latestRatingCount(candidate),
+    price: latest(candidate)?.price ?? null,
+    currency: latest(candidate)?.currency ?? null,
     ratingCountPerDay: score ? rawOf(score, "ratingCountVelocity7d") : null,
     rankChange: score ? rawOf(score, "rankGain7d") : null,
     score: value,

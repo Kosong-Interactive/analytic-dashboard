@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, Minus, Star } from "lucide-react";
 
 import { formatCount, formatSigned } from "@/lib/format/format";
+import { formatUpfrontPrice } from "@/lib/format/price";
 import { platformLabels } from "@/lib/overview/filters";
 import type { TrendingRow } from "@/lib/overview/view-model";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ const HEADERS: Header[] = [
   { label: "Developer" },
   { label: "Platform" },
   { label: "Category" },
+  { label: "Price", align: "right" },
   { label: "Rating", align: "right" },
   { label: "Ratings", align: "right" },
   { label: "Ratings / day", align: "right" },
@@ -117,6 +119,7 @@ export function GameTable({
                   <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
                 ) : null}
                 <td className="max-w-[9rem] truncate text-[11.5px] text-ink-soft">{row.category ?? "—"}</td>
+                <td className="whitespace-nowrap text-right font-mono text-xs text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</td>
                 <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
                 <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
                 <td className="text-right font-mono text-xs"><PerDay value={row.ratingCountPerDay} /></td>
@@ -138,6 +141,7 @@ export function GameTable({
                 <p className="truncate pl-[38px] text-[11.5px] text-dim">
                   {row.developer ?? "Unknown developer"} · {platformLabels[row.store]}
                   {row.category ? ` · ${row.category}` : ""}
+                  {` · ${formatUpfrontPrice(row.price, row.currency)}`}
                   {showRelease ? ` · released ${releaseText(row)}` : ""}
                 </p>
               </div>

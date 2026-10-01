@@ -165,4 +165,80 @@ describe("AppleSearchCollector", () => {
       },
     );
   });
+  describe("discoverTopGameEntries", () => {
+    const feed = (ids: string[]) => ({
+      feed: { entry: ids.map((id) => ({ id: { label: `https://apps.apple.com/id/app/x/id${id}`, attributes: { "im:id": id } } })) },
+    });
+    const result = (trackId: number, name: string) => ({
+      ...appleFixture.results[0],
+      trackId,
+      trackName: name,
+      trackViewUrl: `https://apps.apple.com/id/app/x/id${trackId}`,
+    });
+
+    function collectorFor(feedBody: unknown, lookupResults: unknown[], urls: URL[] = []) {
+      return new AppleSearchCollector({
+        minimumRequestIntervalMs: 0,
+        now: () => new Date("2026-09-30T10:00:00.000Z"),
+        fetchImplementation: async (input) => {
+          const url = new URL(input.toString());
+          urls.push(url);
+          if (url.pathname.includes("/rss/")) return Response.json(feedBody);
+          return Response.json({ resultCount: lookupResults.length, results: lookupResults });
+        },
+      });
+    }
+
+    it("requests the Games feed of the storefront and ranks games in feed order", async () => {
+      const urls: URL[] = [];
+      const collector = collectorFor(feed(["30", "10", "20"]), [result(10, "Ten"), result(20, "Twenty"), result(30, "Thirty")], urls);
+
+      const entries = await collector.discoverTopGameEntries({ country: "id", locale: "id_ID", collection: "TOP_PAID", limit: 3 });
+
+      assert.equal(urls[0]?.pathname, "/id/rss/toppaidapplications/limit=3/genre=6014/json");
+      assert.equal(urls[1]?.pathname, "/lookup");
+      assert.equal(urls[1]?.searchParams.get("id"), "30,10,20");
+      assert.deepEqual(entries.map((e) => [e.rank, e.app.externalId]), [[1, "30"], [2, "10"], [3, "20"]]);
+      assert.equal(entries[0]?.app.country, "id");
+    });
+
+    it("keeps ranks stable when the lookup misses a game, and skips non-games", async () => {
+      const nonGame = { ...result(20, "Notes"), primaryGenreName: "Productivity", genres: ["Productivity"], genreIds: ["6007"] };
+      const collector = collectorFor(feed(["10", "20", "30", "40"]), [result(10, "Ten"), nonGame, result(40, "Forty")]);
+
+      const entries = await collector.discoverTopGameEntries({ country: "us", locale: "en_US" });
+
+      assert.deepEqual(entries.map((e) => [e.rank, e.app.externalId]), [[1, "10"], [4, "40"]]);
+    });
+
+    it("accepts a single-entry feed and an empty feed without calling lookup", async () => {
+      const urls: URL[] = [];
+      const single = collectorFor({ feed: { entry: { id: { attributes: { "im:id": "10" } } } } }, [result(10, "Ten")], urls);
+      assert.equal((await single.discoverTopGameEntries({ country: "us", locale: "en_US" })).length, 1);
+
+      const emptyUrls: URL[] = [];
+      const empty = collectorFor({ feed: {} }, [], emptyUrls);
+      assert.deepEqual(await empty.discoverTopGameEntries({ country: "us", locale: "en_US" }), []);
+      assert.equal(emptyUrls.length, 1);
+    });
+
+    it("rejects a malformed feed and reports HTTP status without the body", async () => {
+      const malformed = collectorFor({ feed: { entry: [{ id: { attributes: { "im:id": "abc" } } }] } }, []);
+      await assert.rejects(() => malformed.discoverTopGameEntries({ country: "us", locale: "en_US" }), AppleSearchApiError);
+
+      const limited = new AppleSearchCollector({
+        minimumRequestIntervalMs: 0,
+        fetchImplementation: async () => new Response("provider details", { status: 503 }),
+      });
+      await assert.rejects(
+        () => limited.discoverTopGameEntries({ country: "us", locale: "en_US" }),
+        (error: unknown) => {
+          assert.ok(error instanceof AppleSearchApiError);
+          assert.equal(error.status, 503);
+          assert.equal(error.message.includes("provider details"), false);
+          return true;
+        },
+      );
+    });
+  });
 });

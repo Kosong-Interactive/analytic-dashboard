@@ -1,6 +1,6 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 
-import { appLabels, classificationRuns, taxonomyLabels } from "../schema/index";
+import { appLabels, classificationRuns, steamAppLabels, steamClassificationRuns, taxonomyLabels } from "../schema/index";
 import type { DatabaseExecutor } from "./executor";
 
 export type LabelType = (typeof taxonomyLabels.$inferInsert)["type"];
@@ -257,4 +257,87 @@ export async function loadTaxonomyLabels(
     .from(taxonomyLabels)
     .where(and(eq(taxonomyLabels.taxonomyVersion, taxonomyVersion), eq(taxonomyLabels.isActive, true)))
     .orderBy(taxonomyLabels.type, taxonomyLabels.displayName);
+}
+
+/** Input hashes already classified for Steam games by one automated source. */
+export async function loadSteamInputHashes(
+  db: DatabaseExecutor,
+  source: AutomatedSource,
+  taxonomyVersion: string,
+): Promise<Map<string, string>> {
+  const rows = await db
+    .select({ steamAppId: steamClassificationRuns.steamAppId, inputHash: steamClassificationRuns.inputHash })
+    .from(steamClassificationRuns)
+    .where(and(eq(steamClassificationRuns.source, source), eq(steamClassificationRuns.taxonomyVersion, taxonomyVersion)));
+  return new Map(rows.map((row) => [row.steamAppId, row.inputHash]));
+}
+
+/**
+ * Steam counterpart of `replaceAutomatedLabels`: replaces one game's previous labels from the same
+ * source and taxonomy version and records the run (including an empty result) in one transaction.
+ * Manual rows are never touched.
+ */
+export async function replaceSteamAutomatedLabels(
+  db: DatabaseExecutor,
+  input: {
+    source: AutomatedSource;
+    steamAppId: string;
+    taxonomyVersion: string;
+    classifierVersion: string;
+    model: string | null;
+    inputHash: string;
+    labels: readonly AutomatedLabelRow[];
+  },
+): Promise<{ written: number; removed: number }> {
+  return db.transaction(async (tx) => {
+    const removed = await tx
+      .delete(steamAppLabels)
+      .where(
+        and(
+          eq(steamAppLabels.steamAppId, input.steamAppId),
+          eq(steamAppLabels.source, input.source),
+          eq(steamAppLabels.taxonomyVersion, input.taxonomyVersion),
+          ne(steamAppLabels.inputHash, input.inputHash),
+        ),
+      )
+      .returning({ id: steamAppLabels.id });
+
+    const run = {
+      classifierVersion: input.classifierVersion,
+      model: input.model,
+      inputHash: input.inputHash,
+      labelCount: input.labels.length,
+      classifiedAt: sql`now()`,
+    };
+    await tx
+      .insert(steamClassificationRuns)
+      .values({ steamAppId: input.steamAppId, source: input.source, taxonomyVersion: input.taxonomyVersion, ...run })
+      .onConflictDoUpdate({
+        target: [steamClassificationRuns.steamAppId, steamClassificationRuns.source, steamClassificationRuns.taxonomyVersion],
+        set: run,
+      });
+
+    if (input.labels.length === 0) return { written: 0, removed: removed.length };
+
+    const written = await tx
+      .insert(steamAppLabels)
+      .values(
+        input.labels.map((label) => ({
+          steamAppId: input.steamAppId,
+          labelId: label.labelId,
+          source: input.source,
+          confidence: label.confidence.toFixed(3),
+          evidence: label.evidence,
+          taxonomyVersion: input.taxonomyVersion,
+          promptVersion: input.classifierVersion,
+          model: input.model,
+          inputHash: input.inputHash,
+          isManualOverride: false,
+        })),
+      )
+      .onConflictDoNothing()
+      .returning({ id: steamAppLabels.id });
+
+    return { written: written.length, removed: removed.length };
+  });
 }

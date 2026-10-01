@@ -39,8 +39,8 @@ export const platformRegistry = {
     label: "App Store",
     kind: "mobile",
     markets: ["id", "us"],
-    // Apple chart collection does not exist yet, and Apple never publishes installs.
-    capabilities: { rating: { scale: 5 }, ratingCount: true, reviewCount: false, installs: false, chartRank: false },
+    // Apple never publishes installs; chart positions come from the classic RSS Games feeds.
+    capabilities: { rating: { scale: 5 }, ratingCount: true, reviewCount: false, installs: false, chartRank: true },
   },
 } as const satisfies Record<Store, PlatformDefinition>;
 

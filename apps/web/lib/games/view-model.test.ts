@@ -104,6 +104,45 @@ describe("buildGameDetail", () => {
   });
 });
 
+describe("buildGameDetail price", () => {
+  it("reports the latest price with its snapshot time and the changes in between", () => {
+    const view = buildGameDetail({
+      history: history({
+        snapshots: [
+          snapshot(10, { price: 4.99, currency: "USD" }),
+          snapshot(6, { price: 4.99, currency: "USD" }),
+          snapshot(3, { price: 2.99, currency: "USD" }),
+          snapshot(1, { price: 2.99, currency: "USD" }),
+        ],
+      }),
+      score,
+      rankChartType: "TOP_FREE",
+      asOf,
+    });
+
+    assert.equal(view.price.current?.price, 2.99);
+    assert.equal(view.price.current?.currency, "USD");
+    assert.deepEqual(view.price.current?.capturedAt, daysAgo(1));
+    assert.deepEqual(view.price.changes, [{ at: daysAgo(3), from: 4.99, to: 2.99, currency: "USD" }]);
+  });
+
+  it("keeps an unknown price null instead of free, and has no change from it", () => {
+    const view = buildGameDetail({
+      history: history({ snapshots: [snapshot(5, { price: 4.99, currency: "USD" }), snapshot(1, { price: null, currency: null })] }),
+      score,
+      rankChartType: "TOP_FREE",
+      asOf,
+    });
+    assert.equal(view.price.current?.price, null);
+    assert.deepEqual(view.price.changes, []);
+  });
+
+  it("has no current price without observations", () => {
+    const view = buildGameDetail({ history: history({ snapshots: [] }), score: undefined, rankChartType: "TOP_FREE", asOf });
+    assert.equal(view.price.current, null);
+  });
+});
+
 describe("formatInstallRange", () => {
   it("never shows an exact download number", () => {
     assert.equal(formatInstallRange(100_000, 500_000), "100K–500K");

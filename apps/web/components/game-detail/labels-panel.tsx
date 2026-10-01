@@ -58,7 +58,7 @@ function Provenance({ row, title }: { row: LabelRowInput; title: string }) {
   );
 }
 
-function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId: string }) {
+function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId?: string }) {
   const confidence = label.automated ? `${Math.round(label.automated.confidence * 100)}%` : null;
   return (
     <li>
@@ -79,7 +79,7 @@ function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId: st
             <span className="font-mono text-[11px] text-dim no-underline">{confidence}</span>
           ) : null}
           <span className="sr-only">
-            {STATUS_TEXT[label.status] || "Counted"}. Show evidence and actions
+            {STATUS_TEXT[label.status] || "Counted"}. Show evidence{storeAppId ? " and actions" : ""}
           </span>
         </summary>
         <div className="mt-1.5 max-w-md rounded-md border border-line bg-surface-alt p-2.5 text-[11px] leading-4 text-ink-soft">
@@ -88,7 +88,7 @@ function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId: st
             {label.manual ? <Provenance row={label.manual} title="Decision" /> : null}
             {label.automated ? <Provenance row={label.automated} title="Detected by" /> : null}
           </div>
-          <LabelActions storeAppId={storeAppId} labelId={label.labelId} status={label.status} />
+          {storeAppId ? <LabelActions storeAppId={storeAppId} labelId={label.labelId} status={label.status} /> : null}
         </div>
       </details>
     </li>
@@ -98,12 +98,17 @@ function LabelChip({ label, storeAppId }: { label: ResolvedLabel; storeAppId: st
 export function LabelsPanel({
   storeAppId,
   labels,
-  options,
+  options = [],
+  readOnly = false,
 }: {
-  storeAppId: string;
+  /** Required unless `readOnly`; manual decisions are stored per listing. */
+  storeAppId?: string;
   labels: ResolvedLabel[];
-  options: Array<{ id: string; type: string; displayName: string }>;
+  options?: Array<{ id: string; type: string; displayName: string }>;
+  /** Shows labels with their evidence but offers no Confirm, Reject, or Add. */
+  readOnly?: boolean;
 }) {
+  const editableId = readOnly ? undefined : storeAppId;
   const types = Object.keys(TYPE_LABELS);
   const present = new Set(labels.filter((l) => l.status !== "rejected").map((l) => l.labelId));
   const addOptions = types
@@ -116,7 +121,11 @@ export function LabelsPanel({
   return (
     <Panel
       title="Classification"
-      description="Inferred labels with confidence and evidence · open a label to see why, or to correct it"
+      description={
+        readOnly
+          ? "Inferred labels with confidence and evidence · open a label to see why"
+          : "Inferred labels with confidence and evidence · open a label to see why, or to correct it"
+      }
     >
       {labels.length === 0 ? (
         <EmptyState title="Not classified yet">
@@ -133,7 +142,7 @@ export function LabelsPanel({
                 <dd>
                   <ul className="flex flex-wrap items-start gap-1.5">
                     {ofType.map((label) => (
-                      <LabelChip key={label.labelId} label={label} storeAppId={storeAppId} />
+                      <LabelChip key={label.labelId} label={label} storeAppId={editableId} />
                     ))}
                   </ul>
                 </dd>
@@ -142,15 +151,18 @@ export function LabelsPanel({
           })}
         </dl>
       )}
-      <div className="border-t border-line-soft px-4 py-3">
-        <AddLabelForm storeAppId={storeAppId} options={addOptions} />
-      </div>
+      {editableId ? (
+        <div className="border-t border-line-soft px-4 py-3">
+          <AddLabelForm storeAppId={editableId} options={addOptions} />
+        </div>
+      ) : null}
       <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
         Labels are inferences from store data, not store facts: keyword rules first, then an AI classification that
         replaces the rule labels once it exists and must quote the listing as evidence. Dimmed labels are below{" "}
-        {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence and are not counted. Your confirmations and rejections
-        are recorded with your email, override automated labels in every view, and are never overwritten by
-        reclassification.
+        {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence and are not counted.
+        {readOnly
+          ? " Steam labels cannot be confirmed or rejected by hand yet."
+          : " Your confirmations and rejections are recorded with your email, override automated labels in every view, and are never overwritten by reclassification."}
       </p>
     </Panel>
   );

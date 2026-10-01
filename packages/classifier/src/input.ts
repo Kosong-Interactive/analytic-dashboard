@@ -2,15 +2,20 @@ import { createHash } from "node:crypto";
 
 import type { Store } from "@analytic-dashboard/shared";
 
+/** Steam is a desktop source outside the mobile `Store` list; its games are classified the same way. */
+export type ClassificationSource = Store | "steam";
+
 /** One store listing of a canonical app, reduced to the fields classification may read. */
 export interface ClassificationListing {
-  store: Store;
+  store: ClassificationSource;
   country: string;
   title: string;
   description: string | null;
   /** Store-declared genres: Apple `genres`, Google `genreId` (e.g. GAME_PUZZLE). */
   storeGenres: string[];
   price: number | null;
+  /** Steam user tags. Absent for mobile listings so their input hashes stay unchanged. */
+  storeTags?: string[];
 }
 
 export interface ClassificationInput {
@@ -35,6 +40,7 @@ export function classificationInputHash(
       description: listing.description?.trim() ?? null,
       storeGenres: [...listing.storeGenres].sort(),
       price: listing.price,
+      ...(listing.storeTags ? { storeTags: [...listing.storeTags].sort() } : {}),
     }));
 
   return createHash("sha256")

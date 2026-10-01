@@ -1,5 +1,6 @@
 import type { TrendingScore } from "@analytic-dashboard/analytics";
 
+import { matchesPriceFilter } from "../format/price";
 import {
   toTrendingRow,
   type OverviewCandidate,
@@ -54,6 +55,7 @@ export function buildTrendingList(input: {
     .map((entry) => entry.row)
     .filter((row) => query.includeUnscored || row.score !== null)
     .filter((row) => query.minScore === 0 || (row.score ?? -1) >= query.minScore)
+    .filter((row) => matchesPriceFilter(row.price, query.price))
     .filter((row) => query.minRating === 0 || (row.rating ?? -1) >= query.minRating)
     .sort(
       (a, b) =>

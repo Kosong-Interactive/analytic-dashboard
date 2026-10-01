@@ -17,10 +17,11 @@ waktu ke waktu.
 | **Trending Games** | Game diurutkan berdasarkan Trend Score, dengan filter dan rincian komponen skor |
 | **New Releases** | Game dengan tanggal rilis dari store dalam 7, 30, atau 90 hari terakhir |
 | **Genres / Mechanics** | Sebaran game per genre, subgenre, mechanic, tema, dan mode multiplayer; klik label untuk melihat daftar lengkap game-nya |
-| **Games** | Semua game yang dipantau, dengan filter (kategori, genre, mechanic, rilis, rating, momentum, status label) |
+| **Games** | Semua game yang dipantau, dengan filter (kategori, genre, mechanic, rilis, rating, momentum, status label, harga Semua/Gratis/Berbayar) dan kolom harga beli awal |
 | ↳ **Watchlist** | Daftar pantauan bersama tim: status, catatan, dan pergerakan sejak game ditambahkan |
 | ↳ **Compare** | Bandingkan hingga 4 game berdampingan, tetap dengan konteks store dan negaranya |
-| **Game Detail** | Metrik, grafik riwayat, rincian Trend Score, label beserta bukti, dan Confirm/Reject manual |
+| **Game Detail** | Metrik, harga beli awal beserta perubahannya, grafik riwayat, rincian Trend Score, label beserta bukti, dan Confirm/Reject manual |
+| **Desktop · Steam** | Mode Desktop dengan menu yang sama seperti Mobile (Overview, Trending, New Releases, Genres, Mechanics, Games, Game Detail) ditambah Steam Charts; Trending Steam baru menampilkan perubahan rank, belum ada skor |
 
 Tekan **⌘K / Ctrl+K** di halaman mana pun untuk mencari game, developer, atau label.
 
@@ -47,7 +48,7 @@ Semua job aman dijalankan ulang. Dashboard hanya **membaca** database: membuka h
 tidak pernah memicu pengambilan data maupun job AI.
 
 Batasan saat ini:
-- Apple belum punya data chart, jadi komponen rank gain kosong untuk game Apple.
+- Chart Apple (Top Free, Top Paid, Top Grossing untuk kategori Games) baru dikumpulkan dan butuh sekitar 3,5 hari riwayat sebelum komponen rank gain game Apple terisi; sebelum itu komponen ini kosong dan skornya dihitung dari komponen lain.
 - Discovery cenderung menangkap game yang sudah populer, sehingga New Releases masih sepi.
 
 ## Trend Score
