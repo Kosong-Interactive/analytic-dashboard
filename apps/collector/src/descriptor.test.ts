@@ -17,7 +17,6 @@ describe("collector descriptor", () => {
 
   it("reads the enabled storefronts from the configuration file by default", () => {
     const { countries } = createCollectorDescriptor();
-    assert.ok(countries.includes("id"));
-    assert.ok(countries.length >= 1);
+    assert.deepEqual(countries, ["id", "us", "sg", "th", "vn", "ph", "my", "jp", "kr", "gb", "de", "br", "in"]);
   });
 });

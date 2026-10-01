@@ -112,7 +112,23 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   `discovery.chart` for `app_store`; Trend Score uses `TOP_FREE` only. Rank gain for Apple needs
   about 3.5 days of chart history after the first collection. Mobile taxonomy remains immutable
   `config/taxonomy/v1.json`; Steam uses the v1 superset `config/taxonomy/v2.json` (merged).
-- `.github/workflows/collect.yml` runs every 6 hours at minute 17 on `main`: discovery → rule
+- **World market (in progress, requested 2026-09-30).** Mobile markets are Indonesia (`id`), SEA
+  (`sg th vn ph my`), and World (`us jp kr gb de br in`) in `packages/shared/src/markets.ts`; all 13
+  storefronts are enabled in `config/countries/enabled.json` (version 2). New storefronts use English
+  locales (`en_XX`) because the keyword rules and taxonomy are English; Google Play `lang` comes
+  from the locale prefix, Apple ignores it. Stage 1 (done): market model, header
+  `Indonesia | SEA | World` on Mobile, and a notice that SEA/World currently show one storefront.
+  Stage 2 (done in code; first collection run by hand on 2026-10-01): daily schedule, stale
+  threshold 36 h, initial collection for the 11 new storefronts. Stage 3 (not started): aggregate
+  SEA and World at read time from per-storefront percentiles (never summed raw metrics; Google
+  Play counts are worldwide per app) and replace the one-storefront stand-in (Indonesia `id`, SEA
+  `sg`, World `us`). Stage 4 (not started): cross-platform comparison and opportunities per
+  market. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
+  at 200 apps per run, so the backlog from the new storefronts takes days.
+- `.github/workflows/collect.yml` runs **once a day at 22:17 UTC (05:17 WIB)** on `main` (job
+  timeout 90 minutes; the daily research job at 01:43 UTC runs after it; sources count as stale
+  after 36 h, both in the web view-model and in `apps/collector/src/jobs/research.ts`). It runs:
+  discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
 - Steam (desktop, Global): `SteamCollector` (`packages/collectors/src/steam/`) uses only the

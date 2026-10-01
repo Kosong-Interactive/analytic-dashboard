@@ -4,7 +4,7 @@
 
 This repository builds an internal mobile-game intelligence dashboard for discovering new and rising games and understanding genre, mechanic, rating, review, and ranking momentum.
 
-Initial storefronts are Indonesia (`id`) and the United States (`us`). Initial sources are the Apple iTunes Search API and public Google Play pages collected through a replaceable open-source scraper adapter.
+Mobile storefronts are grouped into three markets (requested 2026-09-30, enabled 2026-10-01): Indonesia (`id`, its own market), SEA (`sg`, `th`, `vn`, `ph`, `my`), and World (`us`, `jp`, `kr`, `gb`, `de`, `br`, `in`). SEA and World are aggregates of several storefronts, never worldwide figures, and always state how many of their storefronts were collected. Initial sources are the Apple iTunes Search API and public Google Play pages collected through a replaceable open-source scraper adapter.
 
 ## Data semantics
 
@@ -25,4 +25,4 @@ Initial storefronts are Indonesia (`id`) and the United States (`us`). Initial s
 
 ## MVP boundary
 
-Do not add revenue estimates, complete review archives, more countries, public billing/accounts, or a native mobile client unless requested. Consult `docs/MVP_IMPLEMENTATION_PLAN.md` for the accepted scope and delivery phases.
+Do not add revenue estimates, complete review archives, countries beyond the three markets above, public billing/accounts, or a native mobile client unless requested. Consult `docs/MVP_IMPLEMENTATION_PLAN.md` for the accepted scope and delivery phases.

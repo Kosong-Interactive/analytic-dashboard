@@ -7,7 +7,8 @@ import {
 import type { Store } from "@analytic-dashboard/shared";
 
 const DAY_MS = 86_400_000;
-export const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
+/** Collection runs once a day, so a source counts as stale after a day and a half without a run. */
+export const STALE_AFTER_MS = 36 * 60 * 60 * 1000;
 const TRENDING_MIN_SCORE = 61;
 const TRENDING_ROWS = 10;
 const DISCOVERED_ROWS = 5;
