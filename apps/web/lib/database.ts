@@ -9,8 +9,8 @@ const globalForDatabase = globalThis as typeof globalThis & {
 };
 
 /**
- * One lazily created connection per server instance. On Vercel use the Supabase
- * transaction-pooler URL for DATABASE_URL; the client already disables prepared statements.
+ * One lazily created connection per server instance. Use the Supabase session-pooler URL
+ * (port 5432) for DATABASE_URL: through the transaction pooler (6543) concurrent queries stall.
  */
 export function getDatabase(): Database {
   if (!globalForDatabase.__analyticsDatabase) {

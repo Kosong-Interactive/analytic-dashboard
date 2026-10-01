@@ -53,7 +53,7 @@ Set these in **Settings → Environment Variables**. Never commit real values.
 
 | Variable | Scope | Notes |
 |---|---|---|
-| `DATABASE_URL` | Production, Preview | Use the Supabase **transaction pooler** URL (port `6543`). Serverless functions open many short connections and a direct connection will exhaust the limit. |
+| `DATABASE_URL` | Production, Preview | Use the Supabase **session pooler** URL (port `5432`, host `*.pooler.supabase.com`). Do **not** use the transaction pooler (port `6543`): with it, concurrent queries on one connection stall until the 2-minute statement timeout and pages hang on the loading skeleton (see `docs/HANDOFF.md`, Known pitfalls). The Vercel function region should match the Supabase region (`sin1` and `ap-southeast-1` today). |
 | `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview | **Required**: the dashboard login uses Supabase Auth. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production, Preview | **Required**. Publishable key only, never the secret/service-role key. |
 
