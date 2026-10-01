@@ -55,14 +55,14 @@ export function KpiGrid({ items }: { items: Kpi[] }) {
           className="flex h-[108px] flex-col justify-between rounded-[10px] border border-line bg-surface px-4 py-3.5"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs text-dim">{item.label}</span>
+            <span className="text-sm text-dim">{item.label}</span>
             <InfoHint label={item.label}>{item.tip}</InfoHint>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[26px] font-semibold leading-none tracking-tight">
+            <span className="text-[30px] font-semibold leading-none tracking-tight">
               {item.value}
             </span>
-            <span className="text-xs text-dim">{item.note}</span>
+            <span className="text-sm text-dim">{item.note}</span>
           </div>
         </li>
       ))}

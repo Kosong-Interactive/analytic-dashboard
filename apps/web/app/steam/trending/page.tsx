@@ -34,8 +34,8 @@ export default async function SteamTrendingPage({ searchParams }: SteamTrendingP
       buildHref={(change) => steamHref(query, { country: change.country }, base)}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Trending Games</h1>
-        <p className="text-[13px] text-dim">Steam Global · chart movement against last week</p>
+        <h1 className="text-[26px] font-semibold tracking-tight">Trending Games</h1>
+        <p className="text-[15px] text-dim">Steam Global · chart movement against last week</p>
       </div>
 
       <SteamFreshness source={catalog.source} capturedAt={catalog.chartCapturedAt[query.chart]} asOf={catalog.asOf} />
@@ -56,7 +56,7 @@ export default async function SteamTrendingPage({ searchParams }: SteamTrendingP
             caption={`Top ${Math.min(25, trend.rows.length)} of ${trend.scoredCount} scored Steam games by Steam Trend Score`}
           />
         )}
-        <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+        <p className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-dim">
           {trend.scoredCount} of {trend.tracked} tracked games scored
           {trend.averageCoverage === null ? "" : `, on average ${Math.round(trend.averageCoverage * 100)}% of the score weight measurable`}
           . Chart rank gain uses Steam&apos;s own last-week rank, so it counts from the first collection; player growth,
@@ -78,7 +78,7 @@ export default async function SteamTrendingPage({ searchParams }: SteamTrendingP
         />
         <Link
           href={countryQuery ? `/steam/games?${countryQuery}&sort=chart` : "/steam/games?sort=chart"}
-          className="text-xs text-ink-soft underline-offset-2 hover:underline"
+          className="text-sm text-ink-soft underline-offset-2 hover:underline"
         >
           Browse all tracked games
         </Link>
@@ -104,7 +104,7 @@ export default async function SteamTrendingPage({ searchParams }: SteamTrendingP
             </div>
           </div>
         )}
-        <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+        <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">
           {movers.inChart} games in this chart · {movers.measured} with a last-week rank · {movers.unchanged} unchanged.
           Games without a last-week rank are left out, not counted as new or as zero movement.
         </p>

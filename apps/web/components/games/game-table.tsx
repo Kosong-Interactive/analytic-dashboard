@@ -33,7 +33,7 @@ function RankChange({ value }: { value: number | null }) {
   const Icon = value > 0 ? ArrowUp : value < 0 ? ArrowDown : Minus;
   const color = value > 0 ? "text-up" : value < 0 ? "text-down" : "text-dim";
   return (
-    <span className={cn("inline-flex items-center gap-1 font-mono text-xs", color)}>
+    <span className={cn("inline-flex items-center gap-1 font-mono text-sm", color)}>
       <Icon aria-hidden className="size-[11px]" strokeWidth={2.4} />
       {Math.abs(value)}
       <span className="sr-only">{value > 0 ? " places up" : value < 0 ? " places down" : " unchanged"}</span>
@@ -88,10 +88,10 @@ export function GameTable({
   return (
     <>
       <div className="hidden md:block md:overflow-x-auto xl:overflow-visible">
-        <table className="w-full border-collapse text-[13px]">
+        <table className="w-full border-collapse text-[15px]">
           <caption className="sr-only">{caption}</caption>
           <thead>
-            <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
+            <tr className="h-[34px] border-y border-line bg-surface-alt text-[13px] font-medium text-dim">
               {headers.map((header, index) => (
                 <th
                   key={header.label}
@@ -111,18 +111,18 @@ export function GameTable({
           <tbody className="[&_td]:px-2">
             {rows.map((row) => (
               <tr key={row.id} className="h-[46px] border-b border-line-soft hover:bg-[#13161a]">
-                <td className="pl-4 font-mono text-xs text-dim">{row.rank}</td>
+                <td className="pl-4 font-mono text-sm text-dim">{row.rank}</td>
                 <td><GameLink row={row} /></td>
                 <td className="max-w-[9rem] truncate text-dim">{row.developer ?? "—"}</td>
-                <td className="text-[11.5px] text-ink-soft">{platformLabels[row.store]}</td>
+                <td className="text-[13.5px] text-ink-soft">{platformLabels[row.store]}</td>
                 {showRelease ? (
-                  <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
+                  <td className="whitespace-nowrap font-mono text-sm text-ink-soft">{releaseText(row)}</td>
                 ) : null}
-                <td className="max-w-[9rem] truncate text-[11.5px] text-ink-soft">{row.category ?? "—"}</td>
-                <td className="whitespace-nowrap text-right font-mono text-xs text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</td>
-                <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
-                <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
-                <td className="text-right font-mono text-xs"><PerDay value={row.ratingCountPerDay} /></td>
+                <td className="max-w-[9rem] truncate text-[13.5px] text-ink-soft">{row.category ?? "—"}</td>
+                <td className="whitespace-nowrap text-right font-mono text-sm text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</td>
+                <td className="text-right font-mono text-sm"><Rating value={row.rating} /></td>
+                <td className="text-right font-mono text-sm text-ink-soft">{formatCount(row.ratingCount)}</td>
+                <td className="text-right font-mono text-sm"><PerDay value={row.ratingCountPerDay} /></td>
                 <td><RankChange value={row.rankChange} /></td>
                 <td className="pr-4"><ScoreBreakdown row={row} /></td>
               </tr>
@@ -135,10 +135,10 @@ export function GameTable({
         {rows.map((row) => (
           <li key={row.id} className="flex flex-col gap-2.5 border-t border-line-soft px-4 py-3">
             <div className="flex items-start gap-2.5">
-              <span className="w-5 pt-1 font-mono text-xs text-dim">{row.rank}</span>
+              <span className="w-5 pt-1 font-mono text-sm text-dim">{row.rank}</span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <GameLink row={row} />
-                <p className="truncate pl-[38px] text-[11.5px] text-dim">
+                <p className="truncate pl-[38px] text-[13.5px] text-dim">
                   {row.developer ?? "Unknown developer"} · {platformLabels[row.store]}
                   {row.category ? ` · ${row.category}` : ""}
                   {` · ${formatUpfrontPrice(row.price, row.currency)}`}
@@ -146,21 +146,21 @@ export function GameTable({
                 </p>
               </div>
             </div>
-            <dl className="grid grid-cols-4 gap-2 pl-[30px] text-xs">
+            <dl className="grid grid-cols-4 gap-2 pl-[30px] text-sm">
               <div>
-                <dt className="text-[11px] text-dim">Rating</dt>
+                <dt className="text-[13px] text-dim">Rating</dt>
                 <dd className="font-mono"><Rating value={row.rating} /></dd>
               </div>
               <div>
-                <dt className="text-[11px] text-dim">Ratings</dt>
+                <dt className="text-[13px] text-dim">Ratings</dt>
                 <dd className="font-mono text-ink-soft">{formatCount(row.ratingCount)}</dd>
               </div>
               <div>
-                <dt className="text-[11px] text-dim">Per day</dt>
+                <dt className="text-[13px] text-dim">Per day</dt>
                 <dd className="font-mono"><PerDay value={row.ratingCountPerDay} /></dd>
               </div>
               <div>
-                <dt className="text-[11px] text-dim">Rank 7d</dt>
+                <dt className="text-[13px] text-dim">Rank 7d</dt>
                 <dd><RankChange value={row.rankChange} /></dd>
               </div>
             </dl>

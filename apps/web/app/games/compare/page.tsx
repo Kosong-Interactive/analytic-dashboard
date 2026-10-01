@@ -18,7 +18,7 @@ interface ComparePageProps {
 }
 
 const fieldClass =
-  "h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-accent";
+  "h-8 rounded-md border border-line-strong bg-surface px-2 text-[15px] text-ink focus-visible:outline-2 focus-visible:outline-accent";
 
 function comparisonDescription(comparison: Comparison): string {
   if (comparison.games.length === 0) return "Pick 2 to 4 games";
@@ -37,8 +37,8 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   return (
     <AppShell filters={query} active="games" buildHref={(change) => compareHref(query, change)}>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Compare</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">Compare</h1>
+        <p className="text-[15px] text-dim">
           Up to {MAX_COMPARED} tracked games side by side, each with its own store and country context.
         </p>
       </div>
@@ -53,40 +53,40 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           {query.ids.length > 0 ? <input type="hidden" name="ids" value={query.ids.join(",")} /> : null}
           {query.country !== "id" ? <input type="hidden" name="country" value={query.country} /> : null}
           {query.platform !== "all" ? <input type="hidden" name="platform" value={query.platform} /> : null}
-          <label className="flex min-w-0 flex-1 flex-col gap-1 text-[11px] text-dim">
+          <label className="flex min-w-0 flex-1 flex-col gap-1 text-[13px] text-dim">
             Title or developer
             <input type="search" name="q" defaultValue={query.q} maxLength={80} disabled={full} className={fieldClass} />
           </label>
           <button
             type="submit"
             disabled={full}
-            className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90 disabled:opacity-50"
+            className="h-8 rounded-md bg-accent px-3 text-[15px] font-medium text-canvas hover:opacity-90 disabled:opacity-50"
           >
             Search
           </button>
         </form>
         {full ? (
-          <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+          <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">
             {MAX_COMPARED} games are selected. Remove one to add another.
           </p>
         ) : null}
         {!full && query.q ? (
           results.length === 0 ? (
-            <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">No tracked game matches “{query.q}”.</p>
+            <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">No tracked game matches “{query.q}”.</p>
           ) : (
             <ul aria-label="Search results">
               {results.map((result) => (
                 <li key={result.storeAppId} className="flex items-center justify-between gap-3 border-t border-line-soft px-4 py-2">
                   <span className="flex min-w-0 items-center gap-2">
                     <GameIcon title={result.title} iconUrl={result.iconUrl} size={24} />
-                    <span className="truncate text-[13px]">{result.title}</span>
-                    <span className="truncate text-[11.5px] text-dim">
+                    <span className="truncate text-[15px]">{result.title}</span>
+                    <span className="truncate text-[13.5px] text-dim">
                       {result.developerName ?? "Unknown developer"} · {platformLabels[result.store]}
                     </span>
                   </span>
                   <Link
                     href={compareHref(query, { ids: [...query.ids, result.storeAppId], q: "" })}
-                    className="h-7 shrink-0 rounded-md border border-line-strong px-2 text-[11px] leading-7 text-ink-soft hover:bg-surface-alt hover:text-ink"
+                    className="h-7 shrink-0 rounded-md border border-line-strong px-2 text-[13px] leading-7 text-ink-soft hover:bg-surface-alt hover:text-ink"
                   >
                     Add<span className="sr-only"> {result.title} to the comparison</span>
                   </Link>
@@ -98,7 +98,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       </Panel>
 
       {comparison.missingIds.length > 0 ? (
-        <p role="status" className="rounded-md border border-star/40 bg-star/10 px-3 py-2 text-xs text-ink-soft">
+        <p role="status" className="rounded-md border border-star/40 bg-star/10 px-3 py-2 text-sm text-ink-soft">
           {comparison.missingIds.length === 1 ? "One selected game is" : `${comparison.missingIds.length} selected games are`}{" "}
           no longer tracked and cannot be shown.{" "}
           <Link href={compareHref(query, { ids: query.ids.filter((id) => !comparison.missingIds.includes(id)) })} className="underline">
@@ -114,7 +114,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           query.ids.length > 0 ? (
             <Link
               href={compareHref(query, { ids: [], q: "" })}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt hover:text-ink"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong px-3 text-[15px] text-ink-soft hover:bg-surface-alt hover:text-ink"
             >
               <RotateCcw aria-hidden className="size-3.5" />
               Reset
@@ -137,7 +137,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         )}
       </Panel>
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         Highlighted labels are shared by every compared game. Labels are inferences unless confirmed manually. Trend
         Scores are percentiles within each game’s own storefront, so a score compares momentum, not size. A dash means the
         value is missing, never zero.

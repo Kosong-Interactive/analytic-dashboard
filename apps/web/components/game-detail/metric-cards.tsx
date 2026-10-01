@@ -77,10 +77,10 @@ export function MetricCardGrid({ items }: { items: MetricCardItem[] }) {
     <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {items.map((item) => (
         <li key={item.label} className="flex flex-col justify-between gap-2 rounded-[10px] border border-line bg-surface px-4 py-3.5">
-          <span className="text-xs text-dim">{item.label}</span>
+          <span className="text-sm text-dim">{item.label}</span>
           <div className="flex flex-col gap-1">
-            <span className="text-[22px] font-semibold leading-none tracking-tight">{item.value}</span>
-            <span className={cn("text-xs text-dim", item.tone)}>{item.note}</span>
+            <span className="text-[26px] font-semibold leading-none tracking-tight">{item.value}</span>
+            <span className={cn("text-sm text-dim", item.tone)}>{item.note}</span>
           </div>
         </li>
       ))}

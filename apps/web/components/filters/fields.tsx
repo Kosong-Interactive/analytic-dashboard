@@ -1,7 +1,7 @@
 import type { FilterOption } from "@/lib/explorer/list";
 
 export const fieldClass =
-  "h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-accent";
+  "h-8 rounded-md border border-line-strong bg-surface px-2 text-[15px] text-ink focus-visible:outline-2 focus-visible:outline-accent";
 
 export function OptionSelect({
   label,
@@ -18,7 +18,7 @@ export function OptionSelect({
   const withSelected =
     value && !options.some((option) => option.value === value) ? [{ value, label: value, count: 0 }, ...options] : options;
   return (
-    <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
+    <label className="flex min-w-0 flex-col gap-1 text-[13px] text-dim">
       {label}
       <select name={name} defaultValue={value} className={fieldClass}>
         <option value="">Any</option>
@@ -46,7 +46,7 @@ export function EnumSelect<T extends string>({
   labels: Record<T, string>;
 }) {
   return (
-    <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
+    <label className="flex min-w-0 flex-col gap-1 text-[13px] text-dim">
       {label}
       <select name={name} defaultValue={value} className={fieldClass}>
         {values.map((option) => (

@@ -19,9 +19,9 @@ const sourceNames = { rule: "Rule", ai: "AI", manual: "Confirmed" } as const;
 /** How a game carries the label filter; an inference is never shown as a store fact. */
 function MatchedLabel({ matched }: { matched: ExplorerRow["matchedLabel"] }) {
   if (!matched) return <span className="text-dim">—</span>;
-  if (matched.source === "manual") return <span className="text-[11.5px] text-up">Confirmed manually</span>;
+  if (matched.source === "manual") return <span className="text-[13.5px] text-up">Confirmed manually</span>;
   return (
-    <span className="whitespace-nowrap text-[11.5px] text-ink-soft">
+    <span className="whitespace-nowrap text-[13.5px] text-ink-soft">
       {sourceNames[matched.source]} · {Math.round(matched.confidence * 100)}%
     </span>
   );
@@ -41,7 +41,7 @@ export function Labels({ labels }: { labels: ExplorerLabel[] }) {
       {labels.map((label) => (
         <span
           key={label.slug}
-          className="rounded border border-line-strong/70 px-1.5 py-px text-[11px] text-ink-soft"
+          className="rounded border border-line-strong/70 px-1.5 py-px text-[13px] text-ink-soft"
           title={label.source === "manual" ? "Confirmed manually" : `Inferred (${label.source})`}
         >
           {label.displayName}
@@ -58,7 +58,7 @@ function GameLink({ row }: { row: ExplorerRow }) {
       <GameIcon title={row.title} iconUrl={row.iconUrl} size={28} />
       <span className="flex min-w-0 flex-col">
         <span className="max-w-[13rem] truncate font-medium">{row.title}</span>
-        <span className="max-w-[13rem] truncate text-[11.5px] text-dim">{row.developer ?? "Unknown developer"}</span>
+        <span className="max-w-[13rem] truncate text-[13.5px] text-dim">{row.developer ?? "Unknown developer"}</span>
       </span>
     </Link>
   );
@@ -83,10 +83,10 @@ export function ExplorerTable({
   return (
     <>
       <div className="hidden lg:block lg:overflow-x-auto">
-        <table className="w-full border-collapse text-[13px]">
+        <table className="w-full border-collapse text-[15px]">
           <caption className="sr-only">{caption}</caption>
           <thead>
-            <tr className="h-[34px] border-y border-line bg-surface-alt text-[11px] font-medium text-dim">
+            <tr className="h-[34px] border-y border-line bg-surface-alt text-[13px] font-medium text-dim">
               {headers.map((header, index) => (
                 <th
                   key={header}
@@ -107,18 +107,18 @@ export function ExplorerTable({
           <tbody className="[&_td]:px-2">
             {rows.map((row) => (
               <tr key={row.id} className="h-[52px] border-b border-line-soft hover:bg-[#13161a]">
-                <td className="pl-4 font-mono text-xs text-dim">{row.rank}</td>
+                <td className="pl-4 font-mono text-sm text-dim">{row.rank}</td>
                 <td><GameLink row={row} /></td>
-                <td className="whitespace-nowrap text-[11.5px] text-ink-soft">{platformLabels[row.store]}</td>
-                <td className="max-w-[8rem] truncate text-[11.5px] text-ink-soft">{row.category ?? "—"}</td>
+                <td className="whitespace-nowrap text-[13.5px] text-ink-soft">{platformLabels[row.store]}</td>
+                <td className="max-w-[8rem] truncate text-[13.5px] text-ink-soft">{row.category ?? "—"}</td>
                 <td className="max-w-[12rem]"><Labels labels={[...row.genres, ...row.mechanics]} /></td>
                 {showMatchedLabel ? <td><MatchedLabel matched={row.matchedLabel} /></td> : null}
-                <td className="whitespace-nowrap font-mono text-xs text-ink-soft">{releaseText(row)}</td>
-                <td className="whitespace-nowrap text-right font-mono text-xs text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</td>
-                <td className="text-right font-mono text-xs"><Rating value={row.rating} /></td>
-                <td className="text-right font-mono text-xs text-ink-soft">{formatCount(row.ratingCount)}</td>
+                <td className="whitespace-nowrap font-mono text-sm text-ink-soft">{releaseText(row)}</td>
+                <td className="whitespace-nowrap text-right font-mono text-sm text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</td>
+                <td className="text-right font-mono text-sm"><Rating value={row.rating} /></td>
+                <td className="text-right font-mono text-sm text-ink-soft">{formatCount(row.ratingCount)}</td>
                 <td><ScoreBreakdown row={row} /></td>
-                <td className="hidden whitespace-nowrap text-xs text-dim 2xl:table-cell">{formatRelative(row.firstSeenAt, asOf)}</td>
+                <td className="hidden whitespace-nowrap text-sm text-dim 2xl:table-cell">{formatRelative(row.firstSeenAt, asOf)}</td>
                 <td className="pr-4"><RowActions id={row.id} title={row.title} context={actions} /></td>
               </tr>
             ))}
@@ -130,13 +130,13 @@ export function ExplorerTable({
         {rows.map((row) => (
           <li key={row.id} className="flex flex-col gap-2.5 border-t border-line-soft px-4 py-3">
             <div className="flex items-start gap-2.5">
-              <span className="w-6 pt-1.5 font-mono text-xs text-dim">{row.rank}</span>
+              <span className="w-6 pt-1.5 font-mono text-sm text-dim">{row.rank}</span>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-start justify-between gap-2">
                   <GameLink row={row} />
                   <RowActions id={row.id} title={row.title} context={actions} />
                 </div>
-                <p className="truncate pl-[38px] text-[11.5px] text-dim">
+                <p className="truncate pl-[38px] text-[13.5px] text-dim">
                   {platformLabels[row.store]}
                   {row.category ? ` · ${row.category}` : ""} · released {releaseText(row)}
                 </p>
@@ -145,26 +145,26 @@ export function ExplorerTable({
             <div className="flex flex-wrap gap-1 pl-[32px]">
               <Labels labels={[...row.genres, ...row.mechanics]} />
             </div>
-            <dl className="grid grid-cols-4 gap-2 pl-[32px] text-xs">
+            <dl className="grid grid-cols-4 gap-2 pl-[32px] text-sm">
               <div>
-                <dt className="text-[11px] text-dim">Price</dt>
+                <dt className="text-[13px] text-dim">Price</dt>
                 <dd className="font-mono text-ink-soft">{formatUpfrontPrice(row.price, row.currency)}</dd>
               </div>
               <div>
-                <dt className="text-[11px] text-dim">Rating</dt>
+                <dt className="text-[13px] text-dim">Rating</dt>
                 <dd className="font-mono"><Rating value={row.rating} /></dd>
               </div>
               <div>
-                <dt className="text-[11px] text-dim">Ratings</dt>
+                <dt className="text-[13px] text-dim">Ratings</dt>
                 <dd className="font-mono text-ink-soft">{formatCount(row.ratingCount)}</dd>
               </div>
               <div>
-                <dt className="text-[11px] text-dim">First seen</dt>
+                <dt className="text-[13px] text-dim">First seen</dt>
                 <dd className="text-ink-soft">{formatRelative(row.firstSeenAt, asOf)}</dd>
               </div>
               {showMatchedLabel ? (
                 <div className="col-span-4">
-                  <dt className="text-[11px] text-dim">Label</dt>
+                  <dt className="text-[13px] text-dim">Label</dt>
                   <dd>
                     <MatchedLabel matched={row.matchedLabel} />
                   </dd>

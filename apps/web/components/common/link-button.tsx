@@ -13,7 +13,7 @@ export function LinkButton({ className, variant = "primary", ...props }: LinkBut
     <Link
       {...props}
       className={cn(
-        "inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium transition-opacity",
+        "inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium transition-opacity",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
         variant === "primary"
           ? "bg-accent text-canvas hover:opacity-90"

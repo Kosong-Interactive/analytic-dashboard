@@ -14,8 +14,8 @@ import { EntryEditor } from "./entry-editor";
 function Metric({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-[11px] text-dim">{label}</dt>
-      <dd className="font-mono text-xs text-ink-soft">{children}</dd>
+      <dt className="text-[13px] text-dim">{label}</dt>
+      <dd className="font-mono text-sm text-ink-soft">{children}</dd>
     </div>
   );
 }
@@ -38,16 +38,16 @@ export function WatchlistList({ rows, asOf }: { rows: WatchlistRow[]; asOf: Date
             <Link href={`/games/${entry.storeAppId}`} className="flex min-w-0 items-center gap-2.5 hover:underline">
               <GameIcon title={entry.title} iconUrl={entry.iconUrl} size={36} />
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-[13px] font-medium">{entry.title}</span>
-                <span className="truncate text-[11.5px] text-dim">
+                <span className="truncate text-[15px] font-medium">{entry.title}</span>
+                <span className="truncate text-[13.5px] text-dim">
                   {entry.developerName ?? "Unknown developer"} · {platformLabels[entry.store]}
                 </span>
               </span>
             </Link>
-            <p className="text-[11.5px] text-dim">
+            <p className="text-[13.5px] text-dim">
               <span
                 className={cn(
-                  "mr-1.5 rounded border px-1.5 py-px text-[11px]",
+                  "mr-1.5 rounded border px-1.5 py-px text-[13px]",
                   entry.status === "priority" ? "border-accent/60 text-accent" : "border-line-strong text-ink-soft",
                 )}
               >
@@ -82,9 +82,9 @@ export function WatchlistList({ rows, asOf }: { rows: WatchlistRow[]; asOf: Date
             {current ? (
               <ScoreBreakdown row={current} />
             ) : (
-              <p className="text-[11.5px] text-dim">No observations in this storefront selection.</p>
+              <p className="text-[13.5px] text-dim">No observations in this storefront selection.</p>
             )}
-            <p className="text-[11px] text-dim">
+            <p className="text-[13px] text-dim">
               {entry.baselineCapturedAt
                 ? `Baseline observed ${entry.baselineCapturedAt.toISOString().slice(0, 10)}`
                 : "No observation existed when this game was added, so there is no baseline."}

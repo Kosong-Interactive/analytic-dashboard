@@ -39,30 +39,30 @@ export function DesktopDecisionPanel({
       description="The latest decision applies to this label and mobile market; every change remains in history"
       action={
         current ? (
-          <span className={cn("rounded-full border px-2 py-1 text-[11px] font-medium", desktopDecisionTone[current.status])}>
+          <span className={cn("rounded-full border px-2 py-1 text-[13px] font-medium", desktopDecisionTone[current.status])}>
             {opportunityDecisionLabels[current.status]}
           </span>
         ) : null
       }
     >
       {current ? (
-        <div className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-ink-soft">
+        <div className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-ink-soft">
           Latest decision by {current.actor}{current.owner ? ` · owner: ${current.owner}` : ""} · {formatDecisionDate(current.createdAt)} UTC
           {current.note ? <p className="mt-1 text-ink">{current.note}</p> : null}
-          <p className="mt-1 text-[11px] text-dim">
+          <p className="mt-1 text-[13px] text-dim">
             Evidence: {current.formulaVersion} · Steam {current.steamTaxonomyVersion} · mobile {current.mobileTaxonomyVersion}
           </p>
         </div>
       ) : (
-        <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">No team decision has been recorded.</p>
+        <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">No team decision has been recorded.</p>
       )}
       <DesktopDecisionForm country={country} labelType={labelType} labelSlug={labelSlug} />
       {decisions.length > 0 ? (
         <div className="border-t border-line-soft px-4 py-3">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-dim">Decision history</p>
+          <p className="mb-2 text-[13px] font-medium uppercase tracking-wider text-dim">Decision history</p>
           <ol className="flex flex-col gap-2">
             {decisions.map((decision) => (
-              <li key={decision.id} className="rounded-md border border-line-soft bg-surface-alt px-3 py-2 text-xs">
+              <li key={decision.id} className="rounded-md border border-line-soft bg-surface-alt px-3 py-2 text-sm">
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="font-medium">{opportunityDecisionLabels[decision.status]}</span>
                   <span className="text-dim">{formatDecisionDate(decision.createdAt)} UTC</span>

@@ -21,13 +21,13 @@ export function WatchButton({ storeAppId, status }: { storeAppId: string; status
           name="intent"
           value="add"
           disabled={pending}
-          className="h-8 rounded-md bg-accent px-3 text-xs font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+          className="h-8 rounded-md bg-accent px-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
         >
           {pending ? "Adding…" : "Add to watchlist"}
         </button>
       ) : (
         <>
-          <Link href="/games/watchlist" className="text-xs text-ink-soft underline-offset-2 hover:underline">
+          <Link href="/games/watchlist" className="text-sm text-ink-soft underline-offset-2 hover:underline">
             On watchlist · {watchlistStatusLabels[status]}
           </Link>
           <button
@@ -35,7 +35,7 @@ export function WatchButton({ storeAppId, status }: { storeAppId: string; status
             name="intent"
             value="remove"
             disabled={pending}
-            className="h-7 rounded-md border border-line-strong px-2 text-[11px] text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-50"
+            className="h-7 rounded-md border border-line-strong px-2 text-[13px] text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-50"
           >
             {pending ? "Removing…" : "Remove"}
           </button>
@@ -43,12 +43,12 @@ export function WatchButton({ storeAppId, status }: { storeAppId: string; status
       )}
       <Link
         href={`/games/compare?ids=${storeAppId}`}
-        className="h-7 rounded-md border border-line-strong px-2 text-[11px] leading-7 text-ink-soft hover:bg-surface hover:text-ink"
+        className="h-7 rounded-md border border-line-strong px-2 text-[13px] leading-7 text-ink-soft hover:bg-surface hover:text-ink"
       >
         Compare
       </Link>
       {state.ok === false ? (
-        <span role="alert" className="text-[11px] text-down">
+        <span role="alert" className="text-[13px] text-down">
           {state.error}
         </span>
       ) : null}

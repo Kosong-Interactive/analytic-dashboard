@@ -69,7 +69,7 @@ export function ExplorerControls({
             <input type="hidden" name="label" value={`${query.label.type}:${query.label.slug}`} />
           ) : null}
 
-          <label className="col-span-2 flex min-w-0 flex-col gap-1 text-[11px] text-dim xl:col-span-1">
+          <label className="col-span-2 flex min-w-0 flex-col gap-1 text-[13px] text-dim xl:col-span-1">
             Title or developer
             <input type="search" name="q" defaultValue={query.q} maxLength={80} placeholder="Search tracked games" className={fieldClass} />
           </label>
@@ -77,7 +77,7 @@ export function ExplorerControls({
           <OptionSelect label="Genre" name="genre" value={query.genre ?? ""} options={options.genres} />
           <OptionSelect label="Core mechanic" name="mechanic" value={query.mechanic ?? ""} options={options.mechanics} />
           <EnumSelect label="Released" name="released" value={query.released} values={releasedValues} labels={releasedLabels} />
-          <label className="flex min-w-0 flex-col gap-1 text-[11px] text-dim">
+          <label className="flex min-w-0 flex-col gap-1 text-[13px] text-dim">
             Minimum rating
             <select name="minRating" defaultValue={String(query.minRating)} className={fieldClass}>
               {explorerRatingOptions.map((value) => (
@@ -91,12 +91,12 @@ export function ExplorerControls({
           <EnumSelect label="Harga" name="price" value={query.price} values={priceFilterValues} labels={priceFilterLabels} />
           <EnumSelect label="Classification" name="labels" value={query.labels} values={labelStatusValues} labels={labelStatusLabels} />
           <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
-            <button type="submit" className="h-8 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90">
+            <button type="submit" className="h-8 rounded-md bg-accent px-3 text-[15px] font-medium text-canvas hover:opacity-90">
               Apply
             </button>
             <Link
               href={explorerHref(query, clearedExplorerFilters)}
-              className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[13px] text-ink-soft hover:bg-surface-alt"
+              className="flex h-8 items-center rounded-md border border-line-strong px-3 text-[15px] text-ink-soft hover:bg-surface-alt"
             >
               Clear
             </Link>
@@ -106,12 +106,12 @@ export function ExplorerControls({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ul className="flex flex-wrap items-center gap-1.5" aria-label="Active filters">
-          {chips.length === 0 ? <li className="text-xs text-dim">No filters applied</li> : null}
+          {chips.length === 0 ? <li className="text-sm text-dim">No filters applied</li> : null}
           {chips.map((chip) => (
             <li key={chip.label}>
               <Link
                 href={explorerHref(query, chip.remove)}
-                className="inline-flex h-6 items-center gap-1.5 rounded-md border border-line-strong bg-surface-alt px-2 text-xs text-ink-soft hover:text-ink"
+                className="inline-flex h-6 items-center gap-1.5 rounded-md border border-line-strong bg-surface-alt px-2 text-sm text-ink-soft hover:text-ink"
               >
                 {chip.label}
                 <X aria-hidden className="size-3" />
@@ -120,7 +120,7 @@ export function ExplorerControls({
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-2 text-xs text-dim">
+        <div className="flex items-center gap-2 text-sm text-dim">
           <span>Sort by</span>
           <SegmentedLinks
             label="Sort by"

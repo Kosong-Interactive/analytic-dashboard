@@ -51,9 +51,9 @@ function Card({
   return (
     <li className="flex flex-col gap-3 rounded-[10px] border border-line bg-surface-alt px-4 py-3.5">
       <div className="flex flex-col gap-1">
-        <p className="text-[11px] text-dim">{compareTypeLabels[card.type].replace(/s$/, "")}</p>
-        <h3 className="text-sm font-semibold">{card.displayName}</h3>
-        <p className="flex flex-wrap items-center gap-1.5 text-xs">
+        <p className="text-[13px] text-dim">{compareTypeLabels[card.type].replace(/s$/, "")}</p>
+        <h3 className="text-base font-semibold">{card.displayName}</h3>
+        <p className="flex flex-wrap items-center gap-1.5 text-sm">
           <span className="rounded border border-line-strong/70 px-1.5 py-px text-ink-soft" title={modeHints[card.mode]}>
             {modeLabels[card.mode]}
           </span>
@@ -73,13 +73,13 @@ function Card({
           ) : null}
         </p>
       </div>
-      <p className="text-xs leading-5 text-ink-soft">{modeHints[card.mode]}.</p>
-      <ul className="flex flex-col gap-0.5 text-[11.5px] text-ink-soft" aria-label="Evidence">
+      <p className="text-sm leading-5 text-ink-soft">{modeHints[card.mode]}.</p>
+      <ul className="flex flex-col gap-0.5 text-[13.5px] text-ink-soft" aria-label="Evidence">
         {COMPARED_PLATFORMS.map((platform) => (
           <li key={platform}>{signalLine(platform, card.platforms[platform], available.includes(platform))}</li>
         ))}
       </ul>
-      <details className="text-[11.5px] text-dim">
+      <details className="text-[13.5px] text-dim">
         <summary className="cursor-pointer list-none text-ink-soft underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
           Risks and caveats ({card.caveats.length})
         </summary>
@@ -136,7 +136,7 @@ export async function SteamOpportunitiesSection({ country }: { country: "id" | "
           ))}
         </ul>
       )}
-      <p className="border-t border-line-soft px-4 py-3 text-xs leading-5 text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-sm leading-5 text-dim">
         Steam collected {formatRelative(steamSource?.lastCollectedAt ?? null, asOf)} · mobile ranks as of{" "}
         {asOf.toISOString().slice(0, 16).replace("T", " ")} UTC · {list.candidates} of {list.assessed} labels reach a
         direction. Each platform is ranked against its own labels, never on one shared score, and a platform that is

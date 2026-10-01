@@ -24,7 +24,7 @@ export function SegmentedLinks({ label, items, className, compact = false }: Seg
           href={item.href}
           aria-current={item.active ? "true" : undefined}
           className={cn(
-            "flex h-[26px] items-center whitespace-nowrap rounded-md text-xs",
+            "flex h-[26px] items-center whitespace-nowrap rounded-md text-sm",
             compact ? "px-2 sm:px-2.5" : "px-2.5",
             item.active ? "bg-line text-ink" : "text-dim hover:text-ink",
           )}

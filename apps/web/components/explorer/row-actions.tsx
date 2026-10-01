@@ -24,7 +24,7 @@ export function RowActions({ id, title, context }: { id: string; title: string; 
         <span
           aria-disabled="true"
           title="Four games are selected; remove one to add another"
-          className="inline-flex h-7 items-center gap-1 rounded-md border border-line-strong px-2 text-[11px] text-dim opacity-50"
+          className="inline-flex h-7 items-center gap-1 rounded-md border border-line-strong px-2 text-[13px] text-dim opacity-50"
         >
           <GitCompare aria-hidden className="size-3" />
           <span aria-hidden className="hidden sm:inline">
@@ -38,7 +38,7 @@ export function RowActions({ id, title, context }: { id: string; title: string; 
           scroll={false}
           aria-label={selected ? `Remove ${title} from Compare` : `Add ${title} to Compare`}
           className={cn(
-            "inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md border px-2 text-[11px] hover:bg-surface-alt",
+            "inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md border px-2 text-[13px] hover:bg-surface-alt",
             selected ? "border-accent/60 text-accent" : "border-line-strong text-ink-soft hover:text-ink",
           )}
         >

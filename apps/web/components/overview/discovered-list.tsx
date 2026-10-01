@@ -34,19 +34,19 @@ export function DiscoveredList({ data }: { data: OverviewData }) {
                   <Link href={`/games/${game.id}`} className="truncate font-medium hover:underline">
                     {game.title}
                   </Link>
-                  <span className="shrink-0 text-[11.5px] text-dim">{game.category ?? "—"}</span>
+                  <span className="shrink-0 text-[13.5px] text-dim">{game.category ?? "—"}</span>
                 </div>
-                <p className="truncate text-[11.5px] text-dim">
+                <p className="truncate text-[13.5px] text-dim">
                   {game.developer ?? "Unknown developer"} · discovered {formatRelative(game.firstSeenAt, asOf)}
                   {game.releaseDate
                     ? ` · released ${game.releaseDate.toISOString().slice(0, 10)}`
                     : ""}
                 </p>
               </div>
-              <span className="hidden text-[11.5px] text-ink-soft sm:inline">
+              <span className="hidden text-[13.5px] text-ink-soft sm:inline">
                 {platformLabels[game.store]}
               </span>
-              <span className="inline-flex w-14 items-center justify-end gap-1 font-mono text-xs">
+              <span className="inline-flex w-14 items-center justify-end gap-1 font-mono text-sm">
                 {game.rating === null ? (
                   "—"
                 ) : (
@@ -56,7 +56,7 @@ export function DiscoveredList({ data }: { data: OverviewData }) {
                   </>
                 )}
               </span>
-              <span className="w-16 text-right font-mono text-xs text-ink-soft">
+              <span className="w-16 text-right font-mono text-sm text-ink-soft">
                 {formatCount(game.ratingCount)}
               </span>
             </li>

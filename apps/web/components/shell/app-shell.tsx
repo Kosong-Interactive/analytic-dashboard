@@ -22,7 +22,7 @@ export async function AppShell({ filters, active, buildHref, noCounterpart, chil
     <div className="flex min-h-screen">
       <a
         href="#main"
-        className="sr-only z-50 rounded-md bg-accent text-[13px] font-medium text-canvas focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:px-3 focus:py-2"
+        className="sr-only z-50 rounded-md bg-accent text-[15px] font-medium text-canvas focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:px-3 focus:py-2"
       >
         Skip to content
       </a>

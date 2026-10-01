@@ -25,14 +25,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <AppShell noCounterpart filters={filters} active="games">
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Search</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">Search</h1>
+        <p className="text-[15px] text-dim">
           Stored games, developers, and taxonomy labels. Press ⌘K (Ctrl+K) anywhere to search quickly.
         </p>
       </div>
 
       <form method="get" action="/search" role="search" className="flex flex-wrap items-end gap-2">
-        <label className="flex min-w-0 flex-1 flex-col gap-1 text-[11px] text-dim">
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-[13px] text-dim">
           Search
           <input
             type="search"
@@ -40,10 +40,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             defaultValue={raw ?? ""}
             minLength={SEARCH_MIN_LENGTH}
             maxLength={SEARCH_MAX_LENGTH}
-            className="h-9 rounded-md border border-line-strong bg-surface px-2.5 text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-accent"
+            className="h-9 rounded-md border border-line-strong bg-surface px-2.5 text-[15px] text-ink focus-visible:outline-2 focus-visible:outline-accent"
           />
         </label>
-        <button type="submit" className="h-9 rounded-md bg-accent px-3 text-[13px] font-medium text-canvas hover:opacity-90">
+        <button type="submit" className="h-9 rounded-md bg-accent px-3 text-[15px] font-medium text-canvas hover:opacity-90">
           Search
         </button>
       </form>
@@ -70,8 +70,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   <Link href={item.href} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-[#13161a]">
                     {item.kind === "game" ? <GameIcon title={item.title} iconUrl={item.iconUrl ?? null} size={28} /> : null}
                     <span className="flex min-w-0 flex-col">
-                      <span className="truncate text-[13px] font-medium">{item.title}</span>
-                      <span className="truncate text-[11.5px] text-dim">{item.detail}</span>
+                      <span className="truncate text-[15px] font-medium">{item.title}</span>
+                      <span className="truncate text-[13.5px] text-dim">{item.detail}</span>
                     </span>
                   </Link>
                 </li>

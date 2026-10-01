@@ -83,8 +83,8 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
       buildHref={(change) => steamHref(query, { country: change.country }, "/steam")}
     >
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Steam Market Overview</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">Steam Market Overview</h1>
+        <p className="text-[15px] text-dim">
           Desktop games from the Steam Most Played and Top Sellers charts, from our own historical observations.
         </p>
       </div>
@@ -100,7 +100,7 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
         title="Trending Games"
         description="Steam Trend Score (steam_trend_v1) · Steam Global · scored within Steam only"
         action={
-          <Link href="/steam/trending" className="text-xs text-ink-soft underline-offset-2 hover:underline">
+          <Link href="/steam/trending" className="text-sm text-ink-soft underline-offset-2 hover:underline">
             Full ranking and rank movers
           </Link>
         }
@@ -122,7 +122,7 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
         title="Most Played"
         description="Top of the Steam Global chart · players and reviews are Steam's own figures"
         action={
-          <Link href="/steam/charts" className="text-xs text-ink-soft underline-offset-2 hover:underline">
+          <Link href="/steam/charts" className="text-sm text-ink-soft underline-offset-2 hover:underline">
             All charts
           </Link>
         }
@@ -138,7 +138,7 @@ export default async function SteamOverviewPage({ searchParams }: SteamOverviewP
         title="Latest releases"
         description="Tracked games released in the last 30 days, newest first"
         action={
-          <Link href="/steam/new-releases" className="text-xs text-ink-soft underline-offset-2 hover:underline">
+          <Link href="/steam/new-releases" className="text-sm text-ink-soft underline-offset-2 hover:underline">
             New Releases
           </Link>
         }

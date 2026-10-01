@@ -31,8 +31,8 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
   return (
     <AppShell filters={query} active="games" buildHref={(change) => explorerHref(query, change)}>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">Games</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">Games</h1>
+        <p className="text-[15px] text-dim">
           Every tracked game · {countryLabels[query.country]} · {platformLabels[query.platform]} · {list.tracked} tracked
         </p>
       </div>
@@ -93,7 +93,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
         removeHref={(id) => explorerHref(query, { compare: query.compare.filter((other) => other !== id) })}
       />
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         Tracked games are a sample collected from store charts and keyword seeds, not the full store catalogue. “First
         seen” is when this system first observed a game, not its release date. Genre and mechanic labels are inferred
         (rules or AI, shown only at {Math.round(MIN_LABEL_CONFIDENCE * 100)}%+ confidence) unless confirmed manually. A

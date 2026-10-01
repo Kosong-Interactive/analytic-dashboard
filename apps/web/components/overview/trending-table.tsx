@@ -30,7 +30,7 @@ export function TrendingTable({
           caption={`Top ${trending.length} of ${kpis.scoredCount} scored games by Trend Score`}
         />
       )}
-      <p className="border-t border-line-soft px-4 py-3 text-xs text-dim">
+      <p className="border-t border-line-soft px-4 py-3 text-sm text-dim">
         {kpis.scoredCount > 0
           ? `Showing ${trending.length} of ${kpis.scoredCount} scored games (${kpis.tracked - kpis.scoredCount} tracked games lack enough history to score).`
           : `${kpis.tracked} tracked games, none scored yet.`}

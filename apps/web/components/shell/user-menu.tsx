@@ -19,10 +19,10 @@ export function UserMenu({ email }: { email: string }) {
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner side="bottom" align="end" sideOffset={6} className="z-50">
-          <Menu.Popup className="min-w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-line-strong bg-surface-alt p-1 text-[13px] text-ink shadow-xl outline-none">
+          <Menu.Popup className="min-w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-line-strong bg-surface-alt p-1 text-[15px] text-ink shadow-xl outline-none">
             <Menu.Group>
               <Menu.GroupLabel className="px-2.5 pb-2 pt-1.5">
-                <span className="block text-[11px] text-dim">Signed in as</span>
+                <span className="block text-[13px] text-dim">Signed in as</span>
                 <span className="block truncate text-ink-soft" title={email}>
                   {email}
                 </span>

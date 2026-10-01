@@ -21,8 +21,8 @@ export function InfoHint({ label, children }: { label: string; children: string 
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side="bottom" align="end" sideOffset={6} collisionPadding={12} className="z-50">
-          <Popover.Popup className="max-w-[min(18rem,calc(100vw-2rem))] rounded-lg border border-line-strong bg-surface-alt px-3 py-2 text-xs leading-5 text-ink-soft shadow-xl outline-none">
-            <Popover.Title className="mb-0.5 text-xs font-medium text-ink">{label}</Popover.Title>
+          <Popover.Popup className="max-w-[min(18rem,calc(100vw-2rem))] rounded-lg border border-line-strong bg-surface-alt px-3 py-2 text-sm leading-5 text-ink-soft shadow-xl outline-none">
+            <Popover.Title className="mb-0.5 text-sm font-medium text-ink">{label}</Popover.Title>
             <Popover.Description>{children}</Popover.Description>
           </Popover.Popup>
         </Popover.Positioner>

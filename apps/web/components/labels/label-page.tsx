@@ -40,8 +40,8 @@ export async function LabelPage<T extends LabelType>({ config, query, active, ti
   return (
     <AppShell filters={query} active={active} buildHref={(change) => labelHref(config, query, change)}>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
-        <p className="text-[13px] text-dim">
+        <h1 className="text-[26px] font-semibold tracking-tight">{title}</h1>
+        <p className="text-[15px] text-dim">
           {intro} · {countryLabels[query.country]} · {platformLabels[query.platform]}
         </p>
       </div>
@@ -56,7 +56,7 @@ export async function LabelPage<T extends LabelType>({ config, query, active, ti
             active: query.type === type,
           }))}
         />
-        <div className="flex items-center gap-2 text-xs text-dim">
+        <div className="flex items-center gap-2 text-sm text-dim">
           <span>Sort by</span>
           <SegmentedLinks
             label="Sort by"
@@ -88,7 +88,7 @@ export async function LabelPage<T extends LabelType>({ config, query, active, ti
         )}
       </Panel>
 
-      <p className="text-xs leading-5 text-dim">
+      <p className="text-sm leading-5 text-dim">
         Labels come from store-declared genres and keyword rules (taxonomy v1), replaced by an AI classification once a game has one; manual labels take precedence over both.
         Automated labels below {Math.round(MIN_LABEL_CONFIDENCE * 100)}% confidence are not counted. Labels are
         inferences, not store facts: open a game to see the evidence behind each one. Momentum is the average Trend

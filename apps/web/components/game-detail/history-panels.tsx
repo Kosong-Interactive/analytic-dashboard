@@ -47,7 +47,7 @@ export function ChartPanel({
       ) : (
         <div className="px-2 pb-3">
           <HistoryChart points={points} label={label} invert={invert} decimals={decimals} />
-          <p className="px-2 text-xs text-dim">{summary}</p>
+          <p className="px-2 text-sm text-dim">{summary}</p>
         </div>
       )}
     </Panel>

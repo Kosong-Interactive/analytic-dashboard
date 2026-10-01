@@ -127,10 +127,10 @@ export function CommandPalette() {
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
-      <Dialog.Trigger className="flex h-8 w-full min-w-0 items-center gap-2 rounded-md border border-line-strong bg-surface px-2.5 text-[13px] text-dim hover:text-ink focus-visible:outline-2 focus-visible:outline-accent">
+      <Dialog.Trigger className="flex h-8 w-full min-w-0 items-center gap-2 rounded-md border border-line-strong bg-surface px-2.5 text-[15px] text-dim hover:text-ink focus-visible:outline-2 focus-visible:outline-accent">
         <Search aria-hidden className="size-3.5 shrink-0" />
         <span className="flex-1 truncate text-left">Search games, developers, labels</span>
-        <kbd className="hidden rounded border border-line-strong px-1 font-mono text-[10px] sm:inline">⌘K</kbd>
+        <kbd className="hidden rounded border border-line-strong px-1 font-mono text-[11.5px] sm:inline">⌘K</kbd>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/60" />
@@ -159,9 +159,9 @@ export function CommandPalette() {
               aria-controls={listId}
               aria-activedescendant={active ? `${listId}-${active.id}` : undefined}
               aria-autocomplete="list"
-              className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-dim"
+              className="h-12 flex-1 bg-transparent text-base outline-none placeholder:text-dim"
             />
-            <Dialog.Close className="rounded border border-line-strong px-1.5 py-0.5 font-mono text-[10px] text-dim hover:text-ink">
+            <Dialog.Close className="rounded border border-line-strong px-1.5 py-0.5 font-mono text-[11.5px] text-dim hover:text-ink">
               Esc
             </Dialog.Close>
           </div>
@@ -170,7 +170,7 @@ export function CommandPalette() {
             <ul id={listId} role="listbox" aria-label="Search results" className="py-1">
               {groups.map((group) => (
                 <li key={group.kind} role="presentation">
-                  <p className="px-3 pb-1 pt-2.5 text-[11px] font-medium uppercase tracking-wider text-dim">{group.label}</p>
+                  <p className="px-3 pb-1 pt-2.5 text-[13px] font-medium uppercase tracking-wider text-dim">{group.label}</p>
                   <ul role="presentation">
                     {group.items.map((item) => (
                       <li
@@ -187,8 +187,8 @@ export function CommandPalette() {
                       >
                         {item.kind === "game" ? <GameIcon title={item.title} iconUrl={item.iconUrl ?? null} size={24} /> : null}
                         <span className="flex min-w-0 flex-col">
-                          <span className="truncate text-[13px]">{item.title}</span>
-                          <span className="truncate text-[11.5px] text-dim">{item.detail}</span>
+                          <span className="truncate text-[15px]">{item.title}</span>
+                          <span className="truncate text-[13.5px] text-dim">{item.detail}</span>
                         </span>
                       </li>
                     ))}
@@ -223,7 +223,7 @@ function StatusLine({
   else if (remote.status === "loading" || remote.status === "idle") message = "Searching…";
   if (!message) {
     return (
-      <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-2 text-[11px] text-dim">
+      <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-2 text-[13px] text-dim">
         <span>Enter opens the highlighted result. Only stored data is searched.</span>
         <button type="button" onClick={onSeeAll} className="shrink-0 text-ink-soft underline-offset-2 hover:underline">
           See all results
@@ -232,7 +232,7 @@ function StatusLine({
     );
   }
   return (
-    <p role={remote.status === "error" ? "alert" : undefined} className="px-3 py-4 text-center text-xs text-dim">
+    <p role={remote.status === "error" ? "alert" : undefined} className="px-3 py-4 text-center text-sm text-dim">
       {message}
     </p>
   );
