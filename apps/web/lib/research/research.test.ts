@@ -66,6 +66,37 @@ function preview(overrides: Partial<StoredOpportunityPreviewInput> = {}): Stored
   return { ...stored("preview"), score: null, reason: "Demand history is not measurable yet", ...overrides };
 }
 
+describe("buildOpportunitiesView scope", () => {
+  const scope = { label: "SEA", scored: 3, evaluated: 4, total: 5 };
+
+  it("attaches the combined-market scope to a card by id", () => {
+    const view = buildOpportunitiesView({
+      opportunities: [stored("o1"), stored("o2")],
+      runs: [run()],
+      limit: 5,
+      scopes: new Map([["o1", scope]]),
+    });
+    assert.deepEqual(view.cards.find((card) => card.id === "o1")?.scope, scope);
+    assert.equal(view.cards.find((card) => card.id === "o2")?.scope, null);
+  });
+
+  it("carries the scope onto the candidate preview", () => {
+    const view = buildOpportunitiesView({
+      opportunities: [],
+      preview: preview(),
+      runs: [run()],
+      limit: 5,
+      scopes: new Map([["preview", scope]]),
+    });
+    assert.deepEqual(view.preview?.scope, scope);
+  });
+
+  it("leaves the scope empty for a single storefront", () => {
+    const view = buildOpportunitiesView({ opportunities: [stored("o1")], runs: [run()], limit: 5 });
+    assert.equal(view.cards[0]?.scope, null);
+  });
+});
+
 describe("buildOpportunitiesView", () => {
   it("builds cards with a title, bounded evidence, comparables, and an explorer link", () => {
     const view = buildOpportunitiesView({ opportunities: [stored("o1")], runs: [run()], limit: 5 });

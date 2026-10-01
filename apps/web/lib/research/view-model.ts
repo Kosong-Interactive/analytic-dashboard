@@ -61,6 +61,17 @@ export const insightLabels: Record<string, string> = {
 
 export type ConfidenceBand = "high" | "medium" | "low";
 
+/** How many storefronts of a SEA or World market stand behind a combined opportunity. */
+export interface OpportunityScope {
+  label: string;
+  /** Storefronts that scored the cohort; the shown score is their median. */
+  scored: number;
+  /** Storefronts that evaluated the cohort. */
+  evaluated: number;
+  /** Storefronts the market combines. */
+  total: number;
+}
+
 export interface OpportunityCard {
   id: string;
   title: string;
@@ -83,6 +94,8 @@ export interface OpportunityCard {
   browseHref: string | null;
   asOf: Date;
   changeAlert: { severity: "high" | "medium"; title: string; detail: string } | null;
+  /** Set for a combined SEA or World market; `null` for a single storefront. */
+  scope: OpportunityScope | null;
 }
 
 export interface OpportunityPreview extends Omit<OpportunityCard, "score" | "insight" | "earlySignal"> {
@@ -120,7 +133,11 @@ function browseHref(dimensions: z.infer<typeof dimensionsSchema>, country: strin
   return `/games?${query.toString()}`;
 }
 
-function toCard(row: StoredOpportunityInput, historyRows: readonly StoredOpportunityHistoryInput[]): OpportunityCard | null {
+function toCard(
+  row: StoredOpportunityInput,
+  historyRows: readonly StoredOpportunityHistoryInput[],
+  scope: OpportunityScope | null,
+): OpportunityCard | null {
   const dimensions = dimensionsSchema.safeParse(row.dimensions);
   const facts = factsSchema.safeParse(row.facts);
   const comparables = comparablesSchema.safeParse(row.comparables);
@@ -157,11 +174,12 @@ function toCard(row: StoredOpportunityInput, historyRows: readonly StoredOpportu
     browseHref: browseHref(dimensions.data, row.country, row.store),
     asOf: row.asOf,
     changeAlert: alert ? { severity: alert.severity, title: alert.title, detail: alert.detail } : null,
+    scope,
   };
 }
 
-function toPreview(row: StoredOpportunityPreviewInput): OpportunityPreview | null {
-  const parsed = toCard({ ...row, score: 0 }, []);
+function toPreview(row: StoredOpportunityPreviewInput, scope: OpportunityScope | null): OpportunityPreview | null {
+  const parsed = toCard({ ...row, score: 0 }, [], scope);
   if (!parsed) return null;
   return {
     id: parsed.id,
@@ -180,6 +198,7 @@ function toPreview(row: StoredOpportunityPreviewInput): OpportunityPreview | nul
     browseHref: parsed.browseHref,
     asOf: parsed.asOf,
     changeAlert: null,
+    scope: parsed.scope,
     reason: row.reason,
   };
 }
@@ -191,10 +210,13 @@ export function buildOpportunitiesView(input: {
   runs: readonly ResearchRunInput[];
   histories?: readonly StoredOpportunityHistoryInput[];
   limit: number;
+  /** Combined-market scope of each row by id; omitted for a single storefront. */
+  scopes?: ReadonlyMap<string, OpportunityScope>;
 }): OpportunitiesView {
-  const parsed = input.opportunities.map((row) => toCard(row, input.histories ?? []));
+  const scopeOf = (id: string) => input.scopes?.get(id) ?? null;
+  const parsed = input.opportunities.map((row) => toCard(row, input.histories ?? [], scopeOf(row.id)));
   const cards = parsed.filter((card): card is OpportunityCard => card !== null).slice(0, input.limit);
-  const preview = cards.length === 0 && input.preview ? toPreview(input.preview) : null;
+  const preview = cards.length === 0 && input.preview ? toPreview(input.preview, scopeOf(input.preview.id)) : null;
   const runs = input.runs.map((run) => ({ store: run.store, asOf: run.asOf, failed: run.status === "failed" }));
 
   let state: ResearchState;

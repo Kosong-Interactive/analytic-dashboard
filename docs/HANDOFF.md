@@ -141,8 +141,19 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   its market, `MarketHomeCountry` = `id` | `sg` | `us` identifies it). Steam stays Global. The
   Desktop header still offers Indonesia | Global, which maps to the Indonesia and World mobile
   markets. Decisions are stored with the market's identifying storefront in `country` (`us` rows
-  recorded before markets existed now read as World). The Mobile Overview Game Opportunities panel
-  and Research still use the market's first storefront. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
+  recorded before markets existed now read as World). Stage 5 (done in code, not yet committed):
+  the Mobile Overview Game Opportunities panel and Research detail follow the market. The research
+  job is unchanged (one run per store and storefront, all 13 storefronts); the web reads them with
+  `loadMarketOpportunityIndex` (light index of the latest successful runs), combines them with
+  `aggregateMarketOpportunities` (`packages/analytics/src/market-opportunities.ts`, one opportunity
+  per platform and label cohort, score = lower median of the scored storefronts, unscored left out,
+  the shown row is that storefront's so evidence and comparables are real), then loads full rows
+  only for the shown cards (`loadOpportunitiesByIds`). Cards carry a `scope` ("seen in X of N
+  storefronts, Y scored"); `summarizeMarketRuns` gives the panel state distinct cohort counts, not
+  sums. The detail page keeps the market in the shell and reads Mobile team decisions by cohort
+  across the market's storefronts (`loadCohortOpportunityDecisions`); new decisions still attach to
+  the shown row. No migration. Research runs exist only for `id` and `us` until the daily research
+  job covers the other storefronts, so SEA shows "Research has not run yet" until then. Expect more rule-labelled than AI-labelled apps for a while: AI classification is capped
   at 200 apps per run, so the backlog from the new storefronts takes days.
 - `.github/workflows/collect.yml` runs **once a day at 22:17 UTC (05:17 WIB)** on `main` (job
   timeout 90 minutes; the daily research job at 01:43 UTC runs after it; sources count as stale
@@ -362,8 +373,8 @@ Decisions that wait on the user are marked **(ask)**.
    code). The mobile Trend Scores are still missing: Google Play history starts 2026-09-29 10:40 UTC and Apple charts
    2026-09-30 11:53 UTC, so scores should appear after about 2026-10-02 22:40 UTC (Google Play)
    and 2026-10-04 (Apple); re-check `/steam/compare` and the Overview then.
-2. **World market** from several countries for Mobile. **(ask)** which countries; mind Google
-   Play's worldwide metrics when aggregating.
+2. World market is built (stages 1-5). Left: commit/deploy stage 5, run research for the other 11
+   storefronts (or wait for the daily job), and re-check SEA/World once Mobile scores exist.
 3. Findings from the 2026-10-01 clean-up (nothing left to do unless noted):
    - Classification input loading is not slow: 2–3 s for about 5 MB, locally and in CI. The slow
      part of `Classify games with rules` (about 190 s) and `with AI` (about 520 s) was writing each

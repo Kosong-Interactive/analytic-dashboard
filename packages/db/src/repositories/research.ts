@@ -330,6 +330,167 @@ export async function loadLatestOpportunities(
   };
 }
 
+export interface MarketOpportunityIndexRow {
+  id: string;
+  runId: string;
+  store: StoreId;
+  country: string;
+  opportunityKey: string;
+  score: number | null;
+  confidence: number;
+  memberCount: number;
+}
+
+/**
+ * The latest run per storefront of a market (failed runs included, so failure is visible) and a
+ * light index of every cohort the latest successful runs evaluated. The index carries no evidence
+ * payload, so the caller can combine storefronts first and load full rows only for what it shows.
+ */
+export async function loadMarketOpportunityIndex(
+  db: DatabaseExecutor,
+  query: { stores: readonly StoreId[]; countries: readonly string[]; formulaVersion: string },
+): Promise<{ runs: ResearchRunSummary[]; index: MarketOpportunityIndexRow[] }> {
+  if (query.stores.length === 0 || query.countries.length === 0) return { runs: [], index: [] };
+
+  const rows = await db
+    .selectDistinctOn([researchRuns.store, researchRuns.country, researchRuns.status], {
+      id: researchRuns.id,
+      store: researchRuns.store,
+      country: researchRuns.country,
+      status: researchRuns.status,
+      asOf: researchRuns.asOf,
+      formulaVersion: researchRuns.formulaVersion,
+      taxonomyVersion: researchRuns.taxonomyVersion,
+      trackedGames: researchRuns.trackedGames,
+      cohortsEvaluated: researchRuns.cohortsEvaluated,
+      opportunitiesScored: researchRuns.opportunitiesScored,
+      historyDays: researchRuns.historyDays,
+      freshness: researchRuns.freshness,
+      errorSample: researchRuns.errorSample,
+    })
+    .from(researchRuns)
+    .where(
+      and(
+        inArray(researchRuns.store, [...query.stores]),
+        inArray(researchRuns.country, [...query.countries]),
+        eq(researchRuns.formulaVersion, query.formulaVersion),
+      ),
+    )
+    .orderBy(researchRuns.store, researchRuns.country, researchRuns.status, desc(researchRuns.asOf), desc(researchRuns.createdAt));
+
+  // Per storefront, the newest run overall, plus the newest successful one whose results are shown.
+  const runs: ResearchRunSummary[] = [];
+  const successful: ResearchRunSummary[] = [];
+  for (const store of query.stores) {
+    for (const country of query.countries) {
+      const ofStorefront = rows
+        .filter((row) => row.store === store && row.country === country)
+        .map((row) => ({ ...row, historyDays: toNumber(row.historyDays) }));
+      const newest = [...ofStorefront].sort((a, b) => b.asOf.getTime() - a.asOf.getTime())[0];
+      if (newest) runs.push(newest);
+      const ok = ofStorefront.find((row) => row.status === "succeeded");
+      if (ok) successful.push(ok);
+    }
+  }
+  if (successful.length === 0) return { runs, index: [] };
+
+  const runById = new Map(successful.map((run) => [run.id, run]));
+  const indexRows = await db
+    .select({
+      id: marketOpportunities.id,
+      runId: marketOpportunities.runId,
+      opportunityKey: marketOpportunities.opportunityKey,
+      score: marketOpportunities.score,
+      confidence: marketOpportunities.confidence,
+      memberCount: marketOpportunities.memberCount,
+    })
+    .from(marketOpportunities)
+    .where(inArray(marketOpportunities.runId, [...runById.keys()]));
+
+  const index = indexRows.flatMap((row) => {
+    const run = runById.get(row.runId);
+    if (!run) return [];
+    return {
+      id: row.id,
+      runId: row.runId,
+      store: run.store,
+      country: run.country,
+      opportunityKey: row.opportunityKey,
+      score: toNumber(row.score),
+      confidence: Number(row.confidence),
+      memberCount: row.memberCount,
+    };
+  });
+  return { runs, index };
+}
+
+/** Full rows for a bounded set of opportunity ids, scored or not; `score` is null for an unscored cohort. */
+export async function loadOpportunitiesByIds(
+  db: DatabaseExecutor,
+  ids: readonly string[],
+): Promise<Array<StoredOpportunity | StoredOpportunityPreview>> {
+  if (ids.length === 0) return [];
+  const rows = await db
+    .select({
+      id: marketOpportunities.id,
+      runId: marketOpportunities.runId,
+      store: researchRuns.store,
+      country: researchRuns.country,
+      asOf: researchRuns.asOf,
+      formulaVersion: researchRuns.formulaVersion,
+      taxonomyVersion: researchRuns.taxonomyVersion,
+      opportunityKey: marketOpportunities.opportunityKey,
+      dimensions: marketOpportunities.dimensions,
+      memberCount: marketOpportunities.memberCount,
+      score: marketOpportunities.score,
+      reason: marketOpportunities.reason,
+      weightCoverage: marketOpportunities.weightCoverage,
+      confidence: marketOpportunities.confidence,
+      confidenceBand: marketOpportunities.confidenceBand,
+      insightType: marketOpportunities.insightType,
+      components: marketOpportunities.components,
+      facts: marketOpportunities.facts,
+      comparables: marketOpportunities.comparables,
+      positives: marketOpportunities.positives,
+      counterSignals: marketOpportunities.counterSignals,
+      caveats: marketOpportunities.caveats,
+    })
+    .from(marketOpportunities)
+    .innerJoin(researchRuns, eq(researchRuns.id, marketOpportunities.runId))
+    .where(inArray(marketOpportunities.id, [...ids]));
+
+  return rows.map((row): StoredOpportunity | StoredOpportunityPreview => {
+    const base = { ...row, weightCoverage: Number(row.weightCoverage), confidence: Number(row.confidence) };
+    return row.score === null ? { ...base, score: null } : { ...base, score: Number(row.score) };
+  });
+}
+
+/**
+ * Team decisions on one cohort across the storefronts of a market. Opportunity rows are written
+ * per run, so reading by cohort keeps a decision visible when the shown storefront or the day changes.
+ */
+export async function loadCohortOpportunityDecisions(
+  db: DatabaseExecutor,
+  cohort: { store: StoreId; countries: readonly string[]; formulaVersion: string; opportunityKey: string },
+): Promise<OpportunityDecisionRow[]> {
+  if (cohort.countries.length === 0) return [];
+  const rows = await db
+    .select({ decision: opportunityDecisions })
+    .from(opportunityDecisions)
+    .innerJoin(marketOpportunities, eq(marketOpportunities.id, opportunityDecisions.opportunityId))
+    .innerJoin(researchRuns, eq(researchRuns.id, marketOpportunities.runId))
+    .where(
+      and(
+        eq(researchRuns.store, cohort.store),
+        inArray(researchRuns.country, [...cohort.countries]),
+        eq(researchRuns.formulaVersion, cohort.formulaVersion),
+        eq(marketOpportunities.opportunityKey, cohort.opportunityKey),
+      ),
+    )
+    .orderBy(desc(opportunityDecisions.createdAt));
+  return rows.map((row) => row.decision);
+}
+
 /**
  * Immutable history for a bounded set of opportunity identities. Formula and taxonomy versions
  * stay in the identity so a scoring semantic change never looks like market acceleration.

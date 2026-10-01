@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { platformLabel } from "@analytic-dashboard/shared";
+import { countryCodeSchema, marketLabels, marketOf, platformLabel } from "@analytic-dashboard/shared";
 import type { StudioFitResult } from "@analytic-dashboard/analytics";
 
 import { formatCount, formatRelative, formatSigned } from "@/lib/format/format";
@@ -496,6 +496,8 @@ export function OpportunityDetail({
   history: OpportunityHistoryView | null;
   now: Date;
 }) {
+  const storefront = countryCodeSchema.safeParse(view.country);
+  const market = storefront.success ? marketOf(storefront.data) : "id";
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -505,6 +507,12 @@ export function OpportunityDetail({
           <p className="text-[15px] text-dim">
             {platformLabel(view.store)} · {countryLabel(view.country)}{view.insight ? ` · ${view.insight}` : " · Candidate awaiting score"}
           </p>
+          {market === "id" ? null : (
+            <p className="text-sm text-dim">
+              Shown for {countryLabel(view.country)}, the storefront behind the {marketLabels[market]} market
+              score. Team decisions apply to this label across the {marketLabels[market]} market.
+            </p>
+          )}
         </div>
         <div className="text-right text-sm leading-5 text-dim">
           <p>Calculated {formatRelative(view.asOf, now)}</p>
