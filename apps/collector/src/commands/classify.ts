@@ -53,7 +53,9 @@ export async function runClassifyCommand(argv: string[]): Promise<number> {
   };
 
   try {
-    const summary = await runRuleClassification(taxonomy, store);
+    const summary = await runRuleClassification(taxonomy, store, {
+      onProgress: (progress) => console.info(JSON.stringify({ event: "classification.rules.progress", ...progress })),
+    });
     console.info(JSON.stringify({ event: "classification.rules", dryRun, ...summary }));
     return summary.errorCount > 0 ? 1 : 0;
   } finally {

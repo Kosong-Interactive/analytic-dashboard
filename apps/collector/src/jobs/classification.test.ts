@@ -8,7 +8,7 @@ import {
   type ClassificationInput,
 } from "@analytic-dashboard/classifier";
 
-import { runRuleClassification, type ClassificationStore } from "./classification.js";
+import { PROGRESS_EVERY, runRuleClassification, type ClassificationStore } from "./classification.js";
 
 const taxonomy = parseTaxonomy({
   version: "taxonomy-v1",
@@ -48,6 +48,18 @@ function memoryStore(inputs: ClassificationInput[], hashes = new Map<string, str
 }
 
 describe("runRuleClassification", () => {
+  it("reports progress every PROGRESS_EVERY finished writes", async () => {
+    const inputs = Array.from({ length: PROGRESS_EVERY * 2 + 1 }, (_, index) => ({ ...plain, appId: `app-${index}` }));
+    const { store } = memoryStore(inputs);
+    const reports: Array<{ done: number; total: number }> = [];
+    await runRuleClassification(taxonomy, store, { onProgress: (progress) => reports.push(progress) });
+
+    assert.deepEqual(reports, [
+      { done: PROGRESS_EVERY, total: inputs.length },
+      { done: PROGRESS_EVERY * 2, total: inputs.length },
+    ]);
+  });
+
   it("writes taxonomy labels only, with the rules version and input hash", async () => {
     const { store, writes } = memoryStore([merge, plain]);
     const summary = await runRuleClassification(taxonomy, store);
