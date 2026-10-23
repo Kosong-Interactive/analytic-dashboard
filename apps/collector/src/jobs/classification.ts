@@ -45,6 +45,9 @@ const ERROR_SAMPLE_MAX_LENGTH = 300;
 /** Matches the default connection pool, so overlapping writes never wait for a connection. */
 const WRITE_CONCURRENCY = 3;
 
+/** How many finished writes pass between progress reports. */
+export const PROGRESS_EVERY = 500;
+
 /**
  * Deterministic rule labels for every canonical app. Rerunnable: an unchanged input hash is
  * skipped, and a changed one replaces only that app's previous rule labels.
@@ -52,6 +55,10 @@ const WRITE_CONCURRENCY = 3;
 export async function runRuleClassification(
   taxonomy: Taxonomy,
   store: ClassificationStore,
+  options: {
+    /** Called every `PROGRESS_EVERY` finished writes, so a long or stalled run is visible in the log. */
+    onProgress?: (progress: { done: number; total: number }) => void;
+  } = {},
 ): Promise<ClassificationSummary> {
   const labelIds = await store.syncTaxonomy(taxonomy.version, listTaxonomyLabels(taxonomy));
   const [inputs, storedHashes] = await Promise.all([
@@ -86,6 +93,7 @@ export async function runRuleClassification(
     }
   }
 
+  let finished = 0;
   // Each app is its own transaction, so over a high-latency link the writes dominate; overlap them.
   await forEachConcurrent(pending, WRITE_CONCURRENCY, async ({ input, inputHash }) => {
     const labels: RuleLabelRow[] = applyRules(input).flatMap((label) => {
@@ -110,6 +118,8 @@ export async function runRuleClassification(
     } catch (error) {
       errors.push(`${input.appId}: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
+    finished += 1;
+    if (finished % PROGRESS_EVERY === 0) options.onProgress?.({ done: finished, total: pending.length });
   });
 
   summary.errorCount = errors.length;

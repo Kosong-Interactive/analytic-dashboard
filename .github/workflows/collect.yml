@@ -59,10 +59,11 @@ jobs:
           COUNTRY: ${{ inputs.country }}
 
       # Runs even when discovery reported errors, so games that were stored still get labels.
-      # Unchanged apps are skipped by input hash, so this is cheap after the first run.
+      # Unchanged apps are skipped by input hash, so this is cheap after the first run; a backlog
+      # (new storefronts, an interrupted run) can need several minutes, and progress is logged.
       - name: Classify games with rules
         if: ${{ !cancelled() }}
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: npm run classify --workspace @analytic-dashboard/collector
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

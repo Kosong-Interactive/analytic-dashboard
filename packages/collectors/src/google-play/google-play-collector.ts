@@ -99,8 +99,14 @@ export interface GooglePlayCollectorOptions {
   minimumRequestIntervalMs?: number;
   retryAttempts?: number;
   sleep?: (milliseconds: number) => Promise<void>;
+  /** Returns a number in [0, 1); injectable so retry delays are deterministic in tests. */
+  random?: () => number;
   events?: CollectorEvents;
 }
+
+/** Delay before the first retry; it doubles each time, plus up to `RETRY_JITTER_MS` of jitter. */
+const RETRY_BASE_DELAY_MS = 1_000;
+const RETRY_JITTER_MS = 500;
 
 export class GooglePlayCollectorError extends Error {
   constructor(
@@ -127,6 +133,7 @@ export class GooglePlayCollector
   private readonly minimumRequestIntervalMs: number;
   private readonly retryAttempts: number;
   private readonly sleep: (milliseconds: number) => Promise<void>;
+  private readonly random: () => number;
   private readonly cache = new Map<string, CacheEntry>();
   private readonly events: CollectorEvents;
   private nextRequestAt = 0;
@@ -138,7 +145,8 @@ export class GooglePlayCollector
     this.now = options.now ?? (() => new Date());
     this.cacheTtlMs = options.cacheTtlMs ?? 21_600_000;
     this.minimumRequestIntervalMs = options.minimumRequestIntervalMs ?? 1_500;
-    this.retryAttempts = options.retryAttempts ?? 2;
+    this.retryAttempts = options.retryAttempts ?? 3;
+    this.random = options.random ?? Math.random;
     this.sleep =
       options.sleep ??
       ((milliseconds) =>
@@ -229,9 +237,11 @@ export class GooglePlayCollector
 
   private async execute<T>(request: () => Promise<T>): Promise<T> {
     let lastError: unknown;
+    let attempts = 0;
 
     for (let attempt = 0; attempt <= this.retryAttempts; attempt += 1) {
       await this.waitForTurn();
+      attempts += 1;
       try {
         return await request();
       } catch (error) {
@@ -240,11 +250,15 @@ export class GooglePlayCollector
           break;
         }
         this.events.onRetry?.();
-        await this.sleep(500 * 2 ** attempt);
+        await this.sleep(RETRY_BASE_DELAY_MS * 2 ** attempt + Math.floor(this.random() * RETRY_JITTER_MS));
       }
     }
 
-    throw new GooglePlayCollectorError("Google Play request failed", lastError);
+    // The count says whether retries ran; provider details stay in `cause`, out of the message.
+    throw new GooglePlayCollectorError(
+      `Google Play request failed after ${attempts} ${attempts === 1 ? "attempt" : "attempts"}`,
+      lastError,
+    );
   }
 
   private async waitForTurn(): Promise<void> {
@@ -297,11 +311,13 @@ function toLanguage(locale: string): string {
   return locale.split("_")[0] ?? "en";
 }
 
+/**
+ * The unofficial scraper reports blocked, rate-limited, and malformed pages with many different
+ * messages, so everything is retried (a bounded number of times) except a missing resource.
+ */
 function isRetryable(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return /429|rate.?limit|timeout|network|socket|ECONN|fetch failed/i.test(
-    message,
-  );
+  return !/404|not found/i.test(message);
 }
 
 function normalizeGame(

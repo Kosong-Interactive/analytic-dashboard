@@ -155,6 +155,52 @@ describe("GooglePlayCollector", () => {
     assert.equal(attempts, 2);
   });
 
+  it("reports the attempts made and waits longer, with jitter, between retries", async () => {
+    const delays: number[] = [];
+    const collector = new GooglePlayCollector({
+      client: createClient({
+        list: async () => {
+          throw new Error("Error requesting Google Play: unexpected page");
+        },
+      }),
+      minimumRequestIntervalMs: 0,
+      retryAttempts: 3,
+      random: () => 0.5,
+      sleep: async (milliseconds) => {
+        delays.push(milliseconds);
+      },
+    });
+
+    await assert.rejects(
+      () => collector.discoverTopGames({ country: "sg", locale: "en_SG", collection: "GROSSING" }),
+      (error: unknown) => {
+        assert.ok(error instanceof GooglePlayCollectorError);
+        assert.equal(error.message, "Google Play request failed after 4 attempts");
+        return true;
+      },
+    );
+    assert.deepEqual(delays, [1250, 2250, 4250]);
+  });
+
+  it("does not retry a missing resource", async () => {
+    let attempts = 0;
+    const collector = new GooglePlayCollector({
+      client: createClient({
+        app: async () => {
+          attempts += 1;
+          throw new Error("App not found (404)");
+        },
+      }),
+      minimumRequestIntervalMs: 0,
+      sleep: async () => undefined,
+    });
+
+    await assert.rejects(() =>
+      collector.lookupGames({ externalIds: ["com.example.gone"], country: "us", locale: "en_US" }),
+    );
+    assert.equal(attempts, 1);
+  });
+
   it("requests the selected game chart with full details", async () => {
     let collection: string | undefined;
     const collector = new GooglePlayCollector({

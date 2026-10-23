@@ -157,7 +157,14 @@ Uncommitted changes from other tools or people may be in the working tree (`AGEN
   at 200 apps per run, so the backlog from the new storefronts takes days.
 - `.github/workflows/collect.yml` runs **once a day at 22:17 UTC (05:17 WIB)** on `main` (job
   timeout 90 minutes; the daily research job at 01:43 UTC runs after it; sources count as stale
-  after 36 h, both in the web view-model and in `apps/collector/src/jobs/research.ts`). It runs:
+  after 36 h, both in the web view-model and in `apps/collector/src/jobs/research.ts`). The rule
+  classification step has a 20-minute limit and logs `classification.rules.progress` every 500
+  writes (the first run after the 13-storefront expansion hit the old 10-minute limit with a
+  backlog of about 700 apps; discovery also exits 1 when any single Google Play chart fails, which
+  is by design). Google Play requests now retry up to 3 times with 1 s, 2 s, 4 s delays plus
+  jitter, and everything except a 404 is retried; the error says how many attempts were made.
+  GitHub often starts schedules hours late (collect started 01:41 UTC instead of 22:17), so the
+  research job's 01:43 UTC slot is not guaranteed to follow collection. It runs:
   discovery → rule
   classification → AI classification (≤200 changed apps) → Steam discovery.
   `.github/workflows/research.yml` runs daily at 01:43 UTC.
